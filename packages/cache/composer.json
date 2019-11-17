@@ -25,7 +25,7 @@
         "psr/simple-cache": "^1.0"
     },
     "require-dev": {
-        "cache/integration-tests": "dev-master",
+        "cache/integration-tests": "dev-master"
     },
     "conflict": {
         "symfony/var-dumper": "<3.4"
