@@ -25,7 +25,7 @@ use BiuradPHP\Event\Interfaces\EventInterface;
 use Doctrine\Common\Cache\MultiOperationCache;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 
-class Cache implements CacheInterface
+class SimpleCache implements CacheInterface
 {
     /**
      * @var DoctrineCache

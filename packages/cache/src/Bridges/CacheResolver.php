@@ -25,7 +25,7 @@ use PDO, Doctrine, BiuradPHP;
 use BiuradPHP\Manager\PoolManager;
 use BiuradPHP\Event\Interfaces\EventInterface;
 
-class CacheResolver extends BiuradPHP\Cache\Cache
+class CacheResolver extends BiuradPHP\Cache\SimpleCache
 {
     use PoolManager, SmartObject;
 
@@ -55,7 +55,7 @@ class CacheResolver extends BiuradPHP\Cache\Cache
             'void' => function () {
                 return new Doctrine\Common\Cache\VoidCache();
             },
-            
+
             'apcu' => function () {
                 return new Doctrine\Common\Cache\ApcuCache();
             },
