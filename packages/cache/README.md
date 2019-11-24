@@ -100,7 +100,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Testing
 
-To run the tests you'll have to start the included node based server first in a separate terminal window.
+To run the tests you'll have to start the included node based server first if any in a separate terminal window.
 
 With the server running, you can start testing.
 
