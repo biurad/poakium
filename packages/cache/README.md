@@ -111,7 +111,7 @@ vendor/bin/phpunit
 ## Security
 
 If you discover any security related issues, please report using the issue tracker.
-use our example [Issue Report](.github/ISSUE_TEMPLATE/Bug_report) template.
+use our example [Issue Report](.github/ISSUE_TEMPLATE/Bug_report.md) template.
 
 ## Want to be listed on our projects website
 
