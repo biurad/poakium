@@ -132,7 +132,7 @@ We publish all received request's on our website;
 
 Does your business depend on our contributions? Reach out and support us on to build more project's. We want to build over one hundred project's in two years. [Support Us](https://biurad.com/donate) achieve our goal.
 
-Reach out and support me on [Patreon](https://www.patreon.com/andikan). All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
+Reach out and support me on [Patreon](https://www.patreon.com/biurad). All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
 
 [Thanks to all who made Donations and Pledges to Us.](.github/ISSUE_TEMPLATE/Support_us.md)
 
