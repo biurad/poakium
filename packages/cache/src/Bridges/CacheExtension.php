@@ -23,15 +23,6 @@ use Nette, BiuradPHP;
 
 class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 {
-    /** @var string */
-	private $tempDir;
-
-
-	public function __construct(string $tempDir)
-	{
-		$this->tempDir = $tempDir;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -39,7 +30,7 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 	{
         return Nette\Schema\Expect::structure([
             'enabled' => Nette\Schema\Expect::bool(),
-            'driver' => Nette\Schema\Expect::string()->default(null),
+            'driver' => Nette\Schema\Expect::string()->nullable(),
             'pools' => Nette\Schema\Expect::arrayOf('string|array'),
 		])->otherItems('mixed');
 	}
@@ -51,12 +42,13 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 	{
         $builder = $this->getContainerBuilder();
 
-		$builder->addDefinition('cache')
-            ->setFactory(BiuradPHP\Cache\Bridges\CacheResolver::class)
-            ->setArguments([$this->config, $this->tempDir]);
+        CacheBridge::of($this)
+            ->setConfig($this->config)
+            ->withDefault($this->config->driver)
+            ->getDefinition('cache.doctrine');
 
-        $builder->addDefinition('cache.doctrine')
-            ->setFactory('@BiuradPHP\Cache\Bridges\CacheResolver::getPoolAdapter')
-            ->setAutowired(false);
+		$builder->addDefinition('cache')
+            ->setFactory(BiuradPHP\Cache\SimpleCache::class)
+            ->setArguments(['@cache.doctrine']);
     }
 }

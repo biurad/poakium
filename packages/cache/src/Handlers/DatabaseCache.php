@@ -19,8 +19,7 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Handlers;
 
-use PDO;
-use Exception;
+use PDO, Exception;
 use Doctrine\Common\Cache\CacheProvider;
 
 class DatabaseCache extends CacheProvider
