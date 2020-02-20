@@ -10,7 +10,7 @@ For now let's work with [Doctrine Cache](https://github.com/doctrine/cache).
 The recommended way to install Cache Manager is via Composer:
 
 ```bash
-composer require biurad/cache-manager
+composer require biurad/biurad-caching
 ```
 
 It requires PHP version 7.0 and supports PHP up to 7.4. The dev-master version requires PHP 7.1.
