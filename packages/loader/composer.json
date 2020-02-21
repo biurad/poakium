@@ -1,0 +1,39 @@
+{
+    "name": "biurad/biurad-loader",
+    "type": "library",
+    "description": "This dependency is a robust package for loading files, classes and configurations from files",
+    "keywords": ["loader", "loader manager", "biuradphp", "php7"],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        },
+        {
+            "name": "Biurad Lap Community",
+            "homepage": "https://biurad.com/contributors"
+        }
+    ],
+    "require": {
+        "php": "^7.1.3"
+    },
+    "require-dev": {
+        "cache/integration-tests": "dev-master"
+    },
+    "autoload": {
+        "psr-4": { "BiuradPHP\\Loader\\": "src/" },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+	"autoload-dev": {
+        "psr-4": {
+            "BiuradPHP\\Loader\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "suggest": {
+        "biurad/dependency-injection": "For autowiring the dependency in container"
+    }
+}
