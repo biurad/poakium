@@ -19,13 +19,31 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
+use BiuradPHP\Database\Database;
+use BiuradPHP\Database\DatabaseManager;
+
 class Connection
 {
+    /**
+     * Create a Sqlite Connection
+     *
+     * @param string $filename
+     *
+     * @return \SQLite3
+     */
     public static function createSqlite($filename): \SQLite3
     {
         return new \SQLite3($filename);
     }
 
+    /**
+     * Create a Redis Connection
+     *
+     * @param string $host
+     * @param int $port
+     *
+     * @return \Redis
+     */
     public static function createRedis($host, $port): \Redis
     {
         $client = new \Redis();
@@ -34,19 +52,32 @@ class Connection
         return $client;
     }
 
-    public static function createMemcached($host, $port, $options): \Memcached
+    /**
+     * Create Memcache Connection
+     *
+     * @param string $host
+     * @param int $port
+     *
+     * @return \Memcache
+     */
+    public static function createMemcache($host, $port): \Memcache
     {
-        $client = new \Memcached();
-        $client->setOptions($options);
+        $client = new \Memcache();
+        //$client->setOptions($options);
         $client->addServer($host, (int) $port);
 
         return $client;
     }
 
-    public static function createMysqli(
-        $host, $port, $db,
-        $username, $password
-    ): \PDO {
-        return new \PDO("mysql:host=$host;port=$port;dbname=$db;", $username, $password);
+    /**
+     * Create a Mysqli Connection using a database Driver.
+     *
+     * @param string $database
+     * @param \BiuradPHP\Database\DatabaseManager $manager
+     *
+     * @return \BiuradPHP\Database\Interfaces\DatabaseInterface
+     */
+    public static function createMysqli(string $database, DatabaseManager $manager): Database {
+        return $manager->database($database);
     }
 }

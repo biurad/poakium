@@ -21,9 +21,9 @@ namespace BiuradPHP\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Doctrine\Common\Cache\FlushableCache;
-use BiuradPHP\Event\Interfaces\EventInterface;
 use Doctrine\Common\Cache\MultiOperationCache;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
+use BiuradPHP\Events\Interfaces\EventDispatcherInterface;
 
 class SimpleCache implements CacheInterface
 {
@@ -45,10 +45,10 @@ class SimpleCache implements CacheInterface
     /**
      * Cache Constructor.
      *
-     * @param \Doctrine\Common\Cache\Cache|string             $instance
-     * @param \BiuradPHP\Event\Interfaces\EventInterface|null $event
+     * @param \Doctrine\Common\Cache\Cache|string $instance
+     * @param EventDispatcherInterface|null       $event
      */
-    public function __construct(DoctrineCache $instance, EventInterface $event = null)
+    public function __construct(DoctrineCache $instance, EventDispatcherInterface $event = null)
     {
         $this->event = $event;
         $this->instance = $instance;
@@ -114,7 +114,7 @@ class SimpleCache implements CacheInterface
         }
 
         foreach ($keys as $key) {
-            $this->get($key);
+            yield $this->get($key);
         }
     }
 
@@ -134,6 +134,8 @@ class SimpleCache implements CacheInterface
         foreach ($values as $key => $value) {
             $this->set($key, $value, $ttl);
         }
+
+        return true;
     }
 
     /**
@@ -152,6 +154,8 @@ class SimpleCache implements CacheInterface
         foreach ($keys as $key) {
             $this->delete($key);
         }
+
+        return true;
     }
 
     /**

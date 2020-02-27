@@ -21,6 +21,7 @@ namespace BiuradPHP\Cache\Bridges;
 
 use Nette\DI\ContainerBuilder;
 use Nette\DI\Definitions\ServiceDefinition;
+use BiuradPHP\Cache\Exceptions\CacheException;
 use Doctrine, BiuradPHP, InvalidArgumentException;
 use BiuradPHP\DependencyInjection\CompilerExtension;
 use BiuradPHP\DependencyInjection\Interfaces\BridgeInterface;
@@ -30,18 +31,18 @@ class CacheBridge implements BridgeInterface
     private const DRIVERS = [
 		'apcu'       => Doctrine\Common\Cache\ApcuCache::class,
 		'array'      => Doctrine\Common\Cache\ArrayCache::class,
-		'memcached'  => Doctrine\Common\Cache\MemcachedCache::class,
+		'memcache'   =>  Doctrine\Common\Cache\MemcacheCache::class,
 		'redis'      => Doctrine\Common\Cache\RedisCache::class,
         'xcache'     => Doctrine\Common\Cache\XcacheCache::class,
 		'filesystem' => Doctrine\Common\Cache\FilesystemCache::class,
         'wincache'   => Doctrine\Common\Cache\WinCacheCache::class,
         'sqlite'     => Doctrine\Common\Cache\SQLite3Cache::class,
         'zenddata'   => Doctrine\Common\Cache\ZendDataCache::class,
-        'mysqli'     => BiuradPHP\Cache\Handlers\DatabaseCache::class,
+        'database'   => BiuradPHP\Cache\Handlers\DatabaseCache::class,
     ];
 
     /** @var CompilerExtension */
-	private $extension, $config;
+	private $extension, $config, $prefix;
 
 	/** @var string */
 	private $default = 'array';
@@ -56,7 +57,14 @@ class CacheBridge implements BridgeInterface
 		return new self($extension);
     }
 
-	public function setConfig($config): self
+    public function setPrefix(string $prefix)
+    {
+        $this->prefix = $prefix;
+
+        return $this;
+    }
+
+	public function setConfig($config): BridgeInterface
 	{
 		$this->config = $config;
 
@@ -88,17 +96,16 @@ class CacheBridge implements BridgeInterface
         }
 
 		$def = $builder->addDefinition($service)
-			->setFactory(self::DRIVERS[$this->default])
+            ->setFactory(self::DRIVERS[$this->default])
             ->setAutowired(true);
 
         // First, we will determine if a custom driver creator exists for the given driver and
         // if it does not we will check for a creator method for the driver. Custom creator
         // callbacks allow developers to build their own "drivers" easily using Closures.
 		if (isset($this->default)) {
-            $method = 'create'.ucfirst($this->default);
             $pools = $this->config->pools;
 
-            if (method_exists($this, $method)) {
+            if (method_exists($this, $method = 'create'.ucfirst($this->default))) {
                 $this->$method($def, $builder, $pools);
             }
 		}
@@ -115,12 +122,10 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createFilesystem(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
+    protected function createFilesystem(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
         $filesystem = $pools['filesystem'];
-        $path = $builder->parameters['path__TEMP'];
+        $path = $builder->parameters['path']['TEMP'];
 
         $definition->setArguments([
             $path . DS . 'caches/biurad.caching',
@@ -137,10 +142,27 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createApcu(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
+    protected function createApcu(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        // This driver connection should be void.
+        if (! extension_loaded('apcu')) {
+            throw new CacheException(
+                "Sorry, It seems you server doesn't support apcu driver. If you think this is an error!. Enable apcu and try again"
+            );
+        }
+    }
+
+    /**
+     * Create the driver.
+     *
+     * @param ServiceDefinition $definition
+     * @param ContainerBuilder $builder
+     * @param array $pools
+     *
+     * @return void
+     */
+    protected function createWincache(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
         // This driver connection should be void.
     }
 
@@ -153,10 +175,41 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createWincache(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
+    protected function createZenddata(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        // This driver connection should be void.
+    }
+
+    /**
+     * Create the driver.
+     *
+     * @param ServiceDefinition $definition
+     * @param ContainerBuilder $builder
+     * @param array $pools
+     *
+     * @deprecated
+     *
+     * @return void
+     */
+    protected function createXcache(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        // This driver connection should be void.
+        throw new CacheException(
+            "Sorry, This driver has been deprecated, and will be removed in future development", E_DEPRECATED
+        );
+    }
+
+    /**
+     * Create the driver.
+     *
+     * @param ServiceDefinition $definition
+     * @param ContainerBuilder $builder
+     * @param array $pools
+     *
+     * @return void
+     */
+    protected function createArray(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
         // This driver connection should be void.
     }
 
@@ -169,66 +222,22 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createZenddata(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
-        // This driver connection should be void.
-    }
+    protected function createRedis(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        if (!class_exists(\Redis::class)) {
+            throw new CacheException(
+                "Sorry, It seems you server doesn't support redis driver. If you think this is an error!. Enable redis and try again"
+            );
+        }
 
-    /**
-     * Create the driver.
-     *
-     * @param ServiceDefinition $definition
-     * @param ContainerBuilder $builder
-     * @param array $pools
-     *
-     * @return void
-     */
-    protected function createXcache(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
-        // This driver connection should be void.
-    }
-
-    /**
-     * Create the driver.
-     *
-     * @param ServiceDefinition $definition
-     * @param ContainerBuilder $builder
-     * @param array $pools
-     *
-     * @return void
-     */
-    protected function createArray(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
-        // This driver connection should be void.
-    }
-
-    /**
-     * Create the driver.
-     *
-     * @param ServiceDefinition $definition
-     * @param ContainerBuilder $builder
-     * @param array $pools
-     *
-     * @return void
-     */
-    protected function createRedis(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
         $redis = $pools['redis'];
         [$host, $port] = explode(':', $redis['connection']);
 
-        $builder->addDefinition('cache.connection')
+        $builder->addDefinition($this->prefix . '.connection')
             ->setFactory('BiuradPHP\Cache\Bridges\Connection::createRedis')
             ->setArguments([$host, $port]);
 
-        $definition->addSetup('setRedis', ['@cache.connection']);
+        $definition->addSetup('setRedis', ['@' . $this->prefix . '.connection']);
     }
 
     /**
@@ -240,19 +249,22 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createMemcached(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
-        $memcached = $pools['memcached'];
-        $options = $memcached['options'];
-        [$host, $port] = explode(':', $memcached['connection']);
+    protected function createMemcache(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        if (!class_exists(\Memcache::class)) {
+            throw new CacheException(
+                "Sorry, It seems you server doesn't support mecached driver. If you think this is an error!. Enable mecached and try again"
+            );
+        }
 
-        $builder->addDefinition('cache.connection')
-            ->setFactory('BiuradPHP\Cache\Bridges\Connection::createMemcached')
-            ->setArguments([$host, $port, $options]);
+        $memcache = $pools['memcache'];
+        [$host, $port] = explode(':', $memcache['connection']);
 
-        $definition->addSetup('setMemcached', ['@cache.connection']);
+        $builder->addDefinition($this->prefix . '.connection')
+            ->setFactory('BiuradPHP\Cache\Bridges\Connection::createMemcache')
+            ->setArguments([$host, $port]);
+
+        $definition->addSetup('setMemcache', ['@' . $this->prefix . '.connection']);
     }
 
     /**
@@ -264,21 +276,19 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createSqlite(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
+    protected function createSqlite(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
         $sqlite = $pools['sqlite'];
-        $path = $builder->parameters['path__TEMP'];
+        $path = $builder->parameters['path']['TEMP'];
 
         $filename = $sqlite['connection'];
         $table = $sqlite['table'];
 
-        $builder->addDefinition('cache.connection')
+        $builder->addDefinition($this->prefix . '.connection')
             ->setFactory('BiuradPHP\Cache\Bridges\Connection::createSqlite')
             ->setArguments([$path . DS . 'database' . DS . $filename]);
 
-        $definition->setArguments(['@cache.connection', $table]);
+        $definition->setArguments(['@' . $this->prefix . '.connection', $table]);
     }
 
     /**
@@ -290,22 +300,18 @@ class CacheBridge implements BridgeInterface
      *
      * @return void
      */
-    protected function createMysqli(
-        ServiceDefinition $definition,
-        ContainerBuilder $builder, array $pools
-    ): void {
-        $mysqli = $pools['mysqli'];
+    protected function createDatabase(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        $mysqli = $pools['database'];
+
         $options = $mysqli['options'];
-
-        [$host, $port] = explode(':', $mysqli['connection']);
         [$db, $table] = explode(':', $mysqli['collection']);
-        [$username, $password] = explode('@', $mysqli['auth']);
-        'false' !== $password ? $password : $password = null;
 
-        $builder->addDefinition('cache.connection')
+        $builder->addDefinition($this->prefix . '.connection')
             ->setFactory('BiuradPHP\Cache\Bridges\Connection::createMysqli')
-            ->setArguments([$host, $port, $db, $username, $password]);
+            ->setAutowired(false)
+            ->setArguments([$db]);
 
-        $definition->setArguments(['@cache.connection', $table, $options]);
+        $definition->setArguments(['@' . $this->prefix . '.connection', $table, $options]);
     }
 }

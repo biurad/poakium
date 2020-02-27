@@ -1,5 +1,5 @@
 {
-    "name": "biurad/cache-manager",
+    "name": "biurad/biurad-caching",
     "type": "library",
     "description": "🕸 BiuradPHP Framework Cache manager using PSR-6, with easy-to-use API for quick caching.",
     "keywords": ["caching", "cache", "psr6", "doctrine", "biuradphp", "php7"],

@@ -19,15 +19,15 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Handlers;
 
-use PDO, Exception;
 use Doctrine\Common\Cache\CacheProvider;
+use BiuradPHP\Database\Interfaces\DatabaseInterface;
 
 class DatabaseCache extends CacheProvider
 {
     /**
      * The database connection instance.
      *
-     * @var PDO
+     * @var DatabaseInterface
      */
     protected $connection;
 
@@ -36,7 +36,7 @@ class DatabaseCache extends CacheProvider
      *
      * @var string
      */
-    protected $table;
+    protected $table, $expire;
 
     /**
      * The data passed into the database query.
@@ -45,17 +45,15 @@ class DatabaseCache extends CacheProvider
      */
     protected $options = [];
 
-    private $expire;
-
     /**
      * Create a new database store.
      *
-     * @param  \Illuminate\Database\ConnectionInterface  $connection
+     * @param  DatabaseInterface  $connection
      * @param  string  $table
      * @param  string  $prefix
      * @return void
      */
-    public function __construct(PDO $connection, $table, $options)
+    public function __construct(DatabaseInterface $connection, $table, $options)
     {
         $this->table = $table;
         $this->connection = $connection;
@@ -66,28 +64,27 @@ class DatabaseCache extends CacheProvider
         ], $options);
 
         $this->ensureTableExists();
+        $this->expire = time();
     }
 
     private function ensureTableExists(): bool
     {
         [$cacheId, $cacheData, $cacheTime] = $this->getFields();
+        $table = $this->connection->table($this->table);
 
-        $tables = $this->connection->prepare(
-            sprintf(
-                'CREATE TABLE IF NOT EXISTS %s (
-                    %s VARCHAR(255) DEFAULT NULL,
-                    %s BLOB NOT NULL,
-                    %s BIGINT(20) DEFAULT NULL,
-                    UNIQUE KEY `id` (`id`)
-                )',
-                $this->table,
-                $cacheId,
-                $cacheData,
-                $cacheTime
-            )
-        );
+        if ($table->exists()) {
+            return true;
+        }
 
-        return $tables->execute();
+        // create or update table schema
+        $schema = $table->getSchema();
+        $schema->string($cacheId);
+        $schema->index([$cacheId]);
+        $schema->binary($cacheData);
+        $schema->integer($cacheTime)->isNullable();
+        $schema->save();
+
+        return true;
     }
 
     /**
@@ -118,40 +115,40 @@ class DatabaseCache extends CacheProvider
      */
     protected function doSave($id, $data, $lifeTime = 0)
     {
-        $value = serialize($data);
         [$cacheId, $cacheData, $cacheTime] = $this->getFields();
-        $this->expire = $expiration = $lifeTime > 0 ? time() + $lifeTime : null;
+        $expiration = $lifeTime > 0 ? $lifeTime : null;
 
-        try {
-            $inserted = $this->connection->prepare(sprintf(
-                'INSERT INTO %s (%s) VALUES (:id, :data, :expire)',
+        if (DatabaseInterface::SQLITE === $this->connection->getDriver()->getType()) {
+            return $this->connection->execute(sprintf(
+                'INSERT OR REPLACE INTO %s (%s) VALUES (:id, :data, :expire)',
                 $this->table,
-                implode(', ', $this->getFields())
-            ));
-
-            $inserted->bindValue(':id', $id);
-            $inserted->bindValue(':data', serialize($data));
-            $inserted->bindValue(':expire', $expiration);
-
-            return $inserted->execute();
-        } catch (Exception $e) {
-            $result = $this->connection->prepare(sprintf(
-                'UPDATE %s
-                SET
-                    %s = %s
-                    %s = %s
-                WHERE %s = %s',
-                $this->table,
-                $cacheData,
-                $value,
-                $cacheTime,
-                $expiration,
-                $cacheId,
-                $id
-            ));
-
-            return $result->execute();
+                implode(',', $this->getFields())
+            ), [
+                'id' => $id,
+                'data' => serialize($data),
+                'expire' => $expiration
+            ]);
         }
+
+        $updated = $this->connection->update(
+            $this->table, [
+                $cacheId => $id,
+                $cacheData => serialize($data),
+                $cacheTime => $expiration
+            ], [$cacheId => $id]
+        )->run();
+
+        if (0 === $updated) {
+            return $this->connection->table($this->table)
+                ->insertOne([
+                    $cacheId => $id,
+                    $cacheData => serialize($data),
+                    $cacheTime => $expiration
+                ])
+            ;
+        }
+
+        return $updated;
     }
 
     /**
@@ -159,14 +156,12 @@ class DatabaseCache extends CacheProvider
      */
     protected function doDelete($id)
     {
-        $table = $this->table;
         [$cacheId] = $this->getFields();
 
-        $deleted = $this->connection->prepare("
-            DELETE FROM $table WHERE $cacheId = '$id'
-        ");
+        $table = $this->connection->table($this->table);
+        $table->delete([$cacheId => $id])->run();
 
-        return $deleted->execute();
+        return true;
     }
 
     /**
@@ -174,15 +169,10 @@ class DatabaseCache extends CacheProvider
      */
     protected function doFlush()
     {
-        $table = $this->table;
-        $cacheTime = $this->options['cache_time'];
-        $expired = time() - $this->expire;
+        $table = $this->connection->table($this->table);
+        $table->delete()->run();
 
-        $flushed = $this->connection->prepare("
-            DELETE FROM $table WHERE $cacheTime = '$cacheTime' <= $expired
-        ");
-
-        return $flushed->execute();
+        return true;
     }
 
     /**
@@ -202,35 +192,36 @@ class DatabaseCache extends CacheProvider
      */
     private function findById($id, bool $includeData = true): ?array
     {
-        [$idField] = $fields = $this->getFields();
+        [$idField, $cacheData, $cacheTime] = $fields = $this->getFields();
 
-        if (!$includeData) {
-            $key = array_search($this->options['cache_data'], $fields);
+        if (! $includeData) {
+            $key = array_search($cacheData, $fields);
             unset($fields[$key]);
         }
 
-        $statement = $this->connection->prepare(sprintf(
-            "SELECT %s FROM `%s` WHERE %s = ':id' LIMIT 1",
-            implode(', ', $fields),
-            $this->table,
-            $idField
-        ));
+        $table = $this->connection->table($this->table);
 
-        $statement->execute([':id' => $id]);
+        $cache = $table->select([$idField, $cacheData, $cacheTime])
+            ->where($idField, '=', $id)->fetchAll();
 
-        $item = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($item !== true) {
+        // If we have a cache record we will check the expiration time against current
+        // time on the system and see if the record has expired. If it has, we will
+        // remove the records from the database table so it isn't returned again.
+        $cache = empty($cache) ? null : $cache[0];
+        if (is_null($cache)) {
             return null;
         }
 
-        if ($this->isExpired($item)) {
+        // If this cache expiration date is past the current time, we will remove this
+        // item from the cache. Then we will return a null value since the cache is
+        // expired. We will use "Carbon" to make this comparison with the column.
+        if ($this->expire < time() - $cache[$cacheTime]) {
             $this->doDelete($id);
 
             return null;
         }
 
-        return $item;
+        return $cache;
     }
 
     /**
@@ -241,17 +232,5 @@ class DatabaseCache extends CacheProvider
     private function getFields(): array
     {
         return [$this->options['cache_id'], $this->options['cache_data'], $this->options['cache_time']];
-    }
-
-    /**
-     * Check if the item is expired.
-     *
-     * @param array $item
-     */
-    private function isExpired(array $item): bool
-    {
-        return isset($item[$this->options['cache_time']]) &&
-            $item[$this->options['cache_time']] !== null &&
-            $item[$this->options['cache_time']] < time();
     }
 }

@@ -44,11 +44,19 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 
         CacheBridge::of($this)
             ->setConfig($this->config)
+            ->setPrefix($this->name)
             ->withDefault($this->config->driver)
-            ->getDefinition('cache.doctrine');
+            ->getDefinition($this->prefix('doctrine'))
+        ;
 
-		$builder->addDefinition('cache')
+        $builder->addDefinition($this->prefix('psr'))
             ->setFactory(BiuradPHP\Cache\SimpleCache::class)
-            ->setArguments(['@cache.doctrine']);
+        ;
+
+		$builder->addDefinition($this->prefix('factory'))
+            ->setFactory(BiuradPHP\Cache\Caching::class)
+        ;
+
+        $builder->addAlias('cache', $this->prefix('factory'));
     }
 }

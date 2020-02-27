@@ -36,40 +36,41 @@ For manipulation with cache, we use the `BiuradPHP\Cache\SimpleCache`:
 ```php
 use BiuradPHP\Cache\SimpleCache;
 
-$cache = new SimpleCache($storage); // $storage from the previous example
+$psr = new SimpleCache($storage); // $storage from the previous example
+$cache = new Caching
 ```
 
 Let's save the contents of the '`$data`' variable under the '`$key`' key:
 
 ```php
-$cache->set($key, $data);
+$cache->save($key, $data);
 ```
 
 This way, we can read from the cache: (if there is no such item in the cache, the `null` value is returned)
 
 ```php
-$value = $cache->get($key);
+$value = $cache->load($key);
 if ($value === null) ...
 ```
 
 Method `get()` has second parameter `callable` `$fallback`, which is called when there is no such item in the cache. This callback receives the array *$dependencies* by reference, which you can use for setting expiration rules.
 
 ```php
-$cache->set($key, function(& $dependencies) {
+$cache->save($key, function(& $dependencies) {
   // some calculation
   
   return 15;
 }));
 
-$value = $cache->get($key);
+$value = $cache->load($key);
 ```
 
 We could delete the item from the cache either by saving null or by calling `delete()` method:
 
 ```php
-$cache->set($key, null);
+$cache->save($key, null);
 // or
-$cache->delete($key);
+$cache->remove($key);
 ```
 
 It's possible to save any structure to the cache, not only strings. The same applies for keys.
@@ -81,7 +82,7 @@ The solution is to modify application behaviour so that data are created only by
 or use an anonymous function:
 
 ```php
-$result = $cache->set($key, function() {
+$result = $cache->save($key, function() {
 
 	return buildData(); // difficult operation
 });
@@ -124,7 +125,7 @@ We publish all received request's on our website;
 ## Credits
 
 - [Divine Niiquaye Ibok](https://divineniiquayeibok.com)
-- [All Contributors](https://biurad.com/projects/cachemanager/contributers)
+- [All Contributors](https://biurad.com/projects/configmanager/contributers)
 
 ## Support us
 
