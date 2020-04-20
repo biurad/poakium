@@ -22,6 +22,8 @@ namespace BiuradPHP\Cache\Bridges;
 use BiuradPHP\Database\Database;
 use BiuradPHP\Database\DatabaseManager;
 
+use function is_array;
+
 class Connection
 {
     /**
@@ -65,6 +67,27 @@ class Connection
         $client = new \Memcache();
         //$client->setOptions($options);
         $client->addServer($host, (int) $port);
+
+        return $client;
+    }
+
+    /**
+     * Create Memcache Connection
+     *
+     * @param string $host
+     * @param int $port
+     * @param array|null $options
+     *
+     * @return \Memcached
+     */
+    public static function createMemcached($host, $port, $options): \Memcached
+    {
+        $client = new \Memcached();
+        $client->addServer($host, (int) $port);
+
+        if (null !== $options && is_array($options) && !empty($options)) {
+            $client->setOptions($options);
+        }
 
         return $client;
     }

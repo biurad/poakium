@@ -25,6 +25,9 @@ use Doctrine\Common\Cache\MultiOperationCache;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 use BiuradPHP\Events\Interfaces\EventDispatcherInterface;
 
+use function is_iterable;
+use function iterator_to_array;
+
 class SimpleCache implements CacheInterface
 {
     /**
@@ -98,6 +101,8 @@ class SimpleCache implements CacheInterface
         if ($this->instance instanceof FlushableCache) {
             return $this->instance->flushAll();
         }
+
+        return false;
     }
 
     /**
@@ -152,7 +157,9 @@ class SimpleCache implements CacheInterface
         }
 
         foreach ($keys as $key) {
-            $this->delete($key);
+            if (true !== $this->delete($key)) {
+                return false;
+            }
         }
 
         return true;
@@ -161,7 +168,7 @@ class SimpleCache implements CacheInterface
     /**
      * Get the value of event.
      *
-     * @return EventInterface
+     * @return EventDispatcherInterface
      */
     public function getEvent()
     {

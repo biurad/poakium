@@ -2,6 +2,9 @@
 
 All notable changes to `biurad/biurad-caching` will be documented in this file.
 
+## 0.1.10 - 2020-03-28
+- Added doctrine cache adapter *Memcached*
+
 ## 0.1.9 - 2020-02-27
 
 - Added deprecated doctrine cache adapter *Memcache*, (maybe removed again)

@@ -19,7 +19,32 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
+use Closure;
+use DateTime;
+use Throwable;
+use DateTimeInterface;
+use DateTimeZone;
+use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
+
+use function array_shift;
+use function md5;
+use function substr;
+use function sprintf;
+use function count;
+use function array_map;
+use function iterator_to_array;
+use function date_default_timezone_get;
+use function time;
+use function is_numeric;
+use function func_get_args;
+use function array_values;
+use function array_slice;
+use function is_array;
+use function is_object;
+use function serialize;
+use function is_scalar;
+use function strpos;
 
 /**
  * Implements the cache for a application.
@@ -114,7 +139,7 @@ class Caching
 		}
 		foreach ($keys as $key) {
 			if (!is_scalar($key)) {
-				throw new \InvalidArgumentException('Only scalar keys are allowed in bulkLoad()');
+				throw new InvalidArgumentException('Only scalar keys are allowed in bulkLoad()');
 			}
 		}
 		$storageKeys = array_map([$this, 'generateKey'], $keys);
@@ -147,16 +172,16 @@ class Caching
 	 * @param  mixed  $data
 	 * @return mixed  value itself
      *
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function save($key, $data, array $dependencies = null)
 	{
         $key = $this->generateKey($key);
 
-		if ($data instanceof \Closure) {
+		if ($data instanceof Closure) {
 			try {
 				$data = $data(...[&$dependencies]);
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				$this->storage->delete($key);
 				throw $e;
 			}
@@ -186,16 +211,16 @@ class Caching
 		// convert expire into relative amount of seconds
 		if (isset($dp[self::EXPIRATION])) {
             $time = $dp[self::EXPIRATION];
-            if ($time instanceof \DateTimeInterface) {
-                $time = new \DateTime($time->format('Y-m-d H:i:s.u'), $time->getTimezone());
+            if ($time instanceof DateTimeInterface) {
+                $time = new DateTime($time->format('Y-m-d H:i:s.u'), $time->getTimezone());
             } elseif (is_numeric($time)) {
                 if ($time <= self::YEAR) {
                     $time += time();
                 }
-                $time = new \DateTime('@' . $time, new \DateTimeZone(date_default_timezone_get()));
+                $time = new DateTime('@' . $time, new DateTimeZone(date_default_timezone_get()));
 
             } else { // textual or null
-                $time = new \DateTime((string) $time);
+                $time = new DateTime((string) $time);
             }
 			$dp[self::EXPIRATION] = $time->format('U') - time();
 		}
@@ -290,7 +315,7 @@ class Caching
 	 */
 	protected function generateKey($key): string
 	{
-        $key = md5((is_scalar($key) || $key instanceof \Closure) ? (string) $key : serialize($key));
+        $key = md5((is_scalar($key) || $key instanceof Closure) ? (string) $key : serialize($key));
 
 		return strpos($this->namespace, '%s') ? sprintf($this->namespace, $key) : $this->namespace . $key;
 	}

@@ -19,6 +19,11 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
+use InvalidArgumentException;
+
+use function ob_start;
+use function ob_get_flush;
+
 /**
  * Output caching helper.
  */
@@ -45,7 +50,7 @@ class OutputHelper
 	public function end(array $dependencies = []): void
 	{
 		if ($this->cache === null) {
-			throw new \InvalidArgumentException('Output cache has already been saved.');
+			throw new InvalidArgumentException('Output cache has already been saved.');
 		}
         $this->cache->save($this->key, ob_get_flush(), $dependencies);
 

@@ -29,8 +29,7 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
         return Nette\Schema\Expect::structure([
-            'enabled' => Nette\Schema\Expect::bool(),
-            'driver' => Nette\Schema\Expect::string()->nullable(),
+            'driver' => Nette\Schema\Expect::string()->required(),
             'pools' => Nette\Schema\Expect::arrayOf('string|array'),
 		])->otherItems('mixed');
 	}
@@ -42,9 +41,8 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 	{
         $builder = $this->getContainerBuilder();
 
-        CacheBridge::of($this)
+        CachePass::of($this)
             ->setConfig($this->config)
-            ->setPrefix($this->name)
             ->withDefault($this->config->driver)
             ->getDefinition($this->prefix('doctrine'))
         ;

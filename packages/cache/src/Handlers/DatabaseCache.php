@@ -20,7 +20,13 @@ declare(strict_types=1);
 namespace BiuradPHP\Cache\Handlers;
 
 use Doctrine\Common\Cache\CacheProvider;
-use BiuradPHP\Database\Interfaces\DatabaseInterface;
+use BiuradPHP\Database\DatabaseInterface;
+
+use function serialize;
+use function unserialize;
+use function sprintf;
+use function array_search;
+use function implode;
 
 class DatabaseCache extends CacheProvider
 {
@@ -53,7 +59,7 @@ class DatabaseCache extends CacheProvider
      * @param  string  $prefix
      * @return void
      */
-    public function __construct(DatabaseInterface $connection, $table, $options)
+    public function __construct(DatabaseInterface $connection, string $table, array $options)
     {
         $this->table = $table;
         $this->connection = $connection;
@@ -208,7 +214,7 @@ class DatabaseCache extends CacheProvider
         // time on the system and see if the record has expired. If it has, we will
         // remove the records from the database table so it isn't returned again.
         $cache = empty($cache) ? null : $cache[0];
-        if (is_null($cache)) {
+        if (null === $cache) {
             return null;
         }
 

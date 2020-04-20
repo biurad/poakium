@@ -21,5 +21,4 @@ namespace BiuradPHP\Cache\Exceptions;
 
 class CacheException extends \RuntimeException
 {
-    
 }
