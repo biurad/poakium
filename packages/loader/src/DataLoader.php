@@ -13,7 +13,7 @@ declare(strict_types=1);
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/loadermanager
+ * @link      https://www.biurad.com/projects/biurad-loader
  * @since     Version 0.1
  */
 
@@ -69,7 +69,7 @@ class DataLoader implements Interfaces\DataInterface
     {
         $this->allowModifications = (bool) $allowModifications;
 
-        if (class_exists(ConfigLoader::class) && is_string($array) && file_exists($array)) {
+        if (is_string($array) && file_exists($array)) {
             $array = (array) (new ConfigLoader())->loadFile($array);
         }
 
@@ -200,6 +200,14 @@ class DataLoader implements Interfaces\DataInterface
         }
 
         return $array;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
     /**

@@ -1,7 +1,7 @@
 {
     "name": "biurad/biurad-loader",
     "type": "library",
-    "description": "This dependency is a robust package for loading files, classes and configurations from files",
+    "description": "This dependency is a robust package for loading files, classes, class aliases, annotations, and store data",
     "keywords": ["loader", "loader manager", "biuradphp", "php7"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
@@ -16,10 +16,11 @@
         }
     ],
     "require": {
-        "php": "^7.1.3"
+        "php": "^7.1.3",
+        "nette/utils": "^3.1"
     },
     "require-dev": {
-        "cache/integration-tests": "dev-master"
+        "phpunit/phpunit": "~7.0"
     },
     "autoload": {
         "psr-4": { "BiuradPHP\\Loader\\": "src/" },
@@ -34,6 +35,8 @@
     },
     "minimum-stability": "dev",
     "suggest": {
-        "biurad/dependency-injection": "For autowiring the dependency in container"
+        "doctrine/annotations": "Support to use annotations loading feature in project",
+        "symfony/yaml": "Support loading files in yml or yaml format, if native yaml extension is not avaliable",
+        "nette/neon": "Support loading files in neon format, since nette/neon is an advanced version of yaml"
     }
 }

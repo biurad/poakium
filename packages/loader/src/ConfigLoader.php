@@ -13,17 +13,17 @@ declare(strict_types=1);
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/loadermanager
+ * @link      https://www.biurad.com/projects/biurad-loader
  * @since     Version 0.1
  */
 
 namespace BiuradPHP\Loader;
 
-use BiuradPHP\Config\Config;
 use InvalidArgumentException;
 use Nette;
 use Nette\Utils\Validators;
 use BiuradPHP\Loader\Interfaces\AdapterInterface;
+use BiuradPHP\Loader\Interfaces\DataInterface;
 
 class ConfigLoader
 {
@@ -115,7 +115,7 @@ class ConfigLoader
     /**
      * Save's configuration to file.
      *
-     * @param array|Config $data
+     * @param array|DataInterface $data
      * @param string       $file
      */
     public function save(array $data, string $file): void
@@ -124,7 +124,7 @@ class ConfigLoader
             throw new Nette\FileNotFoundException("File '$file' is missing or is not readable.");
         }
 
-        if ((is_object($data) && !($data instanceof Config)) || (!is_object($data) && !is_array($data))
+        if ((is_object($data) && !($data instanceof DataInterface)) || (!is_object($data) && !is_array($data))
         ) {
             throw new InvalidArgumentException(sprintf(
                 '%s $config should be an array or instance of %s\Config\Config',
@@ -133,7 +133,7 @@ class ConfigLoader
             ));
         }
 
-        if ((is_object($data) && ($data instanceof Config))) {
+        if ((is_object($data) && ($data instanceof DataInterface))) {
             $data = $data->toArray();
         }
 

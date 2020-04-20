@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This code is under BSD 3-Clause "New" or "Revised" License.
+ *
+ * PHP version 7 and above required
+ *
+ * @category  LoaderManager
+ *
+ * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
+ * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @license   https://opensource.org/licenses/BSD-3-Clause License
+ *
+ * @link      https://www.biurad.com/projects/biurad-loader
+ * @since     Version 0.1
+ */
+
+namespace BiuradPHP\Loader\Bridges;
+
+use BiuradPHP\Loader\AliasLoader;
+use BiuradPHP\Loader\AnnotationLocator;
+use BiuradPHP\Loader\ComposerPaths;
+use BiuradPHP\Loader\DataLoader;
+use BiuradPHP\Loader\FileLoader;
+use BiuradPHP\Loader\Loader;
+use BiuradPHP\Loader\UniformResourceLocator;
+use Nette, BiuradPHP;
+use Nette\Schema\Expect;
+use Nette\PhpGenerator\PhpLiteral;
+use Nette\PhpGenerator\ClassType as ClassTypeGenerator;
+
+class LoaderExtension extends Nette\DI\CompilerExtension
+{
+    /**
+     * {@inheritDoc}
+     */
+    public function getConfigSchema(): Nette\Schema\Schema
+    {
+        return Nette\Schema\Expect::structure([
+            'locators' => Expect::listOf('string')->before(function ($value) {
+                return is_string($value) ? [$value] : $value;
+            }),
+            'resources' => Nette\Schema\Expect::arrayOf(Expect::array()->before(function ($value) {
+                return is_string($value) ? ['', $value] : $value;
+            })),
+            'data_path' => Nette\Schema\Expect::string(),
+            'composer_path' => Nette\Schema\Expect::string()->nullable(),
+            'aliases' => Nette\Schema\Expect::arrayOf(Expect::string()->assert('class_exists'))
+        ])->castTo('array');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function loadConfiguration()
+    {
+        $builder = $this->getContainerBuilder();
+
+        $builder->addDefinition($this->prefix('config'))
+            ->setFactory(Loader::class);
+
+        $builder->addDefinition($this->prefix('file'))
+            ->setFactory(FileLoader::class)
+            ->setArguments([$this->config['locators']])
+        ;
+
+        $builder->addDefinition($this->prefix('annotation'))
+            ->setFactory(AnnotationLocator::class);
+
+        $builder->addDefinition($this->prefix('data'))
+            ->setFactory(DataLoader::class)
+            ->setArguments([$this->config['data_path']])
+        ;
+
+        $builder->addDefinition($this->prefix('composer'))
+            ->setFactory(ComposerPaths::class)
+            ->setArguments([$this->config['composer_path']])
+        ;
+
+        $builder->addDefinition($this->prefix('locator'))
+            ->setFactory(UniformResourceLocator::class)
+            ->setArguments([$builder->parameters['path']['ROOT']])
+            ->addSetup(
+                'foreach (? as $scheme => [$path, $lookup]) { ?->addPath($scheme, $path, $lookup); }', [$this->config['resources'], '@self']
+        );
+    }
+    /**
+     * {@inheritDoc}
+     */
+    public function afterCompile(ClassTypeGenerator $class): void
+    {
+        $init = $class->getMethod('initialize');
+        $originalInitialize = (string) $init->getBody();
+
+        // For Runtime.
+        $init->setBody(
+            "// The loader class aliases.\n" .
+                '$classAliases = new ?(?);' . "\n" .
+                '$classAliases->register(); // Class alias registered.' .
+                "\n\n",
+            [new PhpLiteral(AliasLoader::class), $this->config['aliases']]
+        );
+
+        $init->addBody($originalInitialize);
+    }
+}

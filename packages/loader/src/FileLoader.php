@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This code is under BSD 3-Clause "New" or "Revised" License.
  *
@@ -11,7 +13,7 @@
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/loadermanager
+ * @link      https://www.biurad.com/projects/biurad-loader
  * @since     Version 0.1
  */
 
@@ -91,12 +93,12 @@ class FileLoader implements ClassInterface
         $classes = [];
         $this->dirs = !empty($dirs) ? $this->dirs = $dirs : $this->dirs;
 
-        foreach ($this->dirs as $prefix => $dir) {
+        foreach (array_filter($this->dirs) as $prefix => $dir) {
 
             if (!is_dir($dir)) {
                 continue;
             }
-            
+
             /** @var \RecursiveIteratorIterator|\SplFileInfo[] $iterator */
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($dir),
@@ -104,11 +106,11 @@ class FileLoader implements ClassInterface
             );
 
             foreach (@$iterator as $file) {
-                if (($fileName = $file->getBasename('.'.$extension)) == $file->getBasename()) {
+                if (($fileName = $file->getBasename($extension)) == $file->getBasename()) {
                     continue;
                 }
 
-                $classes[] = $file->getRealPath();
+                $classes[] = $file->getPathname();
             }
         }
 
@@ -127,7 +129,7 @@ class FileLoader implements ClassInterface
         $this->excludes = !empty($excludes) ? $this->excludes = $excludes : $this->excludes;
 
         $found = [];
-        foreach ($this->findFiles($directories, 'php') as $file) {
+        foreach ($this->findFiles($directories, '.php') as $file) {
             // Remove Excludes
             foreach ($this->excludes as $exclude) {
                 $exclude = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $exclude);
@@ -199,6 +201,30 @@ class FileLoader implements ClassInterface
                 }
             }
         }
+    }
+
+    /**
+     * Get every class trait (including traits used in parents).
+     *
+     * @param string $class
+     *
+     * @return array
+     */
+    public function fetchTraits(string $class): array
+    {
+        $traits = [];
+
+        while ($class) {
+            $traits = array_merge(class_uses($class), $traits);
+            $class = get_parent_class($class);
+        }
+
+        //Traits from traits
+        foreach (array_flip($traits) as $trait) {
+            $traits = array_merge(class_uses($trait), $traits);
+        }
+
+        return array_unique($traits);
     }
 
     /**
@@ -359,29 +385,5 @@ class FileLoader implements ClassInterface
     protected function isWhitespace($token)
     {
         return is_array($token) && $token[0] == T_WHITESPACE;
-    }
-
-    /**
-     * Get every class trait (including traits used in parents).
-     *
-     * @param string $class
-     *
-     * @return array
-     */
-    protected function fetchTraits(string $class): array
-    {
-        $traits = [];
-
-        while ($class) {
-            $traits = array_merge(class_uses($class), $traits);
-            $class = get_parent_class($class);
-        }
-
-        //Traits from traits
-        foreach (array_flip($traits) as $trait) {
-            $traits = array_merge(class_uses($trait), $traits);
-        }
-
-        return array_unique($traits);
     }
 }
