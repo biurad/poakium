@@ -45,6 +45,7 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
             ->setConfig($this->config)
             ->withDefault($this->config->driver)
             ->getDefinition($this->prefix('doctrine'))
+            ->setType(\Doctrine\Common\Cache\Cache::class)
         ;
 
         $builder->addDefinition($this->prefix('psr'))
