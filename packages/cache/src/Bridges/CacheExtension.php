@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUndefinedMethodInspection */
 
 declare(strict_types=1);
 
@@ -19,9 +19,10 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
+use Doctrine\Common\Cache\Cache;
 use Nette, BiuradPHP;
 
-class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
+class CacheExtension extends Nette\DI\CompilerExtension
 {
     /**
      * {@inheritDoc}
@@ -29,9 +30,9 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
         return Nette\Schema\Expect::structure([
-            'driver' => Nette\Schema\Expect::string()->required(),
-            'pools' => Nette\Schema\Expect::arrayOf('string|array'),
-		])->otherItems('mixed');
+            'driver'    => Nette\Schema\Expect::string()->required(),
+            'pools'     => Nette\Schema\Expect::array(),
+		]);
 	}
 
     /**
@@ -45,7 +46,7 @@ class CacheExtension extends BiuradPHP\DependencyInjection\CompilerExtension
             ->setConfig($this->config)
             ->withDefault($this->config->driver)
             ->getDefinition($this->prefix('doctrine'))
-            ->setType(\Doctrine\Common\Cache\Cache::class)
+            ->setType(Cache::class)
         ;
 
         $builder->addDefinition($this->prefix('psr'))

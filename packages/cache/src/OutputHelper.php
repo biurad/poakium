@@ -23,6 +23,7 @@ use InvalidArgumentException;
 
 use function ob_start;
 use function ob_get_flush;
+use Throwable;
 
 /**
  * Output caching helper.
@@ -44,9 +45,13 @@ class OutputHelper
 	}
 
 
-	/**
-	 * Stops and saves the cache.
-	 */
+    /**
+     * Stops and saves the cache.
+     * @param array $dependencies
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws Throwable
+     */
 	public function end(array $dependencies = []): void
 	{
 		if ($this->cache === null) {

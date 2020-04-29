@@ -21,9 +21,11 @@ namespace BiuradPHP\Cache;
 
 use Closure;
 use DateTime;
+use Exception;
 use Throwable;
 use DateTimeInterface;
 use DateTimeZone;
+use Traversable;
 use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 
@@ -98,11 +100,13 @@ class Caching
 		return (string) substr(sprintf($this->namespace, null), 0, -1);
 	}
 
-	/**
-	 * Returns new nested cache object.
+    /**
+     * Returns new nested cache object.
      *
-	 * @return static
-	 */
+     * @param string $namespace
+     *
+     * @return static
+     */
 	public function derive(string $namespace)
 	{
         $derived = new static($this->storage, $this->namespace . $namespace);
@@ -110,12 +114,16 @@ class Caching
 		return $derived;
 	}
 
-	/**
-	 * Reads the specified item from the cache or generate it.
+    /**
+     * Reads the specified item from the cache or generate it.
      *
-	 * @param  mixed  $key
-	 * @return mixed
-	 */
+     * @param mixed $key
+     * @param callable|null $fallback
+     *
+     * @return mixed
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function load($key, callable $fallback = null)
 	{
         $data = $this->storage->get($this->generateKey($key));
@@ -129,9 +137,16 @@ class Caching
 		return $data;
 	}
 
-	/**
-	 * Reads multiple items from the cache.
-	 */
+    /**
+     * Reads multiple items from the cache.
+     *
+     * @param array $keys
+     * @param callable|null $fallback
+     *
+     * @return array
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function bulkLoad(array $keys, callable $fallback = null): array
 	{
 		if (count($keys) === 0) {
@@ -161,19 +176,21 @@ class Caching
 		return $result;
 	}
 
-	/**
-	 * Writes item into the cache.
-	 * Dependencies are:
-	 * - Caching::NAMESPACE => extra name added to key
-	 * - Caching::EXPIRATION => (timestamp) expiration
-	 * - Caching::EXPIRE => (timestamp) expiration
-	 *
-	 * @param  mixed  $key
-	 * @param  mixed  $data
-	 * @return mixed  value itself
+    /**
+     * Writes item into the cache.
+     * Dependencies are:
+     * - Caching::NAMESPACE => extra name added to key
+     * - Caching::EXPIRATION => (timestamp) expiration
+     * - Caching::EXPIRE => (timestamp) expiration
      *
-	 * @throws InvalidArgumentException
-	 */
+     * @param mixed $key
+     * @param mixed $data
+     * @param array|null $dependencies
+     *
+     * @return mixed|null value itself
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function save($key, $data, array $dependencies = null)
 	{
         $key = $this->generateKey($key);
@@ -204,9 +221,18 @@ class Caching
 
 			return $data;
 		}
+
+		return null;
 	}
 
-	private function completeDependencies(?array $dp, $data): array
+    /**
+     * @param array|null $dp
+     * @param mixed $data
+     *
+     * @return array
+     * @throws Exception
+     */
+    private function completeDependencies(?array $dp, $data): array
 	{
 		// convert expire into relative amount of seconds
 		if (isset($dp[self::EXPIRATION])) {
@@ -248,19 +274,28 @@ class Caching
 		return $dp;
 	}
 
-	/**
-	 * Removes item from the cache.
-	 * @param  mixed  $key
-	 */
+    /**
+     * Removes item from the cache.
+     *
+     * @param mixed $key
+     *
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function remove($key): void
 	{
 		$this->save($key, null);
 	}
 
-	/**
-	 * Caches results of function/method calls.
-	 * @return mixed
-	 */
+    /**
+     * Caches results of function/method calls.
+     *
+     * @param callable $function
+     *
+     * @return mixed
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function call(callable $function)
 	{
 		$key = func_get_args();
@@ -272,13 +307,18 @@ class Caching
 		});
 	}
 
-	/**
-	 * Caches results of function/method calls.
+    /**
+     * Caches results of function/method calls.
      *
      * Dependencies are:
-	 * - Caching::CALLBACKS => callables passed around data
-	 */
-	public function wrap(callable $function, array $dependencies = null): \Closure
+     * - Caching::CALLBACKS => callable passed around data
+     *
+     * @param callable $function
+     * @param array|null $dependencies
+     *
+     * @return Closure
+     */
+	public function wrap(callable $function, array $dependencies = null): Closure
 	{
 		return function () use ($function, $dependencies) {
 			$key = [$function, func_get_args()];
@@ -295,10 +335,15 @@ class Caching
 		};
 	}
 
-	/**
-	 * Starts the output cache.
-	 * @param  mixed  $key
-	 */
+    /**
+     * Starts the output cache.
+     *
+     * @param mixed $key
+     *
+     * @return OutputHelper|null
+     * @throws Throwable
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
 	public function start($key): ?OutputHelper
 	{
 		$data = $this->load($key);
@@ -310,9 +355,11 @@ class Caching
 		return null;
 	}
 
-	/**
-	 * Generates internal cache key.
-	 */
+    /**
+     * Generates internal cache key.
+     * @param mixed $key
+     * @return string
+     */
 	protected function generateKey($key): string
 	{
         $key = md5((is_scalar($key) || $key instanceof Closure) ? (string) $key : serialize($key));
@@ -320,9 +367,11 @@ class Caching
 		return strpos($this->namespace, '%s') ? sprintf($this->namespace, $key) : $this->namespace . $key;
 	}
 
-	/**
-	 * Checks CALLBACKS dependencies.
-	 */
+    /**
+     * Checks CALLBACKS dependencies.
+     * @param array $callbacks
+     * @return iterable|Traversable
+     */
 	public function checkCallbacks(array $callbacks): iterable
 	{
 		foreach ($callbacks as $callback) {

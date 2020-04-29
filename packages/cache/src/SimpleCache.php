@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpInconsistentReturnPointsInspection */
 
 declare(strict_types=1);
 
@@ -19,11 +19,10 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
+use Traversable;
 use Psr\SimpleCache\CacheInterface;
-use Doctrine\Common\Cache\FlushableCache;
-use Doctrine\Common\Cache\MultiOperationCache;
-use Doctrine\Common\Cache\Cache as DoctrineCache;
 use BiuradPHP\Events\Interfaces\EventDispatcherInterface;
+use Doctrine\Common\Cache\{FlushableCache, MultiOperationCache, Cache as DoctrineCache};
 
 use function is_iterable;
 use function iterator_to_array;
@@ -36,7 +35,7 @@ class SimpleCache implements CacheInterface
     protected $instance;
 
     /**
-     * @var EventInterface
+     * @var EventDispatcherInterface
      */
     protected $event;
 
@@ -48,7 +47,7 @@ class SimpleCache implements CacheInterface
     /**
      * Cache Constructor.
      *
-     * @param \Doctrine\Common\Cache\Cache|string $instance
+     * @param DoctrineCache|string $instance
      * @param EventDispatcherInterface|null       $event
      */
     public function __construct(DoctrineCache $instance, EventDispatcherInterface $event = null)
@@ -110,7 +109,7 @@ class SimpleCache implements CacheInterface
      */
     public function getMultiple($keys, $default = null)
     {
-        if (is_iterable($keys)) {
+        if (is_iterable($keys) || $keys instanceof  Traversable) {
             $keys = iterator_to_array($keys);
         }
 
@@ -128,7 +127,7 @@ class SimpleCache implements CacheInterface
      */
     public function setMultiple($values, $ttl = null)
     {
-        if (is_iterable($values)) {
+        if (is_iterable($values) || $values instanceof  Traversable) {
             $values = iterator_to_array($values);
         }
 
@@ -148,7 +147,7 @@ class SimpleCache implements CacheInterface
      */
     public function deleteMultiple($keys)
     {
-        if (is_iterable($keys)) {
+        if (is_iterable($keys) || $keys instanceof  Traversable) {
             $keys = iterator_to_array($keys);
         }
 
@@ -178,6 +177,7 @@ class SimpleCache implements CacheInterface
     /**
      * Set the driver instance
      *
+     * @param $instance
      * @return  self
      */
     public function setInstance($instance)

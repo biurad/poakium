@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUndefinedMethodInspection */
 
 declare(strict_types=1);
 
@@ -54,10 +54,9 @@ class DatabaseCache extends CacheProvider
     /**
      * Create a new database store.
      *
-     * @param  DatabaseInterface  $connection
-     * @param  string  $table
-     * @param  string  $prefix
-     * @return void
+     * @param DatabaseInterface $connection
+     * @param string $table
+     * @param array $options
      */
     public function __construct(DatabaseInterface $connection, string $table, array $options)
     {
@@ -124,7 +123,7 @@ class DatabaseCache extends CacheProvider
         [$cacheId, $cacheData, $cacheTime] = $this->getFields();
         $expiration = $lifeTime > 0 ? $lifeTime : null;
 
-        if (DatabaseInterface::SQLITE === $this->connection->getDriver()->getType()) {
+        if ('sqlite' === $this->connection->getDriver()->getType()) {
             return $this->connection->execute(sprintf(
                 'INSERT OR REPLACE INTO %s (%s) VALUES (:id, :data, :expire)',
                 $this->table,
@@ -193,6 +192,7 @@ class DatabaseCache extends CacheProvider
      * Find a single row by ID.
      *
      * @param mixed $id
+     * @param bool $includeData
      *
      * @return array|null
      */

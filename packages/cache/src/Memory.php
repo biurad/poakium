@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpIncludeInspection */
 
 declare(strict_types=1);
 
@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace BiuradPHP\Cache;
 
 use BiuradPHP\Cache\Interfaces\MemoryInterface;
+use Throwable;
 
 /**
  * File based memory storage.
@@ -33,8 +34,7 @@ final class Memory implements MemoryInterface
     private $directory;
 
     /**
-     * @param string         $directory
-     * @param FilesInterface $files
+     * @param string $directory
      */
     public function __construct(string $directory)
     {
@@ -56,7 +56,7 @@ final class Memory implements MemoryInterface
 
         try {
             return include($filename);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return null;
         }
     }

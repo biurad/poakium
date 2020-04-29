@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
 
 declare(strict_types=1);
 
@@ -19,8 +19,9 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
-use BiuradPHP\Database\Database;
+use BiuradPHP\Database\DatabaseInterface;
 use BiuradPHP\Database\DatabaseManager;
+use Redis, Memcache, Memcached, SQLite3;
 
 use function is_array;
 
@@ -31,11 +32,11 @@ class Connection
      *
      * @param string $filename
      *
-     * @return \SQLite3
+     * @return SQLite3
      */
-    public static function createSqlite($filename): \SQLite3
+    public static function createSqlite($filename): SQLite3
     {
-        return new \SQLite3($filename);
+        return new SQLite3($filename);
     }
 
     /**
@@ -44,11 +45,11 @@ class Connection
      * @param string $host
      * @param int $port
      *
-     * @return \Redis
+     * @return Redis
      */
-    public static function createRedis($host, $port): \Redis
+    public static function createRedis($host, $port): Redis
     {
-        $client = new \Redis();
+        $client = new Redis();
         $client->connect($host, (int) $port);
 
         return $client;
@@ -60,11 +61,11 @@ class Connection
      * @param string $host
      * @param int $port
      *
-     * @return \Memcache
+     * @return Memcache
      */
-    public static function createMemcache($host, $port): \Memcache
+    public static function createMemcache($host, $port): Memcache
     {
-        $client = new \Memcache();
+        $client = new Memcache();
         //$client->setOptions($options);
         $client->addServer($host, (int) $port);
 
@@ -78,11 +79,11 @@ class Connection
      * @param int $port
      * @param array|null $options
      *
-     * @return \Memcached
+     * @return Memcached
      */
-    public static function createMemcached($host, $port, $options): \Memcached
+    public static function createMemcached($host, $port, $options): Memcached
     {
-        $client = new \Memcached();
+        $client = new Memcached();
         $client->addServer($host, (int) $port);
 
         if (null !== $options && is_array($options) && !empty($options)) {
@@ -96,11 +97,11 @@ class Connection
      * Create a Mysqli Connection using a database Driver.
      *
      * @param string $database
-     * @param \BiuradPHP\Database\DatabaseManager $manager
+     * @param DatabaseManager $manager
      *
-     * @return \BiuradPHP\Database\Interfaces\DatabaseInterface
+     * @return DatabaseInterface
      */
-    public static function createMysqli(string $database, DatabaseManager $manager): Database {
+    public static function createMysqli(string $database, DatabaseManager $manager): DatabaseInterface {
         return $manager->database($database);
     }
 }

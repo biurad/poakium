@@ -1,4 +1,6 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
+/** @noinspection PhpUnusedParameterInspection */
+/** @noinspection PhpUndefinedFieldInspection */
 
 declare(strict_types=1);
 
@@ -19,13 +21,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
-use Nette\DI\Definitions\Statement;
-use Nette\DI\Definitions\ServiceDefinition;
 use BiuradPHP\Cache\Exceptions\CacheException;
+use Redis, Memcache, Memcached;
+use Nette\DI\CompilerExtension;
 use Doctrine, BiuradPHP, InvalidArgumentException;
-use BiuradPHP\DependencyInjection\CompilerExtension;
+use Nette\DI\Definitions\{Statement, ServiceDefinition};
 use BiuradPHP\DependencyInjection\Concerns\ContainerBuilder;
-use BiuradPHP\DependencyInjection\Interfaces\ContainerBridgeInterface;
 
 use function method_exists;
 use function ucfirst;
@@ -38,7 +39,7 @@ use function class_exists;
 
 use const DIRECTORY_SEPARATOR;
 
-class CachePass implements ContainerBridgeInterface
+class CachePass
 {
     private const DRIVERS = [
 		'apcu'       => Doctrine\Common\Cache\ApcuCache::class,
@@ -65,26 +66,26 @@ class CachePass implements ContainerBridgeInterface
 		$this->extension = $extension;
     }
 
-    public static function of(CompilerExtension $extension): ContainerBridgeInterface
+    public static function of(CompilerExtension $extension): self
 	{
 		return new self($extension);
     }
 
-    public function setPrefix(string $prefix)
+    public function setPrefix(string $prefix): self
     {
         $this->prefix = $prefix;
 
         return $this;
     }
 
-	public function setConfig($config): ContainerBridgeInterface
+	public function setConfig($config): self
 	{
 		$this->config = $config;
 
 		return $this;
 	}
 
-	public function withDefault(string $driver): ContainerBridgeInterface
+	public function withDefault(string $driver): self
 	{
 		if (!isset(self::DRIVERS[$driver])) {
 			throw new InvalidArgumentException(sprintf('Unsupported default cache driver "%s"', $driver));
@@ -189,7 +190,7 @@ class CachePass implements ContainerBridgeInterface
      */
     protected function createRedis(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
     {
-        if (!class_exists(\Redis::class)) {
+        if (!class_exists(Redis::class)) {
             throw new CacheException(
                 "Sorry, It seems you server doesn't support redis driver. If you think this is an error!. Enable redis and try again"
             );
@@ -212,9 +213,9 @@ class CachePass implements ContainerBridgeInterface
      */
     protected function createMemcache(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
     {
-        if (!class_exists(\Memcache::class)) {
+        if (!class_exists(Memcache::class)) {
             throw new CacheException(
-                "Sorry, It seems you server doesn't support memcache driver. If you think this is an error!. Enable mecached and try again"
+                "Sorry, It seems you server doesn't support memcache driver. If you think this is an error!. Enable memcache and try again"
             );
         }
 
@@ -235,9 +236,9 @@ class CachePass implements ContainerBridgeInterface
      */
     protected function createMemcached(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
     {
-        if (!class_exists(\Memcached::class)) {
+        if (!class_exists(Memcached::class)) {
             throw new CacheException(
-                "Sorry, It seems you server doesn't support memcached driver. If you think this is an error!. Enable mecached and try again"
+                "Sorry, It seems you server doesn't support memcached driver. If you think this is an error!. Enable memcached and try again"
             );
         }
 

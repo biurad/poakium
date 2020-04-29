@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Exceptions;
 
-class CacheException extends \RuntimeException
+use RuntimeException;
+
+class CacheException extends RuntimeException
 {
 }
