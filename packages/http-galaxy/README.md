@@ -1,4 +1,4 @@
-# Http Pipeline: abstraction for HTTP request, response, and csp protection. Provides careful data sanitization and utility for URL and cookies manipulation.
+# Http Pipeline: abstraction for HTTP request, response, and csp protection plus more.
 
 HTTP request and response are encapsulated in `BiuradPHP\Http\Request` and `BiuradPHP\Http\Response` objects which offer comfortable API and also act as
 sanitization filter. This package uses [guzzlehttp/psr7](https://github.com/guzzlehttp/psr7).
