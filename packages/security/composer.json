@@ -1,0 +1,60 @@
+{
+    "name": "biurad/biurad-security",
+    "type": "library",
+    "description": "A Security system that provides authentication, authorization and a role-based access control management plus more",
+    "keywords": [
+        "nette",
+        "authentication",
+        "authorization",
+        "ACL",
+        "biuradphp",
+        "php7"
+    ],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        },
+        {
+            "name": "Biurad Lap Community",
+            "homepage": "https://biurad.com/contributors"
+        }
+    ],
+    "require": {
+        "php": "^7.2.5",
+        "psr/log": "~1.0",
+        "biurad/biurad-http": "^0.1",
+        "biurad/biurad-sessions": "^0.1",
+        "biurad/flight-routing-bridge": "^0.1",
+        "symfony/security-core": "^4.4|^5.0",
+        "symfony/security-csrf": "^4.4|^5.0"
+    },
+    "require-dev": {
+        "biurad/nette-di-bridge": "^0.1",
+        "phpunit/phpunit": "^8.4"
+    },
+    "conflict": {
+        "symfony/security-csrf": "<4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "BiuradPHP\\Security\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BiuradPHP\\Security\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}
