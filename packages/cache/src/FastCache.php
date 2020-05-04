@@ -51,7 +51,7 @@ use function strpos;
 /**
  * Implements the cache for a application.
  */
-class Caching
+class FastCache
 {
 	/** dependency */
 	public const

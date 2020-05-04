@@ -21,12 +21,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
-use BiuradPHP\Cache\Exceptions\CacheException;
 use Redis, Memcache, Memcached;
 use Nette\DI\CompilerExtension;
-use Doctrine, BiuradPHP, InvalidArgumentException;
+use Doctrine, InvalidArgumentException;
+use Nette\DI\ContainerBuilder;
+use BiuradPHP\Cache\Exceptions\CacheException;
 use Nette\DI\Definitions\{Statement, ServiceDefinition};
-use BiuradPHP\DependencyInjection\Concerns\ContainerBuilder;
 
 use function method_exists;
 use function ucfirst;
@@ -37,13 +37,12 @@ use function strlen;
 use function strpos;
 use function class_exists;
 
-use const DIRECTORY_SEPARATOR;
-
-class CachePass
+class DoctrineCachePass
 {
     private const DRIVERS = [
 		'apcu'       => Doctrine\Common\Cache\ApcuCache::class,
-		'array'      => Doctrine\Common\Cache\ArrayCache::class,
+        'array'      => Doctrine\Common\Cache\ArrayCache::class,
+        'memory'     => Doctrine\Common\Cache\PhpFileCache::class,
         'memcache'   => Doctrine\Common\Cache\MemcacheCache::class,
         'memcached'  => Doctrine\Common\Cache\MemcachedCache::class,
 		'redis'      => Doctrine\Common\Cache\RedisCache::class,
@@ -52,7 +51,6 @@ class CachePass
         'wincache'   => Doctrine\Common\Cache\WinCacheCache::class,
         'sqlite'     => Doctrine\Common\Cache\SQLite3Cache::class,
         'zenddata'   => Doctrine\Common\Cache\ZendDataCache::class,
-        'database'   => BiuradPHP\Cache\Handlers\DatabaseCache::class,
     ];
 
     /** @var CompilerExtension */
@@ -134,10 +132,29 @@ class CachePass
     protected function createFilesystem(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
     {
         $filesystem = $pools['filesystem'];
-        $path = $builder->getParameter('path.TEMP');
+        $path = $builder->parameters['path']['TEMP'] ?? $builder->parameters['tempDir'];
 
         $definition->setArguments([
-            $path . DIRECTORY_SEPARATOR . 'caches/biurad.caching', $filesystem['extension']
+            isset($builder->parameters['tempDir']) ? $path . '/cache/psr16' : $path . '/caches/biurad' . '.caching', $filesystem['extension']
+        ]);
+    }
+
+    /**
+     * Create the driver.
+     *
+     * @param ServiceDefinition $definition
+     * @param ContainerBuilder $builder
+     * @param array $pools
+     *
+     * @return void
+     */
+    protected function createMemory(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
+    {
+        $filesystem = $pools['memory'];
+        $path = $builder->parameters['path']['TEMP'] ?? $builder->parameters['tempDir'];
+
+        $definition->setArguments([
+            isset($builder->parameters['tempDir']) ? $path . '/cache/psr16' : $path . '/caches/biurad' . '.caching', $filesystem['extension']
         ]);
     }
 
@@ -245,7 +262,7 @@ class CachePass
         $memcached = $pools['memcache'];
         [$host, $port] = explode(':', $memcached['connection']);
 
-        $definition->addSetup('setMemcache', [new Statement([Connection::class, 'createMemcached'], [$host, $port, $memcached['options']])]);
+        $definition->addSetup('setMemcached', [new Statement([Connection::class, 'createMemcached'], [$host, $port, $memcached['options']])]);
     }
 
     /**
@@ -260,7 +277,7 @@ class CachePass
     protected function createSqlite(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
     {
         $sqlite = $pools['sqlite'];
-        $path = $builder->getParameter('path.TEMP');
+        $path = $builder->parameters['path']['TEMP'] ?? $builder->parameters['tempDir'];
 
         $filename = $sqlite['connection'];
         $table = $sqlite['table'];
@@ -274,24 +291,5 @@ class CachePass
         }
 
         $definition->setArguments([new Statement([Connection::class, 'createSqlite'], [$filePath]), $table]);
-    }
-
-    /**
-     * Create the driver.
-     *
-     * @param ServiceDefinition $definition
-     * @param ContainerBuilder $builder
-     * @param array $pools
-     *
-     * @return void
-     */
-    protected function createDatabase(ServiceDefinition $definition, ContainerBuilder $builder, array $pools): void
-    {
-        $mysqli = $pools['database'];
-
-        $options = $mysqli['options'];
-        [$db, $table] = explode(':', $mysqli['collection']);
-
-        $definition->setArguments([new Statement([Connection::class, 'createMysqli'], [$db]), $table, $options]);
     }
 }

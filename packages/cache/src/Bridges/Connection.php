@@ -19,8 +19,6 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache\Bridges;
 
-use BiuradPHP\Database\DatabaseInterface;
-use BiuradPHP\Database\DatabaseManager;
 use Redis, Memcache, Memcached, SQLite3;
 
 use function is_array;
@@ -91,17 +89,5 @@ class Connection
         }
 
         return $client;
-    }
-
-    /**
-     * Create a Mysqli Connection using a database Driver.
-     *
-     * @param string $database
-     * @param DatabaseManager $manager
-     *
-     * @return DatabaseInterface
-     */
-    public static function createMysqli(string $database, DatabaseManager $manager): DatabaseInterface {
-        return $manager->database($database);
     }
 }

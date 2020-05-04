@@ -21,6 +21,7 @@ namespace BiuradPHP\Cache\Bridges;
 
 use Doctrine\Common\Cache\Cache;
 use Nette, BiuradPHP;
+use Nette\Schema\Expect;
 
 class CacheExtension extends Nette\DI\CompilerExtension
 {
@@ -30,8 +31,34 @@ class CacheExtension extends Nette\DI\CompilerExtension
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
         return Nette\Schema\Expect::structure([
-            'driver'    => Nette\Schema\Expect::string()->required(),
-            'pools'     => Nette\Schema\Expect::array(),
+            'driver'    => Nette\Schema\Expect::anyOf(
+                'filesystem', 'memory', 'redis',
+                'memcached', 'memcache', 'zenddata',
+                'apcu', 'xcache', 'wincache', 'sqlite'
+            ),
+            'pools'     => Nette\Schema\Expect::structure([
+                'filesystem'    => Expect::structure([
+                    'connection'    => Expect::null(),
+                    'extension'     => Expect::string()
+                ])->castTo('array'),
+                'memory'    => Expect::structure([
+                    'connection'    => Expect::null(),
+                    'extension'     => Expect::string()
+                ])->castTo('array'),
+                'redis'    => Expect::structure([
+                    'connection'    => Expect::string()
+                ])->castTo('array'),
+                'memcached'    => Expect::structure([
+                    'connection'    => Expect::string()
+                ])->castTo('array'),
+                'memcache'    => Expect::structure([
+                    'connection'    => Expect::string()
+                ])->castTo('array'),
+                'sqlite'    => Expect::structure([
+                    'connection'    => Expect::string(),
+                    'table'     => Expect::string()
+                ])->castTo('array'),
+            ])->castTo('array'),
 		]);
 	}
 
@@ -42,7 +69,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
 	{
         $builder = $this->getContainerBuilder();
 
-        CachePass::of($this)
+        DoctrineCachePass::of($this)
             ->setConfig($this->config)
             ->withDefault($this->config->driver)
             ->getDefinition($this->prefix('doctrine'))
@@ -52,11 +79,5 @@ class CacheExtension extends Nette\DI\CompilerExtension
         $builder->addDefinition($this->prefix('psr'))
             ->setFactory(BiuradPHP\Cache\SimpleCache::class)
         ;
-
-		$builder->addDefinition($this->prefix('factory'))
-            ->setFactory(BiuradPHP\Cache\Caching::class)
-        ;
-
-        $builder->addAlias('cache', $this->prefix('factory'));
     }
 }

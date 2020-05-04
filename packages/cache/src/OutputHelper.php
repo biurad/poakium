@@ -30,14 +30,14 @@ use Throwable;
  */
 class OutputHelper
 {
-	/** @var Caching|null */
+	/** @var FastCache|null */
 	private $cache;
 
 	/** @var string */
 	private $key;
 
 
-	public function __construct(Caching $cache, $key)
+	public function __construct(FastCache $cache, $key)
 	{
 		$this->cache = $cache;
 		$this->key = $key;

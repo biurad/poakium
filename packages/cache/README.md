@@ -1,9 +1,10 @@
-# Cache manager using PSR-6, with easy-to-use API for quick caching
+# Cache manager using PSR-16, with easy-to-use API for quick caching
 
 Cache accelerates your application by storing data - once hardly retrieved - for future use. The caching manager focuses on [Doctrine Cache](https://github.com/doctrine/cache) for caching. [Cache](https://github.com/cache/cache) will be supported in the future.
 
-Cache manager utilizes PSR-16 and PSR-6 (psr7-middlewares) protocols to allow your application to communicate with cache engines.
-For now let's work with [Doctrine Cache](https://github.com/doctrine/cache).
+Cache manager utilizes PSR-16 protocols to allow your application to communicate with cache engines. For now let's work with [Doctrine Cache](https://github.com/doctrine/cache).
+
+**`Please note that this documentation is currently work-in-progress. Feel free to contribute.`**
 
 ## Installation
 
@@ -35,7 +36,7 @@ For manipulation with cache, we use the `BiuradPHP\Cache\SimpleCache`:
 
 ```php
 use BiuradPHP\Cache\SimpleCache;
-use BiuradPHP\Cache\Caching;
+use BiuradPHP\Cache\FastCache as Caching;
 
 $psr = new SimpleCache($storage); // $storage from the previous example
 $cache = new Caching($psr);
