@@ -1,4 +1,4 @@
-# Cache manager using PSR-16, with easy-to-use API for quick caching
+# Cache manager using Doctrine Cache with easy-to-use API for quick caching
 
 Cache accelerates your application by storing data - once hardly retrieved - for future use. The caching manager focuses on [Doctrine Cache](https://github.com/doctrine/cache) for caching. [Cache](https://github.com/cache/cache) will be supported in the future.
 
