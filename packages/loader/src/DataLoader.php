@@ -19,7 +19,10 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader;
 
+use Closure;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Provides a property based interface to an array.
@@ -63,7 +66,8 @@ class DataLoader implements Interfaces\DataInterface
      * on construction.
      *
      * @param array|string $array
-     * @param bool  $allowModifications
+     * @param bool $allowModifications
+     * @throws InvalidArgumentException
      */
     public function __construct($array = [], $allowModifications = false)
     {
@@ -92,7 +96,7 @@ class DataLoader implements Interfaces\DataInterface
      */
     public function get($name, $default = null)
     {
-        $default = $default instanceof \Closure ? $default() : $default;
+        $default = $default instanceof Closure ? $default() : $default;
 
         $resolved = function ($array, $key) use ($default) {
             foreach (explode('.', $key) as $segment) {
@@ -136,9 +140,9 @@ class DataLoader implements Interfaces\DataInterface
      * on construction. Otherwise, throw an exception.
      *
      * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      *
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function __set($name, $value)
     {
@@ -157,7 +161,7 @@ class DataLoader implements Interfaces\DataInterface
                 }
             }
         } else {
-            throw new \RuntimeException('Config is read only');
+            throw new RuntimeException('Config is read only');
         }
     }
 
@@ -228,12 +232,12 @@ class DataLoader implements Interfaces\DataInterface
      *
      * @param string $name
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function __unset($name)
     {
         if (!$this->allowModifications) {
-            throw new \InvalidArgumentException('Config is read only');
+            throw new InvalidArgumentException('Config is read only');
         } elseif ($this->__isset($name)) {
             unset($this->data[$name]);
             $this->skipNextIteration = true;
@@ -348,10 +352,11 @@ class DataLoader implements Interfaces\DataInterface
     /**
      * offsetSet(): defined by ArrayAccess interface.
      *
-     * @see    ArrayAccess::offsetSet()
-     *
      * @param mixed $offset
      * @param mixed $value
+     *
+     * @throws InvalidArgumentException
+     * @see    ArrayAccess::offsetSet()
      */
     public function offsetSet($offset, $value)
     {
@@ -381,6 +386,7 @@ class DataLoader implements Interfaces\DataInterface
      * @param Interfaces\DataInterface $merge
      *
      * @return self
+     * @throws InvalidArgumentException
      */
     public function merge(Interfaces\DataInterface $merge)
     {
@@ -450,9 +456,10 @@ class DataLoader implements Interfaces\DataInterface
      * Merge the given configuration with the existing configuration.
      *
      * @param array|string $source could be file or array
-     * @param string       $name   key name to load as file
+     * @param string $name key name to load as file
      *
      * @return $this|array
+     * @throws InvalidArgumentException
      */
     public function mergeFrom($source, $name)
     {

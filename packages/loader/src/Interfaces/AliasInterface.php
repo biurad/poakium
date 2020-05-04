@@ -24,7 +24,8 @@ interface AliasInterface
     /**
      * Get or create the singleton alias loader instance.
      *
-     * @param  array  $aliases
+     * @param array $aliases
+     * @return AliasInterface
      */
     public static function getInstance(array $aliases = []): AliasInterface;
 

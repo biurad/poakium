@@ -43,6 +43,9 @@ final class NeonAdapter extends Adapter
 
     /**
      * Generates configuration in NEON format.
+     *
+     * @param array $data
+     * @return string
      */
     protected function processDump(array $data)
     {

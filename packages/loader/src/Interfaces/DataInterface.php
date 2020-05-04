@@ -19,7 +19,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
-interface DataInterface extends \Countable, \Iterator, \ArrayAccess, \JsonSerializable
+use ArrayAccess;
+use Countable;
+use Iterator;
+use JsonSerializable;
+
+interface DataInterface extends Countable, Iterator, ArrayAccess, JsonSerializable
 {
     /**
      * Return an associative array of the stored data.

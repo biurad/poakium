@@ -22,6 +22,9 @@ namespace BiuradPHP\Loader\Adapters;
 use Nette;
 use RuntimeException;
 
+use function is_array;
+use function is_object;
+
 /**
  * Reading and generating PHP files.
  *
@@ -68,11 +71,10 @@ final class PhpAdapter extends Adapter
     /**
      * Reads configuration from PHP data.
      *
-     * @param  string $string
+     * @param string $string
      *
-     * @return array|bool
+     * @return void
      *
-     * @throws RuntimeException
      */
     public function fromString($string)
     {
@@ -89,6 +91,9 @@ final class PhpAdapter extends Adapter
 
     /**
      * Generates configuration in PHP format.
+     *
+     * @param array $data
+     * @return string
      */
     protected function ProcessDump(array $data)
     {
@@ -114,7 +119,7 @@ final class PhpAdapter extends Adapter
     {
         $read = [];
         foreach ($var as $key => $value) {
-            if (\is_array($value) || \is_object($value)) {
+            if (is_array($value) || is_object($value)) {
                 $read[] = var_export($key, true) . ' => ' . $this->encodeArray((array) $value, $level + 1);
             } else {
                 $read[] = var_export($key, true) . ' => ' . var_export($value, true);

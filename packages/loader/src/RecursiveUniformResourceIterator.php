@@ -19,6 +19,10 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader;
 
+use FilesystemIterator;
+use RecursiveIterator;
+use SeekableIterator;
+
 /**
  * Implements recursive iterator over filesystem.
  *
@@ -26,7 +30,7 @@ namespace BiuradPHP\Loader;
  * @license MIT
  * @license BSD-3-Clause
  */
-class RecursiveUniformResourceIterator extends UniformResourceIterator implements \SeekableIterator, \RecursiveIterator
+class RecursiveUniformResourceIterator extends UniformResourceIterator implements SeekableIterator, RecursiveIterator
 {
     protected $subPath;
 
@@ -39,7 +43,7 @@ class RecursiveUniformResourceIterator extends UniformResourceIterator implement
 
     public function hasChildren($allow_links = null)
     {
-        $allow_links = (bool) ($allow_links !== null ? $allow_links : $this->flags & \FilesystemIterator::FOLLOW_SYMLINKS);
+        $allow_links = (bool) ($allow_links !== null ? $allow_links : $this->flags & FilesystemIterator::FOLLOW_SYMLINKS);
 
         return $this->iterator && $this->isDir() && !$this->isDot() && ($allow_links || !$this->isLink());
     }

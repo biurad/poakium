@@ -43,7 +43,7 @@ interface ResourceLocatorInterface
      * @param bool|string  $override True to add path as override, string
      * @param bool         $force    true to add paths even if them do not exist
      *
-     * @throws \BadMethodCallException
+     * @throws BadMethodCallException
      */
     public function addPath($scheme, $prefix, $paths, $override = false, $force = true);
 
@@ -75,10 +75,11 @@ interface ResourceLocatorInterface
     /**
      * Find all instances from a resource.
      *
-     * @param string $uri      input URI to be searched
-     * @param bool   $absolute whether to return absolute path
-     * @param bool   $all      whether to return all paths even if they don't exist
+     * @param string $uri input URI to be searched
+     * @param bool $absolute whether to return absolute path
+     * @param bool $all whether to return all paths even if they don't exist
      *
+     * @return array
      * @throws BadMethodCallException
      */
     public function findResources($uri, $absolute = true, $all = false): array;
@@ -86,10 +87,11 @@ interface ResourceLocatorInterface
     /**
      * Find all instances from a list of resources.
      *
-     * @param array $uris     input URIs to be searched
-     * @param bool  $absolute whether to return absolute path
-     * @param bool  $all      whether to return all paths even if they don't exist
+     * @param array $uris input URIs to be searched
+     * @param bool $absolute whether to return absolute path
+     * @param bool $all whether to return all paths even if they don't exist
      *
+     * @return array
      * @throws BadMethodCallException
      */
     public function mergeResources(array $uris, $absolute = true, $all = false): array;
@@ -98,7 +100,9 @@ interface ResourceLocatorInterface
      * Return iterator for the resource URI.
      *
      * @param string $uri
-     * @param int    $flags see constants from FilesystemIterator class
+     * @param int $flags see constants from FilesystemIterator class
+     *
+     * @return UniformResourceIterator
      */
     public function getIterator($uri, $flags = null): UniformResourceIterator;
 
@@ -106,7 +110,9 @@ interface ResourceLocatorInterface
      * Return recursive iterator for the resource URI.
      *
      * @param string $uri
-     * @param int    $flags see constants from FilesystemIterator class
+     * @param int $flags see constants from FilesystemIterator class
+     *
+     * @return RecursiveUniformResourceIterator
      */
     public function getRecursiveIterator($uri, $flags = null): RecursiveUniformResourceIterator;
 }

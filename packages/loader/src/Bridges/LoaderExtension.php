@@ -86,23 +86,21 @@ class LoaderExtension extends Nette\DI\CompilerExtension
                 'foreach (? as $scheme => [$path, $lookup]) { ?->addPath($scheme, $path, $lookup); }', [$this->config['resources'], '@self']
         );
     }
+    
     /**
      * {@inheritDoc}
      */
     public function afterCompile(ClassTypeGenerator $class): void
     {
-        $init = $class->getMethod('initialize');
-        $originalInitialize = (string) $init->getBody();
+        $init = $this->initialization ?? $class->getMethod('initialize');
 
         // For Runtime.
-        $init->setBody(
+        $init->addBody(
             "// The loader class aliases.\n" .
                 '$classAliases = new ?(?);' . "\n" .
                 '$classAliases->register(); // Class alias registered.' .
                 "\n\n",
             [new PhpLiteral(AliasLoader::class), $this->config['aliases']]
         );
-
-        $init->addBody($originalInitialize);
     }
 }

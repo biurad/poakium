@@ -19,7 +19,9 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader;
 
+use BadMethodCallException;
 use FilesystemIterator;
+use RuntimeException;
 
 /**
  * Implements FilesystemIterator for uniform resource locator.
@@ -63,10 +65,17 @@ class UniformResourceIterator extends FilesystemIterator
      */
     protected $locator;
 
+    /**
+     * UniformResourceIterator constructor.
+     *
+     * @param $path
+     * @param null $flags
+     * @param UniformResourceLocator|null $locator
+     */
     public function __construct($path, $flags = null, UniformResourceLocator $locator = null)
     {
         if (!$locator) {
-            throw new \BadMethodCallException('Use $locator->getIterator() instead');
+            throw new BadMethodCallException('Use $locator->getIterator() instead');
         }
 
         $this->path = $path;
@@ -122,7 +131,7 @@ class UniformResourceIterator extends FilesystemIterator
 
     public function seek($position)
     {
-        throw new \RuntimeException('Seek not implemented');
+        throw new RuntimeException('Seek not implemented');
     }
 
     public function getATime()
@@ -264,7 +273,7 @@ class UniformResourceIterator extends FilesystemIterator
                     return null;
                 }
 
-                $this->iterator = new \FilesystemIterator($path, $this->getFlags());
+                $this->iterator = new FilesystemIterator($path, $this->getFlags());
             } while (!$this->iterator->valid());
         }
 

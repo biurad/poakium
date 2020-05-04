@@ -40,9 +40,12 @@ final class JsonAdapter extends Adapter
     }
 
 
-	/**
-	 * Generates configuration in JSON format.
-	 */
+    /**
+     * Generates configuration in JSON format.
+     *
+     * @param array $data
+     * @return false|string
+     */
 	protected function processDump(array $data)
 	{
 		return json_encode(

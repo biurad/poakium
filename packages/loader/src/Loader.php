@@ -28,6 +28,7 @@ final class Loader
 
     /**
      * @param string $type
+     * @return mixed
      */
     public static function instance($type)
     {
@@ -45,6 +46,7 @@ final class Loader
      *`
      * @param string $type type of loader (config, alias, etc)
      *
+     * @return mixed
      * @internal
      */
     public static function driver($type)

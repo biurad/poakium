@@ -20,6 +20,12 @@ declare(strict_types=1);
 namespace BiuradPHP\Loader;
 
 use BiuradPHP\Loader\Interfaces\ClassInterface;
+use Generator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use ReflectionException;
+use SplFileInfo;
 
 class FileLoader implements ClassInterface
 {
@@ -55,6 +61,7 @@ class FileLoader implements ClassInterface
     /**
      * Set the value of excludes
      *
+     * @param array $excludes
      * @return  self
      */
     public function setExcludes($excludes)
@@ -69,11 +76,11 @@ class FileLoader implements ClassInterface
      *
      * @return string
      *
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function findNamspaceForClass($class): string
     {
-        $class = new \ReflectionClass($class);
+        $class = new ReflectionClass($class);
 
         $namespace = $class->getNamespaceName();
 
@@ -99,10 +106,10 @@ class FileLoader implements ClassInterface
                 continue;
             }
 
-            /** @var \RecursiveIteratorIterator|\SplFileInfo[] $iterator */
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($dir),
-                \RecursiveIteratorIterator::LEAVES_ONLY
+            /** @var RecursiveIteratorIterator|SplFileInfo[] $iterator */
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($dir),
+                RecursiveIteratorIterator::LEAVES_ONLY
             );
 
             foreach (@$iterator as $file) {
@@ -120,8 +127,9 @@ class FileLoader implements ClassInterface
     /**
      * Find all the class and interface names in a given directory.
      *
-     * @param  array $directories
+     * @param array $directories
      *
+     * @param array $excludes
      * @return array
      */
     public function findClasses(array $directories = [], array $excludes = []): array
@@ -151,23 +159,24 @@ class FileLoader implements ClassInterface
      * Unreachable classes or files with conflicts must be skipped. This is SLOW method, should be
      * used only for static analysis.
      *
-     * @param mixed $target  Class, interface or trait parent. By default - null (all classes).
+     * @param mixed $target Class, interface or trait parent. By default - null (all classes).
      *                       Parent (class) will also be included to classes list as one of
      *                       results.
      *
-     * @return \ReflectionClass[]
+     * @return ReflectionClass[]
+     * @throws ReflectionException
      */
     public function getClasses($target = null): array
     {
         if (!empty($target) && (is_object($target) || is_string($target))) {
-            $target = new \ReflectionClass($target);
+            $target = new ReflectionClass($target);
         }
 
         $result = [];
         foreach ($this->availableClasses() as $class) {
             //In some cases reflection can thrown an exception if class invalid or can not be loaded,
             //we are going to handle such exception and convert it soft exception
-            $reflection = new \ReflectionClass($class);
+            $reflection = new ReflectionClass($class);
 
             if (!$this->isTargeted($reflection, $target) || $reflection->isInterface()) {
                 continue;
@@ -230,9 +239,9 @@ class FileLoader implements ClassInterface
     /**
      * Available file reflections. Generator.
      *
-     * @return \ReflectionClass[]|\Generator
+     * @return ReflectionClass[]|Generator
      */
-    protected function availableReflections(): \Generator
+    protected function availableReflections(): Generator
     {
         foreach ($this->findClasses($this->dirs) as $class) {
             if (in_array($class, $this->excludes)) {
@@ -254,8 +263,8 @@ class FileLoader implements ClassInterface
 
         foreach ($this->availableReflections() as $class) {
             try {
-                $reflection = new \ReflectionClass($class);
-            } catch (\ReflectionException $e) {
+                $reflection = new ReflectionClass($class);
+            } catch (ReflectionException $e) {
                 //Ignoring
                 continue;
             }
@@ -269,11 +278,11 @@ class FileLoader implements ClassInterface
     /**
      * Check if given class targeted by locator.
      *
-     * @param \ReflectionClass      $class
-     * @param \ReflectionClass|null $target
+     * @param ReflectionClass      $class
+     * @param ReflectionClass|null $target
      * @return bool
      */
-    protected function isTargeted(\ReflectionClass $class, \ReflectionClass $target = null): bool
+    protected function isTargeted(ReflectionClass $class, ReflectionClass $target = null): bool
     {
         if (empty($target)) {
             return true;

@@ -19,10 +19,17 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader;
 
+use ArrayIterator;
 use BiuradPHP\Loader\Interfaces\ComposerPathsInterface;
 use Composer\Autoload\ClassLoader;
+use Countable;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use SplFileInfo;
+use UnexpectedValueException;
 
-class ComposerPaths implements ComposerPathsInterface, \Countable
+class ComposerPaths implements ComposerPathsInterface, Countable
 {
     /** @var string */
     private $path;
@@ -36,7 +43,7 @@ class ComposerPaths implements ComposerPathsInterface, \Countable
     public function __construct(string $composerDirectory = null, string $prefix = 'composer.json')
     {
         $this->prefix = $prefix;
-        $this->path = $composerDirectory ?? dirname((new \ReflectionClass(ClassLoader::class))->getFileName(), 2) . '/';
+        $this->path = $composerDirectory ?? dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2) . '/';
     }
 
     /**
@@ -47,10 +54,10 @@ class ComposerPaths implements ComposerPathsInterface, \Countable
     public function processComposerPaths()
     {
         if (is_dir($this->path)) {
-            /** @var \RecursiveIteratorIterator|\SplFileInfo[] $iterator */
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($this->path),
-                \RecursiveIteratorIterator::LEAVES_ONLY
+            /** @var RecursiveIteratorIterator|SplFileInfo[] $iterator */
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($this->path),
+                RecursiveIteratorIterator::LEAVES_ONLY
             );
 
             foreach (@$iterator as $entryPath) {
@@ -66,7 +73,7 @@ class ComposerPaths implements ComposerPathsInterface, \Countable
         }
 
         if (!file_exists($this->path) && pathinfo($this->path, PATHINFO_EXTENSION) !== 'json') {
-            throw new \UnexpectedValueException('Expected a json file containing packagists or composer\'s vendor directory');
+            throw new UnexpectedValueException('Expected a json file containing packagists or composer\'s vendor directory');
         }
 
         foreach (json_decode(file_get_contents($this->path.'composer/installed.json'), true) as $composer) {
@@ -83,7 +90,7 @@ class ComposerPaths implements ComposerPathsInterface, \Countable
             $this->processComposerPaths();
         }
 
-        return new \ArrayIterator($this->loadPaths);
+        return new ArrayIterator($this->loadPaths);
     }
 
     public function count()

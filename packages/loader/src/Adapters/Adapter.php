@@ -105,13 +105,14 @@ abstract class Adapter implements AdapterInterface
     }
 
 
-	/**
-	 * Generates configuration in designed format.
+    /**
+     * Generates configuration in designed format.
      *
      * @param mixed $data
      *
+     * @return string
      * @throws InvalidArgumentException
-	 */
+     */
 	public function dump($data): string
 	{
         if ($data instanceof Traversable) {

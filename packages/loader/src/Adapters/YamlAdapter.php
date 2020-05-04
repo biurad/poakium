@@ -226,7 +226,9 @@ final class YamlAdapter implements AdapterInterface
 
     /**
      * @param callable|string $function
-     * @param mixed           $arguments
+     * @param mixed $arguments
+     *
+     * @return mixed
      */
     private function yamlBound(callable $function, $arguments)
     {

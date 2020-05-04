@@ -77,6 +77,7 @@ class AliasLoader implements AliasInterface
      * Load a class alias if it is registered.
      *
      * @param string $alias
+     * @return bool|null
      */
     public function load($alias): ?bool
     {

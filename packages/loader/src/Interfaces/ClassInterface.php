@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
+use ReflectionClass;
+
 interface ClassInterface
 {
     /**
@@ -59,7 +61,7 @@ interface ClassInterface
      *                       Parent (class) will also be included to classes list as one of
      *                       results.
      *
-     * @return \ReflectionClass[]
+     * @return ReflectionClass[]
      */
     public function getClasses($target = null): array;
 }

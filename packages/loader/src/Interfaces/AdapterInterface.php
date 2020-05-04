@@ -48,7 +48,8 @@ interface AdapterInterface
      *
      * Write a config object to a string.
      *
-     * @param  mixed $config
+     * @param mixed $config
+     * @return string
      */
     public function dump($config): string;
 }

@@ -73,6 +73,8 @@ final class IniAdapter extends Adapter
 
     /**
      * Generates configuration in INI format.
+     * @param array $data
+     * @return string
      */
     protected function processDump(array $data)
     {
@@ -236,11 +238,10 @@ final class IniAdapter extends Adapter
      *
      * @param string $key
      * @param string $value
-     * @param array  $config
+     * @param array $config
      *
-     * @return array
+     * @return void
      *
-     * @throws RuntimeException
      */
     protected function processKey($key, $value, array &$config)
     {
