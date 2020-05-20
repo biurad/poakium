@@ -74,7 +74,7 @@ class DataLoader implements Interfaces\DataInterface
         $this->allowModifications = (bool) $allowModifications;
 
         if (is_string($array) && file_exists($array)) {
-            $array = (array) (new ConfigLoader())->loadFile($array);
+            $array = (array) (new Files\ConfigLoader())->loadFile($array);
         }
 
         foreach ($array as $key => $value) {

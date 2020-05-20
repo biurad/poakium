@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
-use BiuradPHP\Loader\AnnotationLocator;
+use BiuradPHP\Loader\Annotations\AnnotationLoader;
 
 /**
  * This is a fluent implementation of AnnotationLoader.
@@ -36,7 +36,7 @@ interface AnnotationInterface
      * (Example of Implementation):
      * ```php
      * $annotations = [...]; // organised annotations.
-     * $loader = new BiuradPHP\Loader\AnnotationLocator($classLocator);
+     * $loader = new BiuradPHP\Loader\Annotations\AnnotationLoader($classLocator);
      *
      * foreach ($annotations as $annotation) {
      *      if (!is_object($annotation)) {
@@ -47,7 +47,7 @@ interface AnnotationInterface
      * }
      * ```
      *
-     * @param AnnotationLocator $loader
+     * @param AnnotationLoader $loader
      */
-    public function register(AnnotationLocator $loader): void;
+    public function register(AnnotationLoader $loader): void;
 }

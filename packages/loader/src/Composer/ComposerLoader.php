@@ -17,19 +17,21 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader;
+namespace BiuradPHP\Loader\Composer;
 
 use ArrayIterator;
-use BiuradPHP\Loader\Interfaces\ComposerPathsInterface;
+use BiuradPHP\Loader\Interfaces\ComposerInterface;
 use Composer\Autoload\ClassLoader;
 use Countable;
+use IteratorAggregate;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use RuntimeException;
 use SplFileInfo;
 use UnexpectedValueException;
 
-class ComposerPaths implements ComposerPathsInterface, Countable
+class ComposerLoader implements ComposerInterface, Countable, IteratorAggregate
 {
     /** @var string */
     private $path;
@@ -44,6 +46,38 @@ class ComposerPaths implements ComposerPathsInterface, Countable
     {
         $this->prefix = $prefix;
         $this->path = $composerDirectory ?? dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2) . '/';
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return ClassLoader
+     * @throws RuntimeException
+     */
+    public function getClassLoader(bool $spl_functiion = false): ClassLoader
+    {
+        if ($spl_functiion !== false && function_exists('spl_autoload_functions')) {
+            $autoloadFunctions = spl_autoload_functions();
+            foreach ($autoloadFunctions as $autoloader) {
+                if (!is_array($autoloader)) {
+                    continue;
+                }
+
+                if (isset($autoloader[0]) && $autoloader[0] instanceof ClassLoader) {
+                    return $autoloader[0];
+                }
+            }
+        }
+
+        if (file_exists(__DIR__ . '/../../../../autoload.php')) {
+            return include __DIR__ . '/../../../../autoload.php';
+        }
+
+        if (file_exists(__DIR__ . '/../../../vendor/autoload.php')) {
+            return include __DIR__ . '/../../../vendor/autoload.php';
+        }
+
+        throw new RuntimeException('Cannot detect composer autoload. Please run composer install');
     }
 
     /**
@@ -91,6 +125,16 @@ class ComposerPaths implements ComposerPathsInterface, Countable
         }
 
         return new ArrayIterator($this->loadPaths);
+    }
+
+    /**
+     * Alias to getPaths().
+     *
+     * @return iterable
+     */
+    public function getIterator(): iterable
+    {
+        return $this->getPaths();
     }
 
     public function count()

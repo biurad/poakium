@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader;
+namespace BiuradPHP\Loader\Annotations;
 
 use BiuradPHP\Loader\Interfaces\ClassInterface;
 use Doctrine\Common\Annotations\AnnotationException;
@@ -30,7 +30,7 @@ use ReflectionProperty;
 /**
  * Locate all available annotations for methods, classes and properties across all the codebase.
  */
-final class AnnotationLocator
+final class AnnotationLoader
 {
     /** @var ClassInterface */
     private $classLocator;

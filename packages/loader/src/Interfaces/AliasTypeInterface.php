@@ -19,22 +19,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
-interface AliasInterface
+interface AliasTypeInterface
 {
-    public function addAliasType(AliasTypeInterface $alias): AliasInterface;
-
     /**
-     * Add an alias to the loader.
+     * Get the created alias.
      *
-     * @param  string  $classOrNamespace
-     * @param  string  $alias
+     * @return array
      */
-    public function addAlias(string $classOrNamespace, string $alias): AliasInterface;
-
-    /**
-     * Register the loader on the auto-loader stack.
-     *
-     * @return void
-     */
-    public function register();
+    public function getAlias(): array;
 }

@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader;
+namespace BiuradPHP\Loader\Resources;
 
 use BadMethodCallException, RecursiveIteratorIterator;
 use BiuradPHP\Loader\Interfaces\ResourceLocatorInterface;

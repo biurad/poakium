@@ -18,9 +18,9 @@
 namespace BiuradPHP\Loader\Tests;
 
 use PHPUnit\Framework\TestCase;
-use BiuradPHP\Loader\UniformResourceLocator;
-use BiuradPHP\Loader\UniformResourceIterator;
-use BiuradPHP\Loader\RecursiveUniformResourceIterator;
+use BiuradPHP\Loader\Resources\UniformResourceLocator;
+use BiuradPHP\Loader\Resources\UniformResourceIterator;
+use BiuradPHP\Loader\Resources\RecursiveUniformResourceIterator;
 use BiuradPHP\Loader\Interfaces\ResourceLocatorInterface;
 
 /**
@@ -95,7 +95,8 @@ class UniformResourceLocatorTest extends TestCase
     }
 
 
-    public function getPathsProvider() {
+    public function getPathsProvider()
+    {
         return [
             ['base', ['' => ['base']]],
             ['local', ['' => ['local']]],
@@ -217,7 +218,8 @@ class UniformResourceLocatorTest extends TestCase
     }
 
 
-    public function normalizeProvider() {
+    public function normalizeProvider()
+    {
         return [
             ['', ''],
             ['./', ''],
@@ -252,7 +254,9 @@ class UniformResourceLocatorTest extends TestCase
 
         ];
     }
-    public function findResourcesProvider() {
+
+    public function findResourcesProvider()
+    {
         return [
             ['all://base.txt', ['base/all/base.txt']],
             ['all://base_all.txt', ['override/all/base_all.txt', 'local/all/base_all.txt', 'base/all/base_all.txt']],

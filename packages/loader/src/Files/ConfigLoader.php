@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader;
+namespace BiuradPHP\Loader\Files;
 
 use InvalidArgumentException;
 use BiuradPHP\Loader\Interfaces\AdapterInterface;

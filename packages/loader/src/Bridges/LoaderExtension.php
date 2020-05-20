@@ -19,13 +19,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Bridges;
 
-use BiuradPHP\Loader\AliasLoader;
-use BiuradPHP\Loader\AnnotationLocator;
-use BiuradPHP\Loader\ComposerPaths;
+use BiuradPHP\Loader\Aliases\AliasLoader;
+use BiuradPHP\Loader\Annotations\AnnotationLoader;
+use BiuradPHP\Loader\Composer\ComposerLoader;
 use BiuradPHP\Loader\DataLoader;
-use BiuradPHP\Loader\FileLoader;
-use BiuradPHP\Loader\Loader;
-use BiuradPHP\Loader\UniformResourceLocator;
+use BiuradPHP\Loader\Files\FileLoader;
+use BiuradPHP\Loader\Resources\UniformResourceLocator;
 use Nette, BiuradPHP;
 use Nette\Schema\Expect;
 use Nette\PhpGenerator\PhpLiteral;
@@ -47,7 +46,7 @@ class LoaderExtension extends Nette\DI\CompilerExtension
             })),
             'data_path' => Nette\Schema\Expect::string(),
             'composer_path' => Nette\Schema\Expect::string()->nullable(),
-            'aliases' => Nette\Schema\Expect::arrayOf(Expect::string()->assert('class_exists'))
+            'aliases' => Nette\Schema\Expect::arrayOf(Expect::string())
         ])->castTo('array');
     }
 
@@ -58,16 +57,13 @@ class LoaderExtension extends Nette\DI\CompilerExtension
     {
         $builder = $this->getContainerBuilder();
 
-        $builder->addDefinition($this->prefix('config'))
-            ->setFactory(Loader::class);
-
         $builder->addDefinition($this->prefix('file'))
             ->setFactory(FileLoader::class)
             ->setArguments([$this->config['locators']])
         ;
 
         $builder->addDefinition($this->prefix('annotation'))
-            ->setFactory(AnnotationLocator::class);
+            ->setFactory(AnnotationLoader::class);
 
         $builder->addDefinition($this->prefix('data'))
             ->setFactory(DataLoader::class)
@@ -75,7 +71,7 @@ class LoaderExtension extends Nette\DI\CompilerExtension
         ;
 
         $builder->addDefinition($this->prefix('composer'))
-            ->setFactory(ComposerPaths::class)
+            ->setFactory(ComposerLoader::class)
             ->setArguments([$this->config['composer_path']])
         ;
 
@@ -86,7 +82,7 @@ class LoaderExtension extends Nette\DI\CompilerExtension
                 'foreach (? as $scheme => [$path, $lookup]) { ?->addPath($scheme, $path, $lookup); }', [$this->config['resources'], '@self']
         );
     }
-    
+
     /**
      * {@inheritDoc}
      */

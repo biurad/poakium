@@ -20,8 +20,8 @@ declare(strict_types=1);
 namespace BiuradPHP\Loader\Interfaces;
 
 use BadMethodCallException;
-use BiuradPHP\Loader\RecursiveUniformResourceIterator;
-use BiuradPHP\Loader\UniformResourceIterator;
+use BiuradPHP\Loader\Resources\RecursiveUniformResourceIterator;
+use BiuradPHP\Loader\Resources\UniformResourceIterator;
 
 interface ResourceLocatorInterface
 {

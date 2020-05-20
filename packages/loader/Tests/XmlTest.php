@@ -20,8 +20,8 @@ declare(strict_types=1);
 namespace BiuradPHP\Loader\Tests;
 
 use PHPUnit\Framework\TestCase;
-use BiuradPHP\Loader\Adapters\XmlAdapter;
-use BiuradPHP\Loader\ConfigLoader;
+use BiuradPHP\Loader\Files\Adapters\XmlAdapter;
+use BiuradPHP\Loader\Files\ConfigLoader;
 
 /**
  * @requires PHP 7.1.30

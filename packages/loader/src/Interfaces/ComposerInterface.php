@@ -19,10 +19,12 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
+use Composer\Autoload\ClassLoader;
+
 /**
  * Get All Paths from composer directory
  */
-interface ComposerPathsInterface
+interface ComposerInterface
 {
     /**
      * Get the full path of composer vendor directory
@@ -33,4 +35,11 @@ interface ComposerPathsInterface
      * Get All Found Paths
      */
     public function getPaths(): iterable;
+
+    /**
+     * Get the Composer's ClassLoader instance
+     *
+     * @param bool $spl_functiion
+     */
+    public function getClassLoader(bool $spl_functiion = false): ClassLoader;
 }

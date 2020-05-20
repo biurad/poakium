@@ -17,24 +17,30 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Interfaces;
+namespace BiuradPHP\Loader\Aliases;
 
-interface AliasInterface
+use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
+
+class ClassAlias implements AliasTypeInterface
 {
-    public function addAliasType(AliasTypeInterface $alias): AliasInterface;
+    /**
+     * @var array
+     */
+    private $value;
 
     /**
-     * Add an alias to the loader.
-     *
-     * @param  string  $classOrNamespace
-     * @param  string  $alias
+     * @param string $value
      */
-    public function addAlias(string $classOrNamespace, string $alias): AliasInterface;
+    public function __construct(string $alias, string $class)
+    {
+        $this->value = [$alias => $class];
+    }
 
     /**
-     * Register the loader on the auto-loader stack.
-     *
-     * @return void
+     * {@inheritdoc}
      */
-    public function register();
+    public function getAlias(): array
+    {
+        return $this->value;
+    }
 }
