@@ -38,9 +38,14 @@ class LoaderExtension extends Nette\DI\CompilerExtension
     public function getConfigSchema(): Nette\Schema\Schema
     {
         return Nette\Schema\Expect::structure([
-            'locators' => Expect::listOf('string')->before(function ($value) {
-                return is_string($value) ? [$value] : $value;
-            }),
+            'locators' => Nette\Schema\Expect::structure([
+                'paths' => Expect::listOf('string')->before(function ($value) {
+                    return is_string($value) ? [$value] : $value;
+                }),
+                'excludes' => Expect::listOf('string')->before(function ($value) {
+                    return is_string($value) ? [$value] : $value;
+                }),
+            ])->castTo('array'),
             'resources' => Nette\Schema\Expect::arrayOf(Expect::array()->before(function ($value) {
                 return is_string($value) ? ['', $value] : $value;
             })),
@@ -59,7 +64,7 @@ class LoaderExtension extends Nette\DI\CompilerExtension
 
         $builder->addDefinition($this->prefix('file'))
             ->setFactory(FileLoader::class)
-            ->setArguments([$this->config['locators']])
+            ->setArguments([$this->config['locators']['paths'], $this->config['locators']['excludes']])
         ;
 
         $builder->addDefinition($this->prefix('annotation'))

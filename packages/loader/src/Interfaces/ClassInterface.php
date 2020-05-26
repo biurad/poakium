@@ -26,31 +26,20 @@ interface ClassInterface
     /**
      * Extract the class name from the file at the given path.
      *
-     * @param  string|null  $path
+     * @param  string  $path
      *
      * @return string|null
      */
-    public function findClass(?string $path);
+    public function findClass(string $path): ?string;
 
     /**
      * Fiind all files in a list of directories.
      *
-     * @param array  $dirs
      * @param string $extension
      *
      * @return array
      */
-    public function findFiles(array $dirs = [], $extension = '.php'): array;
-
-    /**
-     * Find all the class and interface names in a given directory.
-     *
-     * @param  array $directories
-     * @param array $excludes
-     *
-     * @return array
-     */
-    public function findClasses(array $directories = [], array $excludes = []): array;
+    public function findFiles(string $extension = '.php'): array;
 
     /**
      * Index all available files and generate list of found classes with their names and filenames.

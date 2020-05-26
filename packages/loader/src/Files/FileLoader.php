@@ -19,17 +19,24 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Files;
 
+use BiuradPHP\Loader\Exceptions\LoaderException;
 use BiuradPHP\Loader\Interfaces\ClassInterface;
-use Generator;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
-use SplFileInfo;
 
-class FileLoader implements ClassInterface
+class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggregate, \Countable
 {
-    private $dirs = [], $excludes = [];
+    use LoggerAwareTrait;
+
+    public const IGNORE_VCS_FILES = ['.svn', '_svn', 'CVS', '_darcs', '.arch-params', '.monotone', '.bzr', '.git', '.hg'];
+
+    private $paths = [];
+    private $excludes = [];
+	private $maxDepth = -1;
 
     /**
      * @param array $directories
@@ -38,120 +45,127 @@ class FileLoader implements ClassInterface
     public function __construct(array $directories = [], $excludes = [])
     {
         if (!empty($directories)) {
-            $this->dirs = $directories;
+            $this->paths = $directories;
         }
-        $this->excludes = $excludes;
+
+        $this->setExcludes($excludes);
     }
 
-    public function getDirs(): array
+    public function getPaths(): array
     {
-        return $this->dirs;
+        return $this->paths;
     }
 
     /**
-     * Add a location to the file loader.
+     * Set Excluded paths
+     *
+     * @param array $paths
+     */
+    public function setExcludes(array $paths): void
+    {
+        array_walk($paths, function (string $path) {
+            $this->excludes[] = function (RecursiveDirectoryIterator $file) use ($path): bool {
+                return !$file->isDot()
+                    && !strpos(strtr($file->getPathname(), '\\', '/'), $path);
+            };
+        });
+    }
+
+    /**
+     * Get pre-configured class locator.
      *
      * @param array $directories
+     * @param array $exclude
+     * @return ClassLoader
      */
-    public function addLocation(array $directories): void
-    {
-        $this->dirs = array_merge($this->dirs, $directories);
+    public function getClassLocator(): ClassLoader {
+        $classLocator = new ClassLoader($this);
+        if (null !== $this->logger) {
+            $classLocator->setLogger($this->logger);
+        }
+
+        return $classLocator;
     }
 
     /**
-     * Set the value of excludes
-     *
-     * @param array $excludes
-     * @return  self
-     */
-    public function setExcludes($excludes)
-    {
-        $this->excludes = $excludes;
+	 * Get the number of found files and/or directories.
+	 */
+	public function count(): int
+	{
+		return iterator_count($this->getIterator());
+	}
 
-        return $this;
+
+	/**
+	 * Returns iterator.
+	 */
+	public function getIterator(): \Iterator
+	{
+		if (!$this->paths) {
+			throw new LoaderException('Call specify directory to search on constructor method.');
+
+		} elseif (count($this->paths) === 1) {
+			return $this->buildIterator((string) $this->paths[0]);
+
+		} else {
+			$iterator = new \AppendIterator();
+			foreach ($this->paths as $path) {
+				$iterator->append($this->buildIterator((string) $path));
+			}
+			return $iterator;
+		}
     }
 
     /**
-     * @param $class
+     * Extract the class name from the file at the given path.
      *
-     * @return string
+     * @param  string  $path
      *
-     * @throws ReflectionException
+     * @return string|null
      */
-    public function findNamspaceForClass($class): string
+    public function findClass(string $path): ?string
     {
-        $class = new ReflectionClass($class);
-
-        $namespace = $class->getNamespaceName();
-
-        return $namespace;
+        return $this->getClassLocator()->findClass($path);
     }
 
     /**
      * Fiind all files in a list of directories.
      *
-     * @param array  $dirs
      * @param string $extension
      *
      * @return array
      */
-    public function findFiles(array $dirs = [], $extension = '.php'): array
+    public function findFiles(string $extension = '.php'): array
     {
         $classes = [];
-        $this->dirs = !empty($dirs) ? $this->dirs = $dirs : $this->dirs;
-
-        foreach (array_filter($this->dirs) as $prefix => $dir) {
-
-            if (!is_dir($dir)) {
+        foreach ($this->getIterator() as $file) {
+            if (('*' !== $extension && $file->getBasename($extension) === $file->getBasename()) || $file->isFile()) {
                 continue;
             }
 
-            /** @var RecursiveIteratorIterator|SplFileInfo[] $iterator */
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($dir),
-                RecursiveIteratorIterator::LEAVES_ONLY
-            );
-
-            foreach (@$iterator as $file) {
-                if (($fileName = $file->getBasename($extension)) == $file->getBasename()) {
-                    continue;
-                }
-
-                $classes[] = $file->getPathname();
-            }
+            $classes[] = $file->getPathname();
         }
 
         return $classes;
     }
 
     /**
-     * Find all the class and interface names in a given directory.
+     * Fiind all directories in a list of directories.
      *
-     * @param array $directories
-     *
-     * @param array $excludes
      * @return array
      */
-    public function findClasses(array $directories = [], array $excludes = []): array
+    public function findDirectories(): array
     {
-        $this->excludes = !empty($excludes) ? $this->excludes = $excludes : $this->excludes;
-
-        $found = [];
-        foreach ($this->findFiles($directories, '.php') as $file) {
-            // Remove Excludes
-            foreach ($this->excludes as $exclude) {
-                $exclude = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $exclude);
-
-                if (mb_strpos(@$file, $exclude)) {
-                    unset($file);
-                    //continue;
-                }
+        $directories = [];
+        foreach ($this->getIterator() as $path) {
+            if ($path->isFile() || ('.' === $path->getFilename() || '..' === $path->getFilename())) {
+                continue;
             }
 
-            $found[] = $this->findClass(@$file);
+            $directories[] = $path->getPathname();
         }
 
-        return $found;
+        return $directories;
     }
 
     /**
@@ -168,231 +182,43 @@ class FileLoader implements ClassInterface
      */
     public function getClasses($target = null): array
     {
-        if (!empty($target) && (is_object($target) || is_string($target))) {
-            $target = new ReflectionClass($target);
-        }
-
-        $result = [];
-        foreach ($this->availableClasses() as $class) {
-            //In some cases reflection can thrown an exception if class invalid or can not be loaded,
-            //we are going to handle such exception and convert it soft exception
-            $reflection = new ReflectionClass($class);
-
-            if (!$this->isTargeted($reflection, $target) || $reflection->isInterface()) {
-                continue;
-            }
-
-            $result[$reflection->getName()] = $reflection;
-        }
-
-        return $result;
+        return $this->getClassLocator()->getClasses($target);
     }
 
     /**
-     * Extract the class name from the file at the given path.
-     *
-     * @param  string|null  $path
-     *
-     * @return string|null
-     */
-    public function findClass(?string $path)
-    {
-        $namespace = null;
+	 * Returns per-path iterator.
+	 */
+	private function buildIterator(string $path): \Iterator
+	{
+		$iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::FOLLOW_SYMLINKS);
 
-        if (null !== $path) {
-            $tokens = token_get_all(file_get_contents($path));
-
-            foreach ($tokens as $key => $token) {
-                if ($this->tokenIsNamespace($token)) {
-                    $namespace = $this->getNamespace($key + 2, $tokens);
-                } elseif ($this->tokenIsClassOrInterface($token)) {
-                    return ltrim($namespace.'\\'.$this->getClass($key + 2, $tokens), '\\');
+		if ($this->excludes) {
+			$iterator = new \RecursiveCallbackFilterIterator($iterator, function ($foo, $bar, RecursiveDirectoryIterator $file): bool {
+				if (!$file->isDot() && !$file->isFile()) {
+					foreach ($this->excludes as $filter) {
+						if (!$filter($file)) {
+							return false;
+						}
+					}
                 }
-            }
-        }
-    }
 
-    /**
-     * Get every class trait (including traits used in parents).
-     *
-     * @param string $class
-     *
-     * @return array
-     */
-    public function fetchTraits(string $class): array
-    {
-        $traits = [];
-
-        while ($class) {
-            $traits = array_merge(class_uses($class), $traits);
-            $class = get_parent_class($class);
+				return true;
+			});
         }
 
-        //Traits from traits
-        foreach (array_flip($traits) as $trait) {
-            $traits = array_merge(class_uses($trait), $traits);
-        }
+		if ($this->maxDepth !== 0) {
+			$iterator = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
+			$iterator->setMaxDepth($this->maxDepth);
+		}
 
-        return array_unique($traits);
-    }
-
-    /**
-     * Available file reflections. Generator.
-     *
-     * @return ReflectionClass[]|Generator
-     */
-    protected function availableReflections(): Generator
-    {
-        foreach ($this->findClasses($this->dirs) as $class) {
-            if (in_array($class, $this->excludes)) {
-                continue;
+		$iterator = new \CallbackFilterIterator($iterator, function ($foo, $bar, \Iterator $file): bool {
+			while ($file instanceof \OuterIterator) {
+				$file = $file->getInnerIterator();
             }
 
-            yield $class;
-        }
-    }
+			return true;
+		});
 
-    /**
-     * Classes available in finder scope.
-     *
-     * @return array
-     */
-    protected function availableClasses(): array
-    {
-        $classes = [];
-
-        foreach ($this->availableReflections() as $class) {
-            try {
-                $reflection = new ReflectionClass($class);
-            } catch (ReflectionException $e) {
-                //Ignoring
-                continue;
-            }
-
-            $classes[] = $reflection->getName();
-        }
-
-        return $classes;
-    }
-
-    /**
-     * Check if given class targeted by locator.
-     *
-     * @param ReflectionClass      $class
-     * @param ReflectionClass|null $target
-     * @return bool
-     */
-    protected function isTargeted(ReflectionClass $class, ReflectionClass $target = null): bool
-    {
-        if (empty($target)) {
-            return true;
-        }
-
-        if (!$target->isTrait()) {
-            //Target is interface or class
-            return $class->isSubclassOf($target) || $class->getName() == $target->getName();
-        }
-
-        //Checking using traits
-        return in_array($target->getName(), $this->fetchTraits($class->getName()));
-    }
-
-    /**
-     * Find the namespace in the tokens starting at a given key.
-     *
-     * @param  int  $key
-     * @param  array  $tokens
-     * @return string|null
-     */
-    protected function getNamespace($key, array $tokens)
-    {
-        $namespace = null;
-
-        $tokenCount = count($tokens);
-
-        for ($i = $key; $i < $tokenCount; $i++) {
-            if ($this->isPartOfNamespace($tokens[$i])) {
-                $namespace .= $tokens[$i][1];
-            } elseif ($tokens[$i] == ';') {
-                return $namespace;
-            }
-        }
-    }
-
-    /**
-     * Find the class in the tokens starting at a given key.
-     *
-     * @param  int  $key
-     * @param  array  $tokens
-     * @return string|null
-     */
-    protected function getClass($key, array $tokens)
-    {
-        $class = null;
-
-        $tokenCount = count($tokens);
-
-        for ($i = $key; $i < $tokenCount; $i++) {
-            if ($this->isPartOfClass($tokens[$i])) {
-                $class .= $tokens[$i][1];
-            } elseif ($this->isWhitespace($tokens[$i])) {
-                return $class;
-            }
-        }
-    }
-
-    /**
-     * Determine if the given token is a namespace keyword.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function tokenIsNamespace($token)
-    {
-        return is_array($token) && $token[0] == T_NAMESPACE;
-    }
-
-    /**
-     * Determine if the given token is a class or interface keyword.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function tokenIsClassOrInterface($token)
-    {
-        return is_array($token) && ($token[0] == T_CLASS || $token[0] == T_INTERFACE || $token[0] == T_TRAIT);
-    }
-
-    /**
-     * Determine if the given token is part of the namespace.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isPartOfNamespace($token)
-    {
-        return is_array($token) && ($token[0] == T_STRING || $token[0] == T_NS_SEPARATOR);
-    }
-
-    /**
-     * Determine if the given token is part of the class.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isPartOfClass($token)
-    {
-        return is_array($token) && $token[0] == T_STRING;
-    }
-
-    /**
-     * Determine if the given token is whitespace.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isWhitespace($token)
-    {
-        return is_array($token) && $token[0] == T_WHITESPACE;
+		return $iterator;
     }
 }
