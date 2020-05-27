@@ -22,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 use BiuradPHP\Cache\SimpleCache;
 use Psr\SimpleCache\CacheInterface;
 use Doctrine\Common\Cache\ArrayCache;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * @requires PHP 7.1.30
@@ -40,7 +41,10 @@ class DoctrineCacheTest extends TestCase
         $this->cache = new SimpleCache($pool);
     }
 
-    public function testSimpleProvider()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testSimpleProvider(): void
     {
         $cache = $this->cache;
 
@@ -64,7 +68,10 @@ class DoctrineCacheTest extends TestCase
         $this->assertFalse($cache->has($key));
     }
 
-    public function testMultiples()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function testMultiples(): void
     {
         $data = [
             'foo' => 'baz',

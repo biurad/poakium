@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
+/** @noinspection PhpDeprecationInspection */
+/** @noinspection PhpComposerExtensionStubsInspection */
 /** @noinspection PhpUnusedParameterInspection */
 /** @noinspection PhpUndefinedFieldInspection */
 
@@ -27,15 +29,6 @@ use Doctrine, InvalidArgumentException;
 use Nette\DI\ContainerBuilder;
 use BiuradPHP\Cache\Exceptions\CacheException;
 use Nette\DI\Definitions\{Statement, ServiceDefinition};
-
-use function method_exists;
-use function ucfirst;
-use function extension_loaded;
-use function explode;
-use function substr;
-use function strlen;
-use function strpos;
-use function class_exists;
 
 class DoctrineCachePass
 {
@@ -99,8 +92,8 @@ class DoctrineCachePass
      *
      * @return ServiceDefinition
      */
-	public function getDefinition(string $service)
-	{
+	public function getDefinition(string $service): ServiceDefinition
+    {
         $builder = $this->extension->getContainerBuilder();
 
 		$def = $builder->addDefinition($service)
@@ -192,7 +185,7 @@ class DoctrineCachePass
     {
         // This driver connection should be void.
         throw new CacheException(
-            "Sorry, This driver has been deprecated, and will be removed in future development", E_DEPRECATED
+            'Sorry, This driver has been deprecated, and will be removed in future development', E_DEPRECATED
         );
     }
 

@@ -20,9 +20,6 @@ declare(strict_types=1);
 namespace BiuradPHP\Cache;
 
 use InvalidArgumentException;
-
-use function ob_start;
-use function ob_get_flush;
 use Throwable;
 
 /**

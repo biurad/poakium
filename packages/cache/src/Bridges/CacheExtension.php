@@ -1,4 +1,5 @@
-<?php /** @noinspection PhpUndefinedMethodInspection */
+<?php
+/** @noinspection PhpUndefinedMethodInspection */
 
 declare(strict_types=1);
 
@@ -65,7 +66,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
     /**
      * {@inheritDoc}
      */
-    public function loadConfiguration()
+    public function loadConfiguration(): void
 	{
         $builder = $this->getContainerBuilder();
 

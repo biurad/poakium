@@ -21,11 +21,7 @@ namespace BiuradPHP\Cache;
 
 use Traversable;
 use Psr\SimpleCache\CacheInterface;
-use BiuradPHP\Events\Interfaces\EventDispatcherInterface;
 use Doctrine\Common\Cache\{FlushableCache, MultiOperationCache, Cache as DoctrineCache};
-
-use function is_iterable;
-use function iterator_to_array;
 
 class SimpleCache implements CacheInterface
 {
@@ -35,31 +31,24 @@ class SimpleCache implements CacheInterface
     protected $instance;
 
     /**
-     * @var EventDispatcherInterface
-     */
-    protected $event;
-
-    /**
      * @var string
      */
-    protected $driver = null;
+    protected $driver;
 
     /**
      * Cache Constructor.
      *
      * @param DoctrineCache|string $instance
-     * @param EventDispatcherInterface|null       $event
      */
-    public function __construct(DoctrineCache $instance, EventDispatcherInterface $event = null)
+    public function __construct(DoctrineCache $instance)
     {
-        $this->event = $event;
         $this->instance = $instance;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function has($key)
+    public function has($key): bool
     {
         return $this->instance->contains($key);
     }
@@ -79,7 +68,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function set($key, $value, $ttl = 0)
+    public function set($key, $value, $ttl = 0): bool
     {
         return $this->instance->save($key, $value, $ttl);
     }
@@ -87,7 +76,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function delete($key)
+    public function delete($key): bool
     {
         return $this->instance->delete($key);
     }
@@ -95,7 +84,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function clear()
+    public function clear(): bool
     {
         if ($this->instance instanceof FlushableCache) {
             return $this->instance->flushAll();
@@ -125,7 +114,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function setMultiple($values, $ttl = null)
+    public function setMultiple($values, $ttl = null): bool
     {
         if (is_iterable($values) || $values instanceof  Traversable) {
             $values = iterator_to_array($values);
@@ -145,7 +134,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function deleteMultiple($keys)
+    public function deleteMultiple($keys): bool
     {
         if (is_iterable($keys) || $keys instanceof  Traversable) {
             $keys = iterator_to_array($keys);
@@ -165,22 +154,12 @@ class SimpleCache implements CacheInterface
     }
 
     /**
-     * Get the value of event.
-     *
-     * @return EventDispatcherInterface
-     */
-    public function getEvent()
-    {
-        return $this->event;
-    }
-
-    /**
      * Set the driver instance
      *
      * @param $instance
      * @return  self
      */
-    public function setInstance($instance)
+    public function setInstance($instance): self
     {
         $this->driver = $instance;
 

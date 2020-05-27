@@ -1,4 +1,5 @@
 <?php
+/** @noinspection StaticClosureCanBeUsedInspection */
 
 declare(strict_types=1);
 
@@ -28,25 +29,6 @@ use DateTimeZone;
 use Traversable;
 use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
-
-use function array_shift;
-use function md5;
-use function substr;
-use function sprintf;
-use function count;
-use function array_map;
-use function iterator_to_array;
-use function date_default_timezone_get;
-use function time;
-use function is_numeric;
-use function func_get_args;
-use function array_values;
-use function array_slice;
-use function is_array;
-use function is_object;
-use function serialize;
-use function is_scalar;
-use function strpos;
 
 /**
  * Implements the cache for a application.
@@ -109,9 +91,7 @@ class FastCache
      */
 	public function derive(string $namespace)
 	{
-        $derived = new static($this->storage, $this->namespace . $namespace);
-
-		return $derived;
+        return new static($this->storage, $this->namespace . $namespace);
 	}
 
     /**
@@ -216,7 +196,7 @@ class FastCache
 			if (isset($dependencies[self::EXPIRATION]) && $dependencies[self::EXPIRATION] <= 0) {
 				$this->storage->delete($key);
 			} else {
-				$this->storage->set($key, $data, isset($dependencies[self::EXPIRATION]) ? $dependencies[self::EXPIRATION] : null);
+				$this->storage->set($key, $data, $dependencies[self::EXPIRATION] ?? null);
             }
 
 			return $data;

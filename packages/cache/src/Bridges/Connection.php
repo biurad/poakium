@@ -1,4 +1,5 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
+/** @noinspection PhpComposerExtensionStubsInspection */
 
 declare(strict_types=1);
 
@@ -20,8 +21,6 @@ declare(strict_types=1);
 namespace BiuradPHP\Cache\Bridges;
 
 use Redis, Memcache, Memcached, SQLite3;
-
-use function is_array;
 
 class Connection
 {
