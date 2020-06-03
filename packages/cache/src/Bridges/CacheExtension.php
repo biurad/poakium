@@ -80,5 +80,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
         $builder->addDefinition($this->prefix('psr'))
             ->setFactory(BiuradPHP\Cache\SimpleCache::class)
         ;
+
+        $builder->addAlias('cache', $this->prefix('psr'));
     }
 }
