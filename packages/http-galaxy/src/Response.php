@@ -19,19 +19,13 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Http;
 
+use DateTimeInterface;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
 use function GuzzleHttp\Psr7\stream_for;
-use function in_array;
-use function gmdate;
-use function addslashes;
-use function is_resource;
-use function strtotime;
-use function is_string;
-use function basename;
 
 /**
  * Class Response
@@ -111,6 +105,22 @@ class Response implements ResponseInterface
     /**#@-*/
 
     /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+     */
+    private const HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES = [
+        'must_revalidate' => false,
+        'no_cache' => false,
+        'no_store' => false,
+        'no_transform' => false,
+        'public' => false,
+        'private' => false,
+        'proxy_revalidate' => false,
+        'max_age' => true,
+        's_maxage' => true,
+        'immutable' => false,
+    ];
+
+    /**
      * @var string EOL characters used for HTTP response.
      */
     private const EOL = "\r\n";
@@ -137,9 +147,10 @@ class Response implements ResponseInterface
      *
      * @param string|UriInterface $url The redirect destination.
      * @param int|null $status The redirect HTTP status code.
-     * @return static
+     *
+     * @return Response
      */
-    public function withRedirect(string $url, $status = self::STATUS_CODE_302): ResponseInterface
+    public function withRedirect(string $url, $status = self::STATUS_CODE_302): self
     {
         $response = $this->getResponse()->withHeader('Location', (string) $url);
 
@@ -160,9 +171,12 @@ class Response implements ResponseInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-	 * @param  string|int|DateTimeInterface  $lastModified
+	 * @param DateTimeInterface  $lastModified
+     * @param string $etag
+     *
+     * @return Response
 	 */
-	public function withModified($lastModified = null, string $etag = null): ResponseInterface
+	public function withModified(DateTimeInterface $lastModified = null, string $etag = null): self
 	{
         $response = $this->getResponse();
 
@@ -170,23 +184,111 @@ class Response implements ResponseInterface
             return $this;
         }
 
-        $new = clone $this;
-		if ($lastModified) {
-            if (is_string($lastModified)) {
-                $lastModified = strtotime($lastModified);
+		if (null !== $lastModified) {
+            if ($lastModified instanceof \DateTime) {
+                $lastModified = \DateTimeImmutable::createFromMutable($lastModified);
             }
 
-            $lastModified = is_int($lastModified)
-                ? gmdate('D, d M Y H:i:s \G\M\T', $lastModified) : $lastModified->format('D, d M Y H:i:s \G\M\T');
-
-			$response = $response->withHeader('Last-Modified', (string) $lastModified);
+            $lastModified->setTimezone(new \DateTimeZone('UTC'));
+			$response = $response->withHeader('Last-Modified', $lastModified->format('D, d M Y H:i:s').' GMT');
         }
 
-		if ($etag) {
-			$response = $response->withHeader('ETag', '"' . addslashes($etag) . '"');
+		if (null !== $etag) {
+			$response = $response->withHeader('ETag', '"'.addslashes($etag).'"');
         }
 
-		return $new->message = $response->withStatus(self::STATUS_CODE_304);
+        $new = clone $this;
+        $new->message = $response;
+
+        return $new;
+    }
+
+    /**
+     * Modifies the response so that it conforms to the rules defined for a 304 status code.
+     * This sets the status, and discards any headers that MUST NOT be included in 304 responses.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @return Response
+     *
+     * @see https://tools.ietf.org/html/rfc2616#section-10.3.5
+     *
+     * @final
+     */
+    public function withNotModified(): self
+    {
+        $response = $this->getResponse();
+        $response = $response->withStatus(self::STATUS_CODE_304);
+
+        // remove headers that MUST NOT be included with 304 Not Modified responses
+        $new = clone $this;
+        foreach (['Allow', 'Content-Encoding', 'Content-Language', 'Content-Length', 'Content-MD5', 'Content-Type', 'Last-Modified'] as $header) {
+            $response = $response->withoutHeader($header);
+        }
+        $new->message = $response;
+
+        return $new;
+    }
+
+    /**
+     * Sets the response's cache headers (validation and/or expiration).
+     *
+     * Available options are: must_revalidate, no_cache, no_store, no_transform, public, private, proxy_revalidate, max_age, s_maxage, and immutable.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param array $options
+     *
+     * @return Response
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @final
+     */
+    public function withCacheControl(array $options): self
+    {
+        $cacheControl = [];
+        $response = $this->getResponse();
+
+        if ($diff = array_diff(array_keys($options), array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
+            throw new \InvalidArgumentException(sprintf('Response does not support the following options: "%s".', implode('", "', $diff)));
+        }
+
+        $cacheControl['max-age'] = isset($options['max_age']) ? sprintf('=%s', $options['max_age']) : null;
+        $cacheControl['s-maxage'] = isset($options['s_maxage']) ? sprintf('=%s', $options['s_maxage']) : null;
+
+        foreach (self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES as $directive => $hasValue) {
+            if (!$hasValue && isset($options[$directive])) {
+                if ($options[$directive]) {
+                    $cacheControl[str_replace('_', '-', $directive)] = true;
+                } else {
+                    unset($cacheControl[str_replace('_', '-', $directive)]);
+                }
+            }
+        }
+
+        if (isset($options['public']) && $options['public']) {
+            $cacheControl['public'] = true;
+            unset($cacheControl['private']);
+        }
+
+        if (isset($options['private']) && $options['private']) {
+            $cacheControl['private'] = true;
+            unset($cacheControl['public']);
+        }
+
+        ksort($cacheControl);
+        $cacheControl = array_filter($cacheControl);
+
+        $directives = array_reduce(array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
+            $add = implode(' ', (array) $cacheControl[$name]);
+            return ('' !== $res ? $res.', ' : '').sprintf('%s%s', $name, '1' === $add ? '' : $add);
+        }, '');
+
+        $new = clone $this;
+        $new->message = $response->withHeader('Cache-Control', strtr($directives, ' 1', ''));
+
+        return $new;
     }
 
     /**
@@ -207,7 +309,7 @@ class Response implements ResponseInterface
      *
      * @throws InvalidArgumentException
      */
-    public function withAttachment($filename, string $name = '', string $disposition = 'attachment', string $mimetype = 'application/octet-stream'): ResponseInterface
+    public function withAttachment($filename, string $name = '', string $disposition = 'attachment', string $mimetype = 'application/octet-stream'): self
     {
         $response = $this->getResponse();
         if (empty($name)) {
@@ -226,8 +328,9 @@ class Response implements ResponseInterface
         );
 
         $new = clone $this;
+        $new->message = $response->withBody($stream);
 
-        return $new->message = $response->withBody($stream);
+        return $new;
     }
 
     /**
@@ -377,13 +480,20 @@ class Response implements ResponseInterface
      * can be reused by a cache with heuristic expiration unless otherwise indicated"
      * (https://tools.ietf.org/html/rfc7231#section-6.1)
      *
+     * Note: This method is not part of the PSR-7 standard.
+     *
      * @final
      */
     public function isCacheable(): bool
     {
         $response = $this->getResponse();
+        $cacheControl = current($response->getHeader('Cache-Control'));
 
-        if (!in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410])) {
+        if (!in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410], true)) {
+            return false;
+        }
+
+        if (strpos($cacheControl, 'no-store') !== false || strpos($cacheControl, 'private') !== false) {
             return false;
         }
 
@@ -393,6 +503,8 @@ class Response implements ResponseInterface
     /**
      * Returns true if the response includes headers that can be used to validate
      * the response with the origin server using a conditional GET request.
+     *
+     * Note: This method is not part of the PSR-7 standard.
      *
      * @final
      */
@@ -432,6 +544,23 @@ class Response implements ResponseInterface
     }
 
     /**
+     * Returns the value of the Expires header as a DateTime instance.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @final
+     */
+    public function getExpires(): ?\DateTimeInterface
+    {
+        try {
+            return $this->getDate('Expires');
+        } catch (\RuntimeException $e) {
+            // according to RFC 2616 invalid date formats (e.g. "0" and "-1") must be treated as in the past
+            return \DateTime::createFromFormat('U', sprintf('%s', time() - 172800));
+        }
+    }
+
+    /**
      * Create stream for given filename.
      *
      * @param string|StreamInterface|resource $stream
@@ -453,5 +582,25 @@ class Response implements ResponseInterface
         }
 
         return stream_for($stream);
+    }
+
+    /**
+     * Returns the HTTP header value converted to a date.
+     *
+     * @return \DateTimeInterface|null The parsed DateTime or the default value if the header does not exist
+     *
+     * @throws \RuntimeException When the HTTP header is not parseable
+     */
+    private function getDate(string $key, \DateTime $default = null)
+    {
+        if (null === $value = $this->getHeaderLine($key)) {
+            return $default;
+        }
+
+        if (false === $date = \DateTime::createFromFormat(DATE_RFC2822, $value)) {
+            throw new \RuntimeException(sprintf('The "%s" HTTP header is not parseable (%s).', $key, $value));
+        }
+
+        return $date;
     }
 }

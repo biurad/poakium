@@ -43,6 +43,22 @@ class ServerRequest implements ServerRequestInterface
     public const HEADER_X_FORWARDED_AWS_ELB = 0b11010; // AWS ELB doesn't send X-Forwarded-Host
 
     /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+     */
+    private const HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES = [
+        'must_revalidate' => false,
+        'no_cache' => false,
+        'no_store' => false,
+        'no_transform' => false,
+        'public' => false,
+        'private' => false,
+        'proxy_revalidate' => false,
+        'max_age' => true,
+        's_maxage' => true,
+        'immutable' => false,
+    ];
+
+    /**
      * @var array|string[]
      */
     private $trustedProxies = [];
@@ -142,6 +158,67 @@ class ServerRequest implements ServerRequestInterface
     }
 
     /**
+     * Sets the request's cache headers (validation and/or expiration).
+     *
+     * Available options are: must_revalidate, no_cache, no_store, no_transform, public, private, proxy_revalidate, max_age, s_maxage, and immutable.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param array $options
+     *
+     * @return ServerRequest
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @final
+     */
+    public function withCacheControl(array $options): self
+    {
+        $cacheControl = [];
+        $request = $this->getRequest();
+
+        if ($diff = array_diff(array_keys($options), array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
+            throw new \InvalidArgumentException(sprintf('Response does not support the following options: "%s".', implode('", "', $diff)));
+        }
+
+        $cacheControl['max-age'] = isset($options['max_age']) ? sprintf('=%s', $options['max_age']) : null;
+        $cacheControl['s-maxage'] = isset($options['s_maxage']) ? sprintf('=%s', $options['s_maxage']) : null;
+
+        foreach (self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES as $directive => $hasValue) {
+            if (!$hasValue && isset($options[$directive])) {
+                if ($options[$directive]) {
+                    $cacheControl[str_replace('_', '-', $directive)] = true;
+                } else {
+                    unset($cacheControl[str_replace('_', '-', $directive)]);
+                }
+            }
+        }
+
+        if (isset($options['public']) && $options['public']) {
+            $cacheControl['public'] = true;
+            unset($cacheControl['private']);
+        }
+
+        if (isset($options['private']) && $options['private']) {
+            $cacheControl['private'] = true;
+            unset($cacheControl['public']);
+        }
+
+        ksort($cacheControl);
+        $cacheControl = array_filter($cacheControl);
+
+        $directives = array_reduce(array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
+            $add = implode(' ', (array) $cacheControl[$name]);
+            return ('' !== $res ? $res.', ' : '').sprintf('%s%s', $name, '1' === $add ? '' : $add);
+        }, '');
+
+        $new = clone $this;
+        $new->message = $request->withHeader('Cache-Control', strtr($directives, ' 1', ''));
+
+        return $new;
+    }
+
+    /**
      * Get serverRequest content character set, if known.
      *
      * Note: This method is not part of the PSR-7 standard.
@@ -182,9 +259,10 @@ class ServerRequest implements ServerRequestInterface
      */
     public function withContentType($contentName)
     {
-        $result = clone $this->withHeader('Content-Type', $contentName);
+        $new = clone $this;
+        $new->message = $this->getRequest()->withHeader('Content-Type', $contentName);
 
-        return $result;
+        return $new;
     }
 
     /**
@@ -297,8 +375,10 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getParam($key, $default = null)
     {
-        $postParams = $this->getParsedBody();
-        $getParams = $this->getQueryParams();
+        $request = $this->getRequest();
+
+        $postParams = $request->getParsedBody();
+        $getParams = $request->getQueryParams();
         $result = $default;
 
         if (is_array($postParams) && isset($postParams[$key])) {
@@ -321,8 +401,10 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getParams(): array
     {
-        $params = $this->getQueryParams();
-        $postParams = $this->getParsedBody();
+        $request = $this->getRequest();
+
+        $params = $request->getQueryParams();
+        $postParams = $request->getParsedBody();
 
         if ($postParams) {
             $params = array_merge($params, (array) $postParams);
@@ -343,7 +425,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getParsedBodyParam($key, $default = null)
     {
-        $postParams = $this->getParsedBody();
+        $postParams = $this->getRequest()->getParsedBody();
         $result = $default;
 
         if (is_array($postParams) && isset($postParams[$key])) {
@@ -367,7 +449,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getQueryParam($key, $default = null)
     {
-        $getParams = $this->getQueryParams();
+        $getParams = $this->getRequest()->getQueryParams();
         $result = $default;
 
         if (isset($getParams[$key])) {
@@ -402,7 +484,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getAuthorizationToken($headerName = 'Bearer'): ?string
     {
-        $header = $this->getHeaderLine('Authorization');
+        $header = $this->getRequest()->getHeaderLine('Authorization');
 
         if (mb_strpos($header, "$headerName ") !== false) {
             return mb_substr($header, 7);

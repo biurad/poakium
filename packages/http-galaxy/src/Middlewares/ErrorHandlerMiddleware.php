@@ -41,17 +41,12 @@ use BiuradPHP\Http\Exceptions\ClientExceptions\UnsupportedMediaTypeException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
-use function ini_set;
-
 /**
- * Default response dispatch middleware.
+ * Default response errorhandler middleware.
  *
- * Checks for a composed route result in the request. If none is provided,
- * delegates request processing to the handler.
- *
- * Otherwise, it delegates processing to the route result.
+ * Wraps Client and Routing exceptions into proper response.
  */
-class ResponseErrorMiddleware implements MiddlewareInterface
+class ErrorHandlerMiddleware implements MiddlewareInterface
 {
     /**
      * {@inheritDoc}
@@ -169,6 +164,7 @@ class ResponseErrorMiddleware implements MiddlewareInterface
      * Asserts response body is empty or status code is 204, 205 or 304
      *
      * @param ResponseInterface $response
+     *
      * @return bool
      */
     private function isResponseEmpty(ResponseInterface $response): bool

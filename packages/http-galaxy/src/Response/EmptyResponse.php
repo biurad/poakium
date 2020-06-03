@@ -21,8 +21,6 @@ namespace BiuradPHP\Http\Response;
 
 use BiuradPHP\Http\Response;
 
-use function GuzzleHttp\Psr7\stream_for;
-
 /**
  * A class representing empty HTTP responses.
  */
@@ -36,18 +34,6 @@ class EmptyResponse extends Response
      */
     public function __construct(int $status = 204, array $headers = [])
     {
-        $body = stream_for('php://temp', ['mode' => 'r']);
-        parent::__construct($status, $headers, $body);
-    }
-
-    /**
-     * Create an empty response with the given headers.
-     *
-     * @param array $headers Headers for the response.
-     * @return EmptyResponse
-     */
-    public static function withHeaders(array $headers) : EmptyResponse
-    {
-        return new static(204, $headers);
+        parent::__construct($status, $headers);
     }
 }

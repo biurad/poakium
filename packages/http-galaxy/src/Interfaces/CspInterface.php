@@ -29,5 +29,5 @@ interface CspInterface
      *
      * @return array Nonces used by the bundle in Content-Security-Policy header
      */
-    public function updateResponseHeaders(Request $request, Response $response);
+    public function updateResponseHeaders(Request $request, Response &$response);
 }

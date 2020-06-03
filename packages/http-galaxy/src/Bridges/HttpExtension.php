@@ -27,18 +27,74 @@ use Laminas\HttpHandlerRunner\Emitter\EmitterStack;
 
 class HttpExtension extends Nette\DI\CompilerExtension
 {
+    /** @var bool */
+	private $debugMode;
+
+	/** @var string|null */
+	private $tempDir;
+
+
+	public function __construct(bool $debugMode = false, string $tempDir = null)
+	{
+		$this->debugMode = $debugMode;
+		$this->tempDir = $tempDir;
+	}
+
     /**
      * {@inheritDoc}
      */
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
         return Nette\Schema\Expect::structure([
-            'frames' => Expect::anyOf(Expect::string(), Expect::bool())->default('SAMEORIGIN'), // X-Frame-Options
+            'caching' => Nette\Schema\Expect::structure([
+                'debug'                     => Nette\Schema\Expect::bool()->default($this->debugMode),
+                'default_ttl'               => Nette\Schema\Expect::int(),
+                'private_headers'           => Nette\Schema\Expect::list(),
+                'allow_reload'              => Nette\Schema\Expect::bool(),
+                'allow_revalidate'          => Nette\Schema\Expect::bool(),
+                'stale_while_revalidate'    => Nette\Schema\Expect::int(),
+                'stale_if_error'            => Nette\Schema\Expect::int(),
+                'surrogate'                 => Nette\Schema\Expect::anyOf('esi', 'ssi', null),
+            ])->castTo('array'),
+            'policies' => Nette\Schema\Expect::structure([
+                'content_security_policy'   => Expect::array(), // Content-Security-Policy
+                'csp_report_only'           => Expect::array(), // Content-Security-Policy-Report-Only
+                'feature_policy'            => Expect::array(), // Feature-Policy
+                'frame_policy'              => Expect::anyOf(Expect::string(), false)->default('SAMEORIGIN') // X-Frame-Options
+                    ->before(function ($value) {
+                        return null === $value ? '' : $value;
+                    }),
+            ])->castTo('array'),
+            'headers' => Nette\Schema\Expect::structure([
+                'cors' => Nette\Schema\Expect::structure([
+                    'allowedPaths'       => Nette\Schema\Expect::list()
+                        ->before(function ($value) {
+                            return is_string($value) ? [$value] : $value;
+                        }),
+                    'allowedOrigins'     => Nette\Schema\Expect::list()
+                        ->before(function ($value) {
+                            return is_string($value) ? [$value] : $value;
+                        }),
+                    'allowedHeaders'    => Nette\Schema\Expect::list()
+                        ->before(function ($value) {
+                            return is_string($value) ? [$value] : $value;
+                        }),
+                    'allowedMethods'    => Nette\Schema\Expect::list()
+                        ->before(function ($value) {
+                            return is_string($value) ? [$value] : $value;
+                        }),
+                    'exposedHeaders'    => Nette\Schema\Expect::list()
+                        ->before(function ($value) {
+                            return is_string($value) ? [$value] : $value;
+                        })->nullable(),
+                    'allowCredentials'  => Nette\Schema\Expect::bool()->nullable(),
+                    'maxAge'            => Nette\Schema\Expect::int()->nullable(),
+                ])->castTo('array'),
+                'request'               => Nette\Schema\Expect::array(),
+                'response'              => Nette\Schema\Expect::array()
+            ])->castTo('array'),
             'emitters' => Expect::listOf(Expect::string()->assert('class_exists')),
-			'content_security_policy' => Expect::arrayOf('array|scalar|null'), // Content-Security-Policy
-			'cspReportOnly' => Expect::arrayOf('array|scalar|null'), // Content-Security-Policy-Report-Only
-			'featurePolicy' => Expect::arrayOf('array|scalar|null'), // Feature-Policy
-		])->otherItems('mixed');
+		])->castTo('array');
 	}
 
     /**
@@ -59,100 +115,47 @@ class HttpExtension extends Nette\DI\CompilerExtension
             ->setType(\Psr\Http\Message\ServerRequestInterface::class)
 			->setFactory(new Statement([new Reference($this->prefix('factory')), 'fromGlobalRequest']));
 
-        $response = $builder->addDefinition($this->prefix('response'))
+        $builder->addDefinition($this->prefix('response'))
             ->setType(\Psr\Http\Message\ResponseInterface::class)
             ->setFactory(BiuradPHP\Http\Response::class);
 
-        $builder->addDefinition($this->prefix('csp'))
+        $builder->addDefinition($this->prefix('access_control'))
+            ->setFactory(BiuradPHP\Http\Cors\AccessControl::class, [$this->config['headers']['cors']]);
+
+        $csPolicy = $builder->addDefinition($this->prefix('csp'))
             ->setType(BiuradPHP\Http\Interfaces\CspInterface::class)
             ->setFactory(BiuradPHP\Http\Csp\ContentSecurityPolicy::class)
             ->setArguments([new Statement(BiuradPHP\Http\Csp\NonceGenerator::class)]);
 
+        if (false === ($builder->parameters['access']['CONTENT_SECURITY_POLICY'] ?? true)) {
+            $csPolicy->addSetup('disableCsp');
+        }
+
+        $builder->addDefinition($this->prefix('http_middleware'))
+            ->setFactory(BiuradPHP\Http\Middlewares\HttpMiddleware::class, [$this->config]);
+
+        if (class_exists(BiuradPHP\HttpCache\HttpCache::class) && class_exists(BiuradPHP\Routing\Bridges\RoutingExtension::class)) {
+            $surrogate = null;
+            if ('esi' === $this->config['caching']['surrogate']) {
+                $surrogate = new Statement(BiuradPHP\HttpCache\Esi::class);
+            } elseif ('ssi' === $this->config['caching']['surrogate']) {
+                $surrogate = new Statement(BiuradPHP\HttpCache\Ssi::class);
+            }
+            unset($this->config['caching']['surrogate']);
+
+            $builder->addDefinition($this->prefix('cache'))
+                ->setFactory(BiuradPHP\HttpCache\HttpCache::class)
+                ->setArgument('store', new Statement(BiuradPHP\HttpCache\Store::class, [$this->tempDir]))
+                ->setArgument('options', $this->config['caching'])
+                ->setArgument('surrogate', $surrogate);
+        }
+
         $builder->addDefinition($this->prefix('emitter'))
             ->setFactory(EmitterStack::class)
-            ->addSetup('foreach (? as $emitter) { ?->push($this->createInstance($emitter)); }', [$this->config->emitters, '@self']);
-
-        $this->resolveResponse($response);
+            ->addSetup('foreach (? as $emitter) { ?->push($this->createInstance($emitter)); }', [$this->config['emitters'], '@self']);
 
         $builder->addAlias('emitter', $this->prefix('emitter'));
         $builder->addAlias('request', $this->prefix('request'));
         $builder->addAlias('response', $this->prefix('response'));
     }
-
-    private function resolveResponse($response)
-    {
-        $config  = $this->config;
-        $builder = $this->getContainerBuilder();
-        $headers = [];
-		$headers = array_map('strval', $headers);
-
-		if (isset($config->frames) && $config->frames !== true) {
-            $frames = $config->frames;
-
-			if ($frames === false) {
-				$frames = 'DENY';
-			} elseif (preg_match('#^https?:#', $frames)) {
-				$frames = "ALLOW-FROM $frames";
-            }
-
-            $headers['X-Frame-Options'] = $frames;
-        }
-
-        $nonce = (new \BiuradPHP\Http\Csp\NonceGenerator())->generate();
-
-		foreach (['content_security_policy', 'cspReportOnly'] as $key) {
-			if (empty($config->$key)) {
-				continue;
-            }
-
-            $value = self::buildPolicy($config->$key);
-
-			//if (false !== strpos($value, 'nonce')) {
-			//	$value = str_replace('nonce', 'nonce-' . $nonce, $value);
-            //}
-
-            if (true !== ($builder->parameters['access']['CONTENT_SECURITY_POLICY'] ?? false)) {
-                break;
-            }
-
-			$headers['Content-Security-Policy' . ($key === 'content_security_policy' ? '' : '-Report-Only')] = $value;
-		}
-
-		if (!empty($config->featurePolicy)) {
-			$headers['Feature-Policy'] = $this->buildPolicy($config->featurePolicy);
-        }
-
-        $responseHeaders = [];
-
-		foreach ($headers as $key => $value) {
-			if ($value !== '') {
-                $responseHeaders += [$key => $value];
-			}
-        }
-
-        $response->setArgument('body', 'php://memory');
-        $response->setArgument('headers', $responseHeaders);
-    }
-
-    private function buildPolicy(array $config): string
-	{
-		static $nonQuoted = ['require-sri-for' => 1, 'sandbox' => 1];
-        $value = '';
-
-		foreach ($config as $type => $policy) {
-			if ($policy === false) {
-				continue;
-            }
-
-			$policy = $policy === true ? [] : (array) $policy;
-            $value .= $type;
-
-			foreach ($policy as $item) {
-				$value .= !isset($nonQuoted[$type]) && preg_match('#^[a-z-]+\z#', $item) ? " '$item'" : " $item";
-            }
-
-			$value .= '; ';
-		}
-		return $value;
-	}
 }

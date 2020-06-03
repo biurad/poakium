@@ -27,6 +27,11 @@ class ResponseFactory implements ResponseFactoryInterface
 {
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
     {
+        if (false !== empty($reasonPhrase)) {
+            // This will make the Response class to use a custom reasonPhrase
+            $reasonPhrase = null;
+        }
+
         return new Response($code, [], null, '1.1', $reasonPhrase);
     }
 }

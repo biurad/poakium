@@ -29,12 +29,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use BiuradPHP\Http\ServerRequest as Request;
 
-use function fopen;
-use function array_pop;
-use function ltrim;
-use function preg_match;
-use function sprintf;
-
 /**
  * @final
  *

@@ -24,13 +24,6 @@ use GuzzleHttp\Exception;
 use Psr\Http\Message\StreamInterface;
 use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 
-use function get_class;
-use function gettype;
-use function is_object;
-use function is_string;
-use function sprintf;
-use function GuzzleHttp\Psr7\stream_for;
-
 /**
  * HTML response.
  *
@@ -58,33 +51,7 @@ class HtmlResponse extends Response
         parent::__construct(
             $status,
             $this->injectContentType('text/html; charset=utf-8', $headers),
-            $this->createBody($html)
+            $html
         );
-    }
-
-    /**
-     * Create the message body.
-     *
-     * @param string|StreamInterface $html
-     * @throws Exception\InvalidArgumentException if $html is neither a string or stream.
-     */
-    private function createBody($html) : StreamInterface
-    {
-        if ($html instanceof StreamInterface) {
-            return $html;
-        }
-
-        if (! is_string($html)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'Invalid content (%s) provided to %s',
-                (is_object($html) ? get_class($html) : gettype($html)),
-                __CLASS__
-            ));
-        }
-
-        $body = stream_for('php://temp', ['mode' => 'wb+']);
-        $body->write($html);
-        $body->rewind();
-        return $body;
     }
 }

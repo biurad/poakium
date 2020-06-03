@@ -26,7 +26,7 @@
         }
     ],
     "require": {
-        "php": "^7.1.3",
+        "php": "^7.2",
         "ext-json": "*",
         "ext-mbstring": "*",
         "psr/http-factory": "^1.0",
@@ -36,6 +36,10 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~7.5"
+    },
+    "suggest": {
+        "biurad/biurad-http-cache": "A fully-featured reverse proxy (i.e. gateway cache) written in PHP. Implementation of Symfony HTTP Cache",
+        "biurad/biurad-sessions": "A session object and several utilities that you can use to store information about the user between requests."
     },
     "autoload": {
         "psr-4": {

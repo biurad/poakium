@@ -61,10 +61,10 @@ class CookiesMiddleware implements MiddlewareInterface
     /**
      * Create a new CookieGuard instance.
      *
-     * @param EncrypterInterface|null $encrypter
      * @param Queueing $cookie
+     * @param EncrypterInterface|null $encrypter
      */
-    public function __construct(?EncrypterInterface $encrypter = null, Queueing $cookie)
+    public function __construct(Queueing $cookie, ?EncrypterInterface $encrypter)
     {
         $this->cookies = $cookie;
         $this->encrypter = $encrypter;
@@ -195,9 +195,7 @@ class CookiesMiddleware implements MiddlewareInterface
             $headers[] = (string) $cookie;
         }
 
-        if (!empty($headers)) return $response->withAddedHeader('Set-Cookie', $headers);
-
-        return $response;
+        return $headers ? $response->withAddedHeader('Set-Cookie', $headers) : $response;
     }
 
     /**

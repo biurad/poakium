@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Http\Middlewares;
 
+use BiuradPHP\Http\Csp\ContentSecurityPolicy;
+use BiuradPHP\Http\Csp\NonceGenerator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use BiuradPHP\Http\Interfaces\CspInterface;
@@ -30,8 +32,6 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  *
  * Provides tools for working with the Content-Security-Policy header
  * to help defeat XSS attacks.
- * The generated nounce are inserted into the request attributes as
- * `csp_style_nonce` and `csp_script_nonce`.
  *
  * @see     http://www.w3.org/TR/CSP/
  * @see     http://www.html5rocks.com/en/tutorials/security/content-security-policy/
@@ -43,16 +43,15 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  */
 class CspMiddleware implements MiddlewareInterface
 {
-    /** @var \BiuradPHP\Http\Interfaces\CspInterface */
+    /** @var ContentSecurityPolicy */
     private $csp;
 
-    /** @var \Psr\Http\Message\ResponseInterface */
-    private $response;
-
-    public function __construct(ResponseInterface $response, CspInterface $csp)
+    /**
+     * @param CspInterface $csp
+     */
+    public function __construct(?CspInterface $csp)
     {
-        $this->csp = $csp;
-        $this->response = $response;
+        $this->csp = $csp ?? new ContentSecurityPolicy(new NonceGenerator());
     }
 
     /**
@@ -61,18 +60,18 @@ class CspMiddleware implements MiddlewareInterface
      * @param Request $request
      * @param RequestHandler $handler
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
-        $nonce = $this->csp->updateResponseHeaders($request, $this->response);
+        $response = clone $handler->handle($request);
+        $nonce = $this->csp->updateResponseHeaders($request, $response);
 
-        $request = $request
-            ->withAttribute('csp_style_nonce', $nonce['csp_style_nonce'])
-            ->withAttribute('csp_script_nonce', $nonce['csp_script_nonce']);
+        // Incase it's disabled
+        if ($nonce instanceof ResponseInterface) {
+            return $nonce;
+        }
 
-        $this->response = $handler->handle($request);
-
-        return $this->response;
+        return $response;
     }
 }

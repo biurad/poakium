@@ -25,14 +25,6 @@ use Psr\Http\Message\StreamInterface;
 use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 
 use function GuzzleHttp\Psr7\stream_for;
-use function is_object;
-use function is_resource;
-use function json_encode;
-use function json_last_error;
-use function json_last_error_msg;
-use function sprintf;
-
-use const JSON_ERROR_NONE;
 
 /**
  * JSON response.
@@ -93,12 +85,9 @@ class JsonResponse extends Response
         $this->setPayload($data);
         $this->encodingOptions = $encodingOptions;
 
-        $json = $this->jsonEncode($data, $this->encodingOptions);
-        $body = $this->createBodyFromJson($json);
-
         $headers = $this->injectContentType('application/json', $headers);
 
-        parent::__construct($status, $headers, $body);
+        parent::__construct($status, $headers, $this->jsonEncode($data, $this->encodingOptions));
     }
 
     /**
@@ -116,6 +105,7 @@ class JsonResponse extends Response
     {
         $new = clone $this;
         $new->setPayload($data);
+
         return $this->updateBodyFor($new);
     }
 
@@ -128,6 +118,7 @@ class JsonResponse extends Response
     {
         $new = clone $this;
         $new->encodingOptions = $encodingOptions;
+
         return $this->updateBodyFor($new);
     }
 
@@ -190,6 +181,7 @@ class JsonResponse extends Response
     {
         $json = $this->jsonEncode($toUpdate->payload, $toUpdate->encodingOptions);
         $body = $this->createBodyFromJson($json);
+
         return $toUpdate->withBody($body);
     }
 }

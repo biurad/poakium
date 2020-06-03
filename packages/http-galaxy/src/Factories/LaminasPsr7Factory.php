@@ -35,13 +35,6 @@ use function Laminas\Diactoros\parseCookieHeader;
 use function Laminas\Diactoros\marshalUriFromSapi;
 use function Laminas\Diactoros\marshalMethodFromSapi;
 use function Laminas\Diactoros\marshalProtocolVersionFromSapi;
-use function base64_encode;
-use function base64_decode;
-use function stripos;
-use function is_callable;
-use function explode;
-use function substr;
-use function count;
 
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>

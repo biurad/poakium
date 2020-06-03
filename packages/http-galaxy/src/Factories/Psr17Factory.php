@@ -120,6 +120,10 @@ abstract class Psr17Factory implements Psr17Interface
         $factory = self::isFactoryDecoratorAvailable($this->streamFactoryClass, StreamFactoryInterface::class);
         assert($factory instanceof StreamFactoryInterface);
 
+        if ('' === $mode || false === in_array($mode[0], ['r', 'w', 'a', 'x', 'c'], true)) {
+            throw new Exceptions\InvalidPsr17FactoryException('The mode ' . $mode . ' is invalid.');
+        }
+
         return $factory->createStreamFromFile($filename, $mode);
     }
 

@@ -22,14 +22,7 @@ namespace BiuradPHP\Http\Response;
 use BiuradPHP\Http\Response;
 use GuzzleHttp\Exception;
 use Psr\Http\Message\StreamInterface;
-use GuzzleHttp\Psr7\Stream;
 use BiuradPHP\Http\Traits\InjectContentTypeTrait;
-
-use function get_class;
-use function gettype;
-use function is_object;
-use function is_string;
-use function sprintf;
 
 /**
  * XML response.
@@ -60,33 +53,7 @@ class XmlResponse extends Response
         parent::__construct(
             $status,
             $this->injectContentType('application/xml; charset=utf-8', $headers),
-            $this->createBody($xml)
+            $xml
         );
-    }
-
-    /**
-     * Create the message body.
-     *
-     * @param string|StreamInterface $xml
-     * @throws Exception\InvalidArgumentException if $xml is neither a string or stream.
-     */
-    private function createBody($xml) : StreamInterface
-    {
-        if ($xml instanceof StreamInterface) {
-            return $xml;
-        }
-
-        if (! is_string($xml)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'Invalid content (%s) provided to %s',
-                (is_object($xml) ? get_class($xml) : gettype($xml)),
-                __CLASS__
-            ));
-        }
-
-        $body = new Stream('php://temp', 'wb+');
-        $body->write($xml);
-        $body->rewind();
-        return $body;
     }
 }
