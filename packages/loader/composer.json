@@ -26,6 +26,7 @@
     },
     "autoload": {
         "psr-4": { "BiuradPHP\\Loader\\": "src/" },
+        "files": ["src/compatibility.php"],
         "exclude-from-classmap": [
             "/Tests/"
         ]
@@ -37,7 +38,7 @@
     },
     "minimum-stability": "dev",
     "suggest": {
-        "doctrine/annotations": "Support to use annotations loading feature in project",
+        "biurad/doctrine-annotations-bridge": "Support to use annotations loading feature in project",
         "symfony/yaml": "Support loading files in yml or yaml format, if native yaml extension is not avaliable",
         "nette/neon": "Support loading files in neon format, since nette/neon is an advanced version of yaml"
     }

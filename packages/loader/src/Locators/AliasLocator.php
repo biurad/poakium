@@ -17,9 +17,11 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Aliases;
+namespace BiuradPHP\Loader\Locators;
 
 use ArrayObject;
+use BiuradPHP\Loader\Aliases\ClassAlias;
+use BiuradPHP\Loader\Aliases\NamespaceAlias;
 use BiuradPHP\Loader\Interfaces\AliasInterface;
 use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
 
@@ -31,7 +33,7 @@ use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
  * @author Divine Niiquaye <divineibok@gmail.com>
  * @license BSD-3-Cluase
  */
-class AliasLoader implements AliasInterface
+class AliasLocator implements AliasInterface
 {
     private $namespaces = [];
     private $classes = [];

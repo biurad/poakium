@@ -28,7 +28,7 @@ use RuntimeException;
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class IniAdapter extends Adapter
+final class IniFileAdapter extends AbstractAdapter
 {
     /**
      * Separator for nesting levels of configuration data identifiers.
@@ -55,6 +55,14 @@ final class IniAdapter extends Adapter
     protected $renderWithoutSections = false;
 
     /**
+     * {@inheritdoc}
+     */
+    public function supports(string $file): bool
+    {
+        return 'ini' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    }
+
+    /**
      * Reads configuration from INI data.
      *
      * @param string $string
@@ -63,7 +71,7 @@ final class IniAdapter extends Adapter
      *
      * @throws RuntimeException
      */
-    protected function processFrom(string $string)
+    protected function processFrom(string $string): array
     {
         $ini = parse_ini_string($string, $this->getProcessSections());
         restore_error_handler();
@@ -76,7 +84,7 @@ final class IniAdapter extends Adapter
      * @param array $data
      * @return string
      */
-    protected function processDump(array $data)
+    protected function processDump(array $data): string
     {
         $class = __CLASS__;
 

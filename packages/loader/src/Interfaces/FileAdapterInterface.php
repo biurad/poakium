@@ -21,34 +21,46 @@ namespace BiuradPHP\Loader\Interfaces;
 
 /**
  * Adapter for reading and writing configuration files.
+ *
+ * @author Divine Niiquaye <divineibok@gmail.com>
+ * @license BSD-3-Cluase
  */
-interface AdapterInterface
+interface FileAdapterInterface
 {
+    /**
+     * Check file supported extensions
+     *
+     * @param string $file
+     *
+     * @return bool
+     */
+    public function supports(string $file): bool;
 
 	/**
      * Read from a file and create an array
      *
-     * @param  string $filename
+     * @param string $filename
      *
      * @return array
      */
-    public function fromFile(string $filename);
+    public function fromFile(string $filename): array;
 
     /**
      * Read from a string and create an array
      *
-     * @param  string[]|string $string
+     * @param string $string
      *
-     * @return array|bool
+     * @return array
      */
-    public function fromString($string);
+    public function fromString(string $string): array;
 
     /**
      * Generates configuration string.
      *
      * Write a config object to a string.
      *
-     * @param mixed $config
+     * @param array|object|\Traversable|\JsonSerializable $config
+     *
      * @return string
      */
     public function dump($config): string;

@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Composer;
+namespace BiuradPHP\Loader\Locators;
 
 use ArrayIterator;
 use BiuradPHP\Loader\Interfaces\ComposerInterface;
@@ -31,7 +31,7 @@ use RuntimeException;
 use SplFileInfo;
 use UnexpectedValueException;
 
-class ComposerLoader implements ComposerInterface, Countable, IteratorAggregate
+class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
 {
     /** @var string */
     private $path;

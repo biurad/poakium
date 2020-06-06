@@ -39,7 +39,7 @@ interface ClassInterface
      *
      * @return array
      */
-    public function findFiles(string $extension = '.php'): array;
+    public function findFiles(string $extension = 'php'): array;
 
     /**
      * Index all available files and generate list of found classes with their names and filenames.

@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Resources;
+namespace BiuradPHP\Loader\Files;
 
 use FilesystemIterator;
 use RecursiveIterator;

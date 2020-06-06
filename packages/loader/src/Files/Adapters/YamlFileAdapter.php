@@ -19,9 +19,11 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Files\Adapters;
 
-use RuntimeException;
+use BiuradPHP\Loader\Exceptions\FileGeneratingException;
+use BiuradPHP\Loader\Exceptions\FileLoadingException;
+use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
 use InvalidArgumentException;
-use BiuradPHP\Loader\Interfaces\AdapterInterface;
+use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -31,15 +33,8 @@ use Symfony\Component\Yaml\Yaml;
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class YamlAdapter implements AdapterInterface
+final class YamlFileAdapter implements FileAdapterInterface
 {
-    /**
-     * Directory of the YAML file.
-     *
-     * @var string
-     */
-    private $directory;
-
     /**
      * YAML decoder callback.
      *
@@ -65,19 +60,30 @@ final class YamlAdapter implements AdapterInterface
         if ($yamlDecoder !== null && $yamlEncoder !== null) {
             $this->setYamlDecoder($yamlDecoder);
             $this->setYamlEncoder($yamlEncoder);
-        } else {
-            if (class_exists(Yaml::class) && !function_exists('yaml_emit')) {
-                $this->setYamlDecoder([new Yaml(), 'parse']);
-                $this->setYamlEncoder([new Yaml(), 'dump']);
-            }
-            // Try native PECL YAML PHP extension first if available.
-            if (function_exists('yaml_parse')) {
-                $this->setYamlDecoder('yaml_parse');
-            }
-            if (function_exists('yaml_emit')) {
-                $this->setYamlEncoder('yaml_emit');
-            }
+
+            return;
         }
+
+        // Try native PECL YAML PHP extension first if available.
+        if (function_exists('yaml_parse') && function_exists('yaml_emit')) {
+            $this->setYamlDecoder('yaml_parse');
+            $this->setYamlEncoder('yaml_emit');
+
+            return;
+        }
+
+        if (class_exists(Yaml::class) && !function_exists('yaml_emit')) {
+            $this->setYamlDecoder([new Yaml(), 'parse']);
+            $this->setYamlEncoder([new Yaml(), 'dump']);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supports(string $file): bool
+    {
+        return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['yml', 'yaml'], true);
     }
 
     /**
@@ -92,9 +98,7 @@ final class YamlAdapter implements AdapterInterface
     public function setYamlDecoder($yamlDecoder)
     {
         if (!is_callable($yamlDecoder)) {
-            throw new RuntimeException(
-                'Invalid parameter to setYamlDecoder() - must be callable'
-            );
+            throw new RuntimeException('Invalid parameter to setYamlDecoder() - must be callable');
         }
         $this->yamlDecoder = $yamlDecoder;
 
@@ -149,24 +153,19 @@ final class YamlAdapter implements AdapterInterface
      *
      * @throws RuntimeException
      */
-    public function fromFile(string $filename)
+    public function fromFile(string $filename): array
     {
         if (!is_file($filename) || !is_readable($filename)) {
-            throw new RuntimeException(sprintf(
-                "File '%s' doesn't exist or not readable",
-                $filename
-            ));
+            throw new FileLoadingException(sprintf('File \'%s\' doesn\'t exist or not readable', $filename));
         }
 
         if (null === $this->getYamlDecoder()) {
-            throw new RuntimeException("You didn't specify a Yaml\Yml callback decoder");
+            throw new RuntimeException('You didn\'t specify a Yaml\Yml callback decoder');
         }
-
-        $this->directory = dirname($filename);
 
         $config = $this->yamlBound($this->getYamlDecoder(), file_get_contents($filename));
         if (null === $config) {
-            throw new RuntimeException('Error parsing YAML\YML file');
+            throw new FileLoadingException('Error parsing YAML\YML file');
         }
 
         return (array) $config;
@@ -181,20 +180,18 @@ final class YamlAdapter implements AdapterInterface
      *
      * @throws RuntimeException
      */
-    public function fromString($string)
+    public function fromString($string): array
     {
         if (null === $this->getYamlDecoder()) {
-            throw new RuntimeException("You didn't specify a Yaml\YML callback decoder");
+            throw new RuntimeException('You didn\'t specify a Yaml\YML callback decoder');
         }
         if (empty($string)) {
             return [];
         }
 
-        $this->directory = null;
-
         $config = $this->yamlBound($this->getYamlDecoder(), $string);
         if (null === $config) {
-            throw new RuntimeException("Error parsing YAML\YML data");
+            throw new RuntimeException('Error parsing YAML\YML data');
         }
 
         return (array) $config;
@@ -212,13 +209,13 @@ final class YamlAdapter implements AdapterInterface
     public function dump($config): string
     {
         if (null === $this->getYamlEncoder()) {
-            throw new RuntimeException("You didn't specify a Yaml callback encoder");
+            throw new FileGeneratingException("You didn't specify a Yaml callback encoder");
         }
 
         $config = $this->yamlBound($this->getYamlEncoder(), $config);
 
         if (null === $config) {
-            throw new RuntimeException('Error generating YAML data');
+            throw new FileGeneratingException('Error generating YAML data');
         }
 
         return $config;

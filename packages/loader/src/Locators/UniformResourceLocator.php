@@ -17,18 +17,15 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Resources;
+namespace BiuradPHP\Loader\Locators;
 
 use BadMethodCallException, RecursiveIteratorIterator;
+use BiuradPHP\Loader\Files\RecursiveUniformResourceIterator;
+use BiuradPHP\Loader\Files\UniformResourceIterator;
 use BiuradPHP\Loader\Interfaces\ResourceLocatorInterface;
 use InvalidArgumentException;
 use Exception;
 use RuntimeException;
-
-use function count;
-use function is_array;
-use function is_string;
-use function strlen;
 
 /**
  * Implements Uniform Resource Location.

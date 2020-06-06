@@ -19,22 +19,32 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Files\Adapters;
 
+use BiuradPHP\Loader\Exceptions\FileGeneratingException;
+
 /**
  * Reading and generating JSON files.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class JsonAdapter extends Adapter
+final class JsonFileAdapter extends AbstractAdapter
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function supports(string $file): bool
+    {
+        return 'json' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    }
+
     /**
      * Reads configuration from JSON data.
      *
      * @param  string $string
      *
-     * @return array|bool
+     * @return array
      */
-    protected function processFrom(string $string)
+    protected function processFrom(string $string): array
     {
         return json_decode($string, true);
     }
@@ -46,10 +56,14 @@ final class JsonAdapter extends Adapter
      * @param array $data
      * @return false|string
      */
-	protected function processDump(array $data)
+	protected function processDump(array $data): string
 	{
-		return json_encode(
-            $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-        );
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new FileGeneratingException('Unable to generate json from provided data');
+        }
+
+        return $json;
 	}
 }

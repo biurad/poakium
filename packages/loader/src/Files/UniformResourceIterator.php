@@ -17,9 +17,10 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Resources;
+namespace BiuradPHP\Loader\Files;
 
 use BadMethodCallException;
+use BiuradPHP\Loader\Locators\UniformResourceLocator;
 use FilesystemIterator;
 use RuntimeException;
 

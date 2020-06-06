@@ -19,30 +19,29 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Interfaces;
 
-use Composer\Autoload\ClassLoader;
-
 /**
- * Get All Paths from composer directory
+ * LoaderInterface is the interface implemented by all loader classes.
  *
  * @author Divine Niiquaye <divineibok@gmail.com>
  * @license BSD-3-Cluase
  */
-interface ComposerInterface
+interface LoaderInterface
 {
     /**
-     * Get the full path of composer vendor directory
-     */
-    public function getPath(): string;
-
-    /**
-     * Get All Found Paths
-     */
-    public function getPaths(): iterable;
-
-    /**
-     * Get the Composer's ClassLoader instance
+     * Loads a resource.
      *
-     * @param bool $spl_functiion
+     * @param mixed $resource The resource
+     *
+     * @throws \Exception If something went wrong
      */
-    public function getClassLoader(bool $spl_functiion = false): ClassLoader;
+    public function load($resource, string $type = null);
+
+    /**
+     * Returns whether this class supports the given resource.
+     *
+     * @param mixed $resource A resource
+     *
+     * @return bool True if this class supports the given resource, false otherwise
+     */
+    public function supports($resource, string $type = null): bool;
 }

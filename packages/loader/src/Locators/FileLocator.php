@@ -17,8 +17,9 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Files;
+namespace BiuradPHP\Loader\Locators;
 
+use BiuradPHP\Loader\Exceptions\FileNotFoundException;
 use BiuradPHP\Loader\Exceptions\LoaderException;
 use BiuradPHP\Loader\Interfaces\ClassInterface;
 use Psr\Log\LoggerAwareInterface;
@@ -28,7 +29,7 @@ use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionException;
 
-class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggregate, \Countable
+class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggregate, \Countable
 {
     use LoggerAwareTrait;
 
@@ -74,12 +75,11 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
     /**
      * Get pre-configured class locator.
      *
-     * @param array $directories
-     * @param array $exclude
-     * @return ClassLoader
+     * @return ClassLocator
      */
-    public function getClassLocator(): ClassLoader {
-        $classLocator = new ClassLoader($this);
+    public function getClassLocator(): ClassLocator {
+        $classLocator = new ClassLocator($this);
+
         if (null !== $this->logger) {
             $classLocator->setLogger($this->logger);
         }
@@ -98,22 +98,25 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
 
 	/**
 	 * Returns iterator.
+     *
+     * @return \Iterator|\SplFIleInfo[]
 	 */
 	public function getIterator(): \Iterator
 	{
 		if (!$this->paths) {
-			throw new LoaderException('Call specify directory to search on constructor method.');
+            throw new LoaderException('Call specify directory to search on constructor method.');
+        }
 
-		} elseif (count($this->paths) === 1) {
+        if (count($this->paths) === 1) {
 			return $this->buildIterator((string) $this->paths[0]);
+        }
 
-		} else {
-			$iterator = new \AppendIterator();
-			foreach ($this->paths as $path) {
-				$iterator->append($this->buildIterator((string) $path));
-			}
-			return $iterator;
-		}
+        $iterator = new \AppendIterator();
+        foreach ($this->paths as $path) {
+            $iterator->append($this->buildIterator((string) $path));
+        }
+
+        return $iterator;
     }
 
     /**
@@ -131,15 +134,17 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
     /**
      * Fiind all files in a list of directories.
      *
-     * @param string $extension
+     * @param string|array $extension
      *
      * @return array
      */
-    public function findFiles(string $extension = '.php'): array
+    public function findFiles(string $extension = 'php'): array
     {
         $classes = [];
+
+        /** @var \SplFileInfo $file */
         foreach ($this->getIterator() as $file) {
-            if (('*' !== $extension && $file->getBasename($extension) === $file->getBasename()) || $file->isFile()) {
+            if (('*' !== $extension && $file->getExtension() !== $extension) || !$file->isFile()) {
                 continue;
             }
 
@@ -157,6 +162,8 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
     public function findDirectories(): array
     {
         $directories = [];
+
+        /** @var \SplFileInfo $path */
         foreach ($this->getIterator() as $path) {
             if ($path->isFile() || ('.' === $path->getFilename() || '..' === $path->getFilename())) {
                 continue;
@@ -166,6 +173,57 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
         }
 
         return $directories;
+    }
+
+    /**
+     * Returns a full path for a given file name.
+     *
+     * @param string      $name        The file name to locate
+     * @param string|null $currentPath The current path
+     * @param bool        $first       Whether to return the first occurrence or an array of filenames
+     *
+     * @return string|array The full path to the file or an array of file paths
+     *
+     * @throws \InvalidArgumentException        If $name is empty
+     * @throws FileLocatorFileNotFoundException If a file is not found
+     */
+    public function locate(string $name, string $currentPath = null, bool $first = true)
+    {
+        if ('' === $name) {
+            throw new \InvalidArgumentException('An empty file name is not valid to be located.');
+        }
+
+        if ($this->isAbsolutePath($name)) {
+            if (!file_exists($name)) {
+                throw new FileNotFoundException(sprintf('The file "%s" does not exist.', $name), 0, null, [$name]);
+            }
+
+            return $name;
+        }
+
+        $paths = $this->paths;
+
+        if (null !== $currentPath) {
+            array_unshift($paths, $currentPath);
+        }
+
+        $paths = array_unique($paths);
+        $filepaths = [];
+
+        foreach ($paths as $path) {
+            if (@file_exists($file = $path.\DIRECTORY_SEPARATOR.$name)) {
+                if (true === $first) {
+                    return $file;
+                }
+                $filepaths[] = $file;
+            }
+        }
+
+        if (!$filepaths) {
+            throw new FileNotFoundException(sprintf('The file "%s" does not exist (in: "%s").', $name, implode('", "', $paths)));
+        }
+
+        return $filepaths;
     }
 
     /**
@@ -183,6 +241,24 @@ class FileLoader implements ClassInterface, LoggerAwareInterface, \IteratorAggre
     public function getClasses($target = null): array
     {
         return $this->getClassLocator()->getClasses($target);
+    }
+
+    /**
+     * Returns whether the file path is an absolute path.
+     */
+    private function isAbsolutePath(string $file): bool
+    {
+        if ('/' === $file[0] || '\\' === $file[0]
+            || (\strlen($file) > 3 && ctype_alpha($file[0])
+                && ':' === $file[1]
+                && ('\\' === $file[2] || '/' === $file[2])
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME)
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

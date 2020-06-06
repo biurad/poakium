@@ -19,18 +19,27 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Bridges;
 
-use BiuradPHP\Loader\Aliases\AliasLoader;
-use BiuradPHP\Loader\Annotations\AnnotationLoader;
-use BiuradPHP\Loader\Composer\ComposerLoader;
-use BiuradPHP\Loader\DataLoader;
-use BiuradPHP\Loader\Files\FileLoader;
-use BiuradPHP\Loader\Resources\UniformResourceLocator;
+use BiuradPHP\DependencyInjection\Concerns\Compiler;
+use BiuradPHP\Loader\Locators\AliasLocator;
+use BiuradPHP\Loader\AliasLoader;
+use BiuradPHP\Loader\ConfigFileLoader;
+use BiuradPHP\Loader\DelegatingLoader;
+use BiuradPHP\Loader\DirectoryLoader;
+use BiuradPHP\Loader\Files\DataLoader;
+use BiuradPHP\Loader\GlobFileLoader;
+use BiuradPHP\Loader\Interfaces\LoaderExtensionInterface;
+use BiuradPHP\Loader\Locators\AnnotationLocator;
+use BiuradPHP\Loader\Locators\ComposerLocator;
+use BiuradPHP\Loader\Locators\FileLocator;
+use BiuradPHP\Loader\Locators\UniformResourceLocator;
+use Doctrine\Common\Annotations\Reader;
 use Nette, BiuradPHP;
+use Nette\DI\Container;
+use Nette\DI\Definitions\Statement;
 use Nette\Schema\Expect;
-use Nette\PhpGenerator\PhpLiteral;
 use Nette\PhpGenerator\ClassType as ClassTypeGenerator;
 
-class LoaderExtension extends Nette\DI\CompilerExtension
+class LoaderExtension extends Nette\DI\CompilerExtension implements LoaderExtensionInterface
 {
     /**
      * {@inheritDoc}
@@ -51,7 +60,10 @@ class LoaderExtension extends Nette\DI\CompilerExtension
             })),
             'data_path' => Nette\Schema\Expect::string(),
             'composer_path' => Nette\Schema\Expect::string()->nullable(),
-            'aliases' => Nette\Schema\Expect::arrayOf(Expect::string())
+            'aliases' => Nette\Schema\Expect::arrayOf(Expect::string()),
+            'loaders' => Nette\Schema\Expect::listOf(Expect::object()->before(function ($value) {
+                return is_string($value) ? new Statement($value) : $value;
+            })),
         ])->castTo('array');
     }
 
@@ -63,12 +75,25 @@ class LoaderExtension extends Nette\DI\CompilerExtension
         $builder = $this->getContainerBuilder();
 
         $builder->addDefinition($this->prefix('file'))
-            ->setFactory(FileLoader::class)
+            ->setFactory(FileLocator::class)
             ->setArguments([$this->config['locators']['paths'], $this->config['locators']['excludes']])
         ;
 
-        $builder->addDefinition($this->prefix('annotation'))
-            ->setFactory(AnnotationLoader::class);
+        $builder->addDefinition($this->prefix('loader'))
+            ->setFactory(DelegatingLoader::class)
+            ->setArguments([
+                array_merge([
+                    new Statement(AliasLoader::class),
+                    new Statement(ConfigFileLoader::class),
+                    new Statement(DirectoryLoader::class),
+                    new Statement(GlobFileLoader::class),
+                ], $this->config['loaders'])
+            ]);
+
+        if (class_exists(Reader::class)) {
+            $builder->addDefinition($this->prefix('annotation'))
+                ->setFactory(AnnotationLocator::class);
+        }
 
         $builder->addDefinition($this->prefix('data'))
             ->setFactory(DataLoader::class)
@@ -76,16 +101,30 @@ class LoaderExtension extends Nette\DI\CompilerExtension
         ;
 
         $builder->addDefinition($this->prefix('composer'))
-            ->setFactory(ComposerLoader::class)
+            ->setFactory(ComposerLocator::class)
             ->setArguments([$this->config['composer_path']])
         ;
 
-        $builder->addDefinition($this->prefix('locator'))
+        $builder->addDefinition($this->prefix('alias'))
+            ->setFactory(AliasLocator::class, [$this->config['aliases']]);
+
+        $locator = $builder->addDefinition($this->prefix('locator'))
             ->setFactory(UniformResourceLocator::class)
-            ->setArguments([$builder->parameters['path']['ROOT']])
-            ->addSetup(
-                'foreach (? as $scheme => [$path, $lookup]) { ?->addPath($scheme, $path, $lookup); }', [$this->config['resources'], '@self']
-        );
+            ->setArguments([$builder->parameters['path']['ROOT']]);
+
+        foreach ($this->config['resources'] as $scheme => [$path, $lookup]) {
+            $locator->addSetup('addPath', [$scheme, $path, $lookup]);
+        }
+
+        $builder->addAlias('locator', $this->prefix('locator'));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addCompilerPasses(Compiler &$compiler): void
+    {
+        $compiler->addPass(new LoaderPassCompiler());
     }
 
     /**
@@ -95,13 +134,14 @@ class LoaderExtension extends Nette\DI\CompilerExtension
     {
         $init = $this->initialization ?? $class->getMethod('initialize');
 
+        if (empty($this->config['aliases'])) {
+            return;
+        }
+
         // For Runtime.
         $init->addBody(
-            "// The loader class aliases.\n" .
-                '$classAliases = new ?(?);' . "\n" .
-                '$classAliases->register(); // Class alias registered.' .
-                "\n\n",
-            [new PhpLiteral(AliasLoader::class), $this->config['aliases']]
+            '$this->?()->register(); // Class alias registered.'."\n\n",
+            [Container::getMethodName($this->prefix('alias'))]
         );
     }
 }

@@ -19,11 +19,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Loader\Files\Adapters;
 
+use BiuradPHP\Loader\Exceptions\FileLoadingException;
 use Nette;
-use RuntimeException;
-
-use function is_array;
-use function is_object;
 
 /**
  * Reading and generating PHP files.
@@ -31,61 +28,42 @@ use function is_object;
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class PhpAdapter extends Adapter
+final class PhpFileAdapter extends AbstractAdapter
 {
     /**
-     * Reads configuration from PHP file.
-     *
-     * @param  string $filename
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritdoc}
      */
-    public function fromFile(string $filename)
+    public function supports(string $file): bool
     {
-        if (!is_file($filename) || !is_readable($filename)) {
-            throw new RuntimeException(
-                sprintf(
-                    "File '%s' doesn't exist or not readable",
-                    $filename
-                )
-            );
-        }
-
-        set_error_handler(
-            function ($error, $message = '') use ($filename) {
-                throw new RuntimeException(
-                    sprintf('Error reading PHP file "%s": %s', $filename, $message),
-                    $error
-                );
-            },
-            E_WARNING
-        );
-        $php = require $filename;
-        restore_error_handler();
-
-        return (array) $php;
+        return 'php' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
     }
 
     /**
-     * Reads configuration from PHP data.
-     *
-     * @param string $string
-     *
-     * @return void
-     *
+     * {@inheritdoc}
      */
-    public function fromString($string)
+    public function fromFile(string $filename): array
     {
-        throw new RuntimeException(
-            sprintf('Error reading PHP %s, this is not supported', gettype($string))
-        );
+        return (array) require $filename;
     }
 
-    protected function processFrom(string $config)
+    /**
+     * {@inheritdoc}
+     */
+    public function fromString($string): array
+    {
+        throw new FileLoadingException(sprintf('Error reading PHP %s, this is not supported', gettype($string)));
+    }
+
+    /**
+     * Not supported on php files.
+     *
+     * @param string $config
+     * @return array
+     */
+    protected function processFrom(string $config): array
     {
         //TODO this method will be implemented if php arrays are updated to support this method.
+        return [];
     }
 
 
@@ -93,9 +71,10 @@ final class PhpAdapter extends Adapter
      * Generates configuration in PHP format.
      *
      * @param array $data
+     *
      * @return string
      */
-    protected function ProcessDump(array $data)
+    protected function ProcessDump(array $data): string
     {
         $class = __CLASS__;
 

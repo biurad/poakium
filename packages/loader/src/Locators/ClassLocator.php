@@ -17,7 +17,7 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Files;
+namespace BiuradPHP\Loader\Locators;
 
 use BiuradPHP\Loader\Exceptions\LoaderException;
 use Psr\Log\LoggerAwareInterface;
@@ -26,8 +26,11 @@ use Symfony\Component\VarDumper\Tests\Fixtures\NotLoadableClass;
 
 /**
  * Can locate classes in a specified directory.
+ *
+ * @author Divine Niiquaye <divineibok@gmail.com>
+ * @license BSD-3-Cluase
  */
-final class ClassLoader implements LoggerAwareInterface
+final class ClassLocator implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -37,8 +40,12 @@ final class ClassLoader implements LoggerAwareInterface
     /**
      * @param FileLoader $finder
      */
-    public function __construct(FileLoader $finder)
+    public function __construct(FileLocator $finder)
     {
+        if (!\function_exists('token_get_all')) {
+            throw new \LogicException('The Tokenizer extension is required for the class loading.');
+        }
+
         $this->finder = $finder;
     }
 
@@ -71,6 +78,8 @@ final class ClassLoader implements LoggerAwareInterface
             $result[$reflection->getName()] = $reflection;
         }
 
+        gc_mem_caches();
+
         return $result;
     }
 
@@ -82,7 +91,7 @@ final class ClassLoader implements LoggerAwareInterface
     public function findClasses(): array
     {
         $found = [];
-        foreach ($this->finder->findFiles('.php') as $file) {
+        foreach ($this->finder->findFiles('php') as $file) {
             $found[] = $this->findClass(@$file);
         }
 
@@ -98,28 +107,70 @@ final class ClassLoader implements LoggerAwareInterface
      */
     public function findClass(string $path): ?string
     {
-        $namespace = null;
+        $class = false;
+        $namespace = false;
         $tokens = token_get_all(file_get_contents($path));
 
-        foreach ($tokens as $key => $token) {
-            if ($this->tokenIsIncludeOrRequire($token)) {
+        if (1 === \count($tokens) && T_INLINE_HTML === $tokens[0][0]) {
+            if (null !== $this->logger) {
+                // We are not analyzing php files which are meant for template purpose
+                $this->logger->warning(sprintf('The file "%s" does not contain PHP code. Did you forgot to add the "<?php" start tag at the beginning of the file?', $path), compact('path'));
+            }
+
+            return null;
+        }
+
+        for ($i = 0; isset($tokens[$i]); ++$i) {
+            $token = $tokens[$i];
+
+            if (!isset($token[1])) {
+                continue;
+            }
+
+            if (in_array($token[0], [T_INCLUDE, T_INCLUDE_ONCE, T_REQUIRE, T_REQUIRE_ONCE], true)) {
                 if (null !== $this->logger) {
-                    //We are not analyzing files which has includes, it's not safe to require such reflections
-                    $this->logger->warning(
-                        sprintf("File `%s` has includes and excluded from analysis", $path),
-                        compact('path')
-                    );
+                    // We are not analyzing files which has includes, it's not safe to require such reflections
+                    $this->logger->warning(sprintf("File `%s` has includes and excluded from analysis", $path), compact('path'));
                 }
 
                 continue;
             }
 
-            if ($this->tokenIsNamespace($token)) {
-                $namespace = $this->getNamespace($key + 2, $tokens);
+            if (true === $class && T_STRING === $token[0]) {
+                return $namespace.'\\'.$token[1];
             }
 
-            if ($this->tokenIsClassOrInterface($token)) {
-                return ltrim($namespace.'\\'.$this->getClass($key + 2, $tokens), '\\');
+            if (true === $namespace && T_STRING === $token[0]) {
+                $namespace = $token[1];
+                while (isset($tokens[++$i][1]) && \in_array($tokens[$i][0], [T_NS_SEPARATOR, T_STRING], true)) {
+                    $namespace .= $tokens[$i][1];
+                }
+                $token = $tokens[$i];
+            }
+
+            if (T_CLASS === $token[0]) {
+                // Skip usage of ::class constant and anonymous classes
+                $skipClassToken = false;
+                for ($j = $i - 1; $j > 0; --$j) {
+                    if (!isset($tokens[$j][1])) {
+                        break;
+                    }
+
+                    if (T_DOUBLE_COLON === $tokens[$j][0] || T_NEW === $tokens[$j][0]) {
+                        $skipClassToken = true;
+                        break;
+                    } elseif (!\in_array($tokens[$j][0], [T_WHITESPACE, T_DOC_COMMENT, T_COMMENT], true)) {
+                        break;
+                    }
+                }
+
+                if (!$skipClassToken) {
+                    $class = true;
+                }
+            }
+
+            if (T_NAMESPACE === $token[0]) {
+                $namespace = true;
             }
         }
 
@@ -248,119 +299,5 @@ final class ClassLoader implements LoggerAwareInterface
 
         //Checking using traits
         return in_array($target->getName(), $this->fetchTraits($class->getName()));
-    }
-
-    /**
-     * Find the namespace in the tokens starting at a given key.
-     *
-     * @param  int  $key
-     * @param  array  $tokens
-     * @return string|null
-     *
-     */
-    protected function getNamespace($key, array $tokens)
-    {
-        $namespace = null;
-        $tokenCount = count($tokens);
-
-        for ($i = $key; $i < $tokenCount; $i++) {
-            if ($this->isPartOfNamespace($tokens[$i])) {
-                $namespace .= $tokens[$i][1];
-            } elseif ($tokens[$i] == ';') {
-                return $namespace;
-            }
-        }
-    }
-
-    /**
-     * Find the class in the tokens starting at a given key.
-     *
-     * @param  int  $key
-     * @param  array  $tokens
-     *
-     * @return string|null
-     */
-    protected function getClass($key, array $tokens)
-    {
-        $class = null;
-        $tokenCount = count($tokens);
-
-        for ($i = $key; $i < $tokenCount; $i++) {
-            if ($this->isPartOfClass($tokens[$i])) {
-                $class .= $tokens[$i][1];
-            } elseif ($this->isWhitespace($tokens[$i])) {
-                return $class;
-            }
-        }
-    }
-
-    /**
-     * Determine if the given token is a require or include keyword.
-     *
-     * @param  array|string  $token
-     *
-     * @return bool
-     */
-    protected function tokenIsIncludeOrRequire($token)
-    {
-        return is_array($token)
-            && ($token[0] == T_INCLUDE || $token[0] == T_INCLUDE_ONCE || $token[0] == T_REQUIRE || $token[0] == T_REQUIRE_ONCE);
-    }
-
-    /**
-     * Determine if the given token is a class or interface keyword.
-     *
-     * @param  array|string  $token
-     *
-     * @return bool
-     */
-    protected function tokenIsClassOrInterface($token)
-    {
-        return is_array($token) && ($token[0] == T_CLASS || $token[0] == T_INTERFACE || $token[0] == T_TRAIT);
-    }
-
-    /**
-     * Determine if the given token is part of the namespace.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isPartOfNamespace($token)
-    {
-        return is_array($token) && ($token[0] == T_STRING || $token[0] == T_NS_SEPARATOR);
-    }
-
-    /**
-     * Determine if the given token is whitespace.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isWhitespace($token)
-    {
-        return is_array($token) && $token[0] == T_WHITESPACE;
-    }
-
-    /**
-     * Determine if the given token is a namespace keyword.
-     *
-     * @param  array|string  $token
-     *
-     * @return bool
-     */
-    protected function tokenIsNamespace($token)
-    {
-        return is_array($token) && $token[0] == T_NAMESPACE;
-    }
-
-    /**
-     * Determine if the given token is part of the class.
-     *
-     * @param  array|string  $token
-     * @return bool
-     */
-    protected function isPartOfClass($token)
-    {
-        return is_array($token) && $token[0] == T_STRING;
     }
 }

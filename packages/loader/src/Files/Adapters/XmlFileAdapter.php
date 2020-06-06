@@ -31,7 +31,7 @@ use XMLWriter;
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class XmlAdapter extends Adapter
+final class XmlFileAdapter extends AbstractAdapter
 {
     /**
      * XML Reader instance.
@@ -60,13 +60,21 @@ final class XmlAdapter extends Adapter
     ];
 
     /**
+     * {@inheritdoc}
+     */
+    public function supports(string $file): bool
+    {
+        return 'xml' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    }
+
+    /**
      * Reads configuration from XML data.
      *
      * @param  string $string
      *
-     * @return array|bool
+     * @return array
      */
-    protected function processFrom(string $string)
+    protected function processFrom(string $string): array
     {
         $this->reader = new XMLReader();
 
@@ -76,7 +84,7 @@ final class XmlAdapter extends Adapter
 
         $this->reader->close();
 
-        return $return;
+        return (array) $return;
     }
 
     /**
@@ -84,9 +92,10 @@ final class XmlAdapter extends Adapter
      * Process the array|objects for dumping.
      *
      * @param  array $config
+     *
      * @return string
      */
-    protected function processDump(array $config)
+    protected function processDump(array $config): string
     {
         $writer = new XMLWriter();
         $writer->openMemory();

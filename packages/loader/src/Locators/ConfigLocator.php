@@ -17,28 +17,31 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader\Files;
+namespace BiuradPHP\Loader\Locators;
 
+use BiuradPHP\Loader\Exceptions\FileLoadingException;
 use InvalidArgumentException;
-use BiuradPHP\Loader\Interfaces\AdapterInterface;
+use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
 use BiuradPHP\Loader\Interfaces\DataInterface;
+use BiuradPHP\Loader\Files\Adapters;
 use RuntimeException;
 
-class ConfigLoader
+class ConfigLocator
 {
     protected const INCLUDES_KEY = 'includes';
 
     /**
-     * @var array drivers
+     * @var FileAdapterInterface[] drivers
      */
     private $adapters = [
-        'php' => Adapters\PhpAdapter::class,
-        'ini' => Adapters\IniAdapter::class,
-        'xml' => Adapters\XmlAdapter::class,
-        'neon' => Adapters\NeonAdapter::class,
-        'json' => Adapters\JsonAdapter::class,
-        'yml' => Adapters\YamlAdapter::class,
-        'yaml' => Adapters\YamlAdapter::class,
+        Adapters\PhpFileAdapter::class,
+        Adapters\IniFileAdapter::class,
+        Adapters\XmlFileAdapter::class,
+        Adapters\NeonFileAdapter::class,
+        Adapters\JsonFileAdapter::class,
+        Adapters\YamlFileAdapter::class,
+        Adapters\MoFileAdapter::class,
+        Adapters\CsvFileAdapter::class,
     ];
 
     /**
@@ -67,10 +70,6 @@ class ConfigLoader
      */
     public function loadFile(string $file, ?bool $merge = true): array
     {
-        if (!is_file($file) || !is_readable($file)) {
-            throw new InvalidArgumentException("File '$file' is missing or is not readable.");
-        }
-
         if (isset($this->loadedFiles[$file])) {
             throw new RuntimeException("Recursive included file '$file'");
         }
@@ -126,26 +125,24 @@ class ConfigLoader
      * @param array|DataInterface $data
      * @param string       $file
      */
-    public function save(array $data, string $file): void
+    public function saveFile(array $data, string $file): void
     {
         if (!is_file($file) || !is_readable($file)) {
-            throw new InvalidArgumentException("File '$file' is missing or is not readable.");
+            throw new FileLoadingException("File '$file' is missing or is not readable.");
         }
 
-        if ((is_object($data) && !($data instanceof DataInterface)) || (!is_object($data) && !is_array($data))
-        ) {
-            throw new InvalidArgumentException(sprintf(
-                '%s $config should be an array or instance of %s\Config\Config',
-                __METHOD__,
-                __NAMESPACE__
-            ));
+        $fileStatus = file_put_contents($file, $this->getAdapter($file)->dump($data));
+
+        // Invalidate configuration file from the opcache.
+        if (\function_exists('opcache_invalidate') && filter_var(ini_get('opcache.enable'), FILTER_VALIDATE_BOOLEAN)) {
+            // PHP 5.5.5+
+            @opcache_invalidate($file, true);
         }
 
-        if ((is_object($data) && ($data instanceof DataInterface))) {
-            $data = $data->toArray();
-        }
+        // Touch the directory as well, thus marking it modified.
+        @touch(dirname($file));
 
-        if (!file_put_contents($file, $this->getAdapter($file)->dump($data))) {
+        if (false === $fileStatus) {
             throw new InvalidArgumentException("Cannot write file '$file'.");
         }
     }
@@ -169,62 +166,58 @@ class ConfigLoader
     {
         return preg_match('#([a-z]+:)?[/\\\\]#Ai', $includedFile) // is absolute
             ? $includedFile
-            : dirname($mainFile).'/'.$includedFile;
+            : dirname($mainFile) . '/' . $includedFile;
     }
 
     /**
      * Registers adapter for given file extension.
      *
-     * @param string $extension
-     * @param string|Interfaces\AdapterInterface $adapter
+     * @param FileAdapterInterface $adapter
      *
      * @return static
      */
-    public function addAdapter(string $extension, $adapter)
+    public function addAdapter(FileAdapterInterface $adapter)
     {
-        $this->adapters[mb_strtolower($extension)] = $adapter;
+        $this->adapters[] = $adapter;
 
         return $this;
     }
 
-    public function getAdapter(string $file): AdapterInterface
+    public function getAdapter(string $file): FileAdapterInterface
     {
-        $extension = mb_strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $adapters = array_map(function ($adapter) {
+            return is_object($adapter) ? $adapter : new $adapter();
+        }, $this->adapters);
 
-        if (!isset($this->adapters[$extension])) {
-            throw new InvalidArgumentException("Unknown file extension '$file'.");
+        foreach ($adapters as $adapter) {
+            if ($adapter->supports($file)) {
+                return $adapter;
+            }
         }
 
-        if (!isset($extension)) {
-            throw new RuntimeException(sprintf(
-                'Filename "%s" is missing an extension and cannot be auto-detected',
-                $file
-            ));
-        }
-
-        return is_object($this->adapters[$extension]) ? $this->adapters[$extension] : new $this->adapters[$extension]();
+        throw new RuntimeException(sprintf('Filename "%s" is missing an extension and cannot be auto-detected', $file));
     }
 
     /**
-	 * Finds whether a variable is a zero-based integer indexed array.
-	 * @param  mixed  $value
-	 */
-	private function isList($value): bool
-	{
-		return is_array($value) && (!$value || array_keys($value) === range(0, count($value) - 1));
-	}
+     * Finds whether a variable is a zero-based integer indexed array.
+     * @param  mixed  $value
+     */
+    private function isList($value): bool
+    {
+        return is_array($value) && (!$value || array_keys($value) === range(0, count($value) - 1));
+    }
 
     /**
-	 * Recursively appends elements of remaining keys from the second array to the first.
-	 */
-	private function mergeTree(array $arr1, array $arr2): array
-	{
-		$res = $arr1 + $arr2;
-		foreach (array_intersect_key($arr1, $arr2) as $k => $v) {
-			if (is_array($v) && is_array($arr2[$k])) {
-				$res[$k] = self::mergeTree($v, $arr2[$k]);
-			}
-		}
-		return $res;
-	}
+     * Recursively appends elements of remaining keys from the second array to the first.
+     */
+    private function mergeTree(array $arr1, array $arr2): array
+    {
+        $res = $arr1 + $arr2;
+        foreach (array_intersect_key($arr1, $arr2) as $k => $v) {
+            if (is_array($v) && is_array($arr2[$k])) {
+                $res[$k] = self::mergeTree($v, $arr2[$k]);
+            }
+        }
+        return $res;
+    }
 }

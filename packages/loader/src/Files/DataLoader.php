@@ -17,9 +17,10 @@ declare(strict_types=1);
  * @since     Version 0.1
  */
 
-namespace BiuradPHP\Loader;
+namespace BiuradPHP\Loader\Files;
 
-use Closure;
+use BiuradPHP\Loader\Interfaces\DataInterface;
+use BiuradPHP\Loader\Locators\ConfigLocator;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use RuntimeException;
@@ -35,7 +36,7 @@ use RuntimeException;
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license   BSD-3-Clause
  */
-class DataLoader implements Interfaces\DataInterface
+class DataLoader implements DataInterface
 {
     /**
      * Whether modifications to configuration data are allowed.
@@ -74,7 +75,7 @@ class DataLoader implements Interfaces\DataInterface
         $this->allowModifications = (bool) $allowModifications;
 
         if (is_string($array) && file_exists($array)) {
-            $array = (array) (new Files\ConfigLoader())->loadFile($array);
+            $array = (array) (new ConfigLocator)->loadFile($array);
         }
 
         foreach ($array as $key => $value) {
@@ -96,7 +97,7 @@ class DataLoader implements Interfaces\DataInterface
      */
     public function get($name, $default = null)
     {
-        $default = $default instanceof Closure ? $default() : $default;
+        $default = $default instanceof \Closure ? $default() : $default;
 
         $resolved = function ($array, $key) use ($default) {
             foreach (explode('.', $key) as $segment) {
@@ -383,12 +384,12 @@ class DataLoader implements Interfaces\DataInterface
      * - Items in $merge with INTEGER keys will be appended.
      * - Items in $merge with STRING keys will overwrite current values.
      *
-     * @param Interfaces\DataInterface $merge
+     * @param DataInterface $merge
      *
      * @return self
      * @throws InvalidArgumentException
      */
-    public function merge(Interfaces\DataInterface $merge)
+    public function merge(DataInterface $merge)
     {
         /** @var DataLoader $value */
         foreach ($merge as $key => $value) {
@@ -463,7 +464,7 @@ class DataLoader implements Interfaces\DataInterface
      */
     public function mergeFrom($source, $name)
     {
-        if ($source instanceof Interfaces\DataInterface || $source instanceof Collection) {
+        if ($source instanceof DataInterface || $source instanceof Collection) {
             $source = $source->toArray();
         }
 

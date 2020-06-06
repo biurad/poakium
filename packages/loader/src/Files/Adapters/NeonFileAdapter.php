@@ -27,16 +27,24 @@ use Nette\Neon;
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-final class NeonAdapter extends Adapter
+final class NeonFileAdapter extends AbstractAdapter
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function supports(string $file): bool
+    {
+        return 'neon' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    }
+
     /**
      * Reads configuration from NEON data.
      *
      * @param string $string
      *
-     * @return array|bool
+     * @return array
      */
-    protected function processFrom(string $string)
+    protected function processFrom(string $string): array
     {
         return Neon\Neon::decode($string);
     }
@@ -47,7 +55,7 @@ final class NeonAdapter extends Adapter
      * @param array $data
      * @return string
      */
-    protected function processDump(array $data)
+    protected function processDump(array $data): string
     {
         $class = __CLASS__;
 
