@@ -1,0 +1,52 @@
+{
+    "name": "biurad/biurad-scaffolder",
+    "type": "library",
+    "description": "The Scaffold Maker is the fastest way to generate the most common code you'll need in a PHP projects",
+    "keywords": [
+        "scaffolding",
+        "scaffolder",
+        "php code generator",
+        "php generator",
+        "biuradphp",
+        "php7"
+    ],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        },
+        {
+            "name": "Biurad Lap Community",
+            "homepage": "https://biurad.com/contributors"
+        }
+    ],
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "require": {
+        "php": "^7.2",
+        "biurad/doctrine-annotations-bridge": "^0.1",
+        "biurad/biurad-terminal": "^0.1",
+        "doctrine/inflector": "^1.3",
+        "nette/neon": "^3.0",
+        "nette/php-generator": "^3.3",
+        "nikic/php-parser": "^4.4",
+        "symfony/yaml": "^4.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "BiuradPHP\\Scaffold\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BiuradPHP\\Scaffold\\Tests\\": "Tests/"
+        }
+    }
+}
