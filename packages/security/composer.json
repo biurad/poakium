@@ -40,7 +40,7 @@
     },
     "autoload": {
         "psr-4": {
-            "BiuradPHP\\Security\\": ""
+            "BiuradPHP\\Security\\": "src/"
         },
         "exclude-from-classmap": [
             "/Tests/"
