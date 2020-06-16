@@ -3,48 +3,55 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold;
 
 use Nette\PhpGenerator\Constant;
 use Nette\PhpGenerator\Method;
+use Nette\PhpGenerator\PhpNamespace;
 use Nette\PhpGenerator\Property;
 use Nette\Utils\Validators;
-use Nette\PhpGenerator\PhpNamespace;
 
 final class ClassNameDetails
 {
     private $fullClassName;
+
     private $namespacePrefix;
+
     private $suffix;
 
     private $properties = [];
+
     private $constants = [];
+
     private $methods = [];
+
     private $traits = [];
+
     private $uses = [];
+
     private $implements = [];
+
     private $extends = [];
+
     private $comments = [];
 
     public function __construct(string $fullClassName, string $namespacePrefix, string $suffix = null)
     {
-        $this->fullClassName = $fullClassName;
-        $this->namespacePrefix = trim($namespacePrefix, '\\');
-        $this->suffix = $suffix;
+        $this->fullClassName   = $fullClassName;
+        $this->namespacePrefix = \trim($namespacePrefix, '\\');
+        $this->suffix          = $suffix;
     }
 
     public function getFullName(): string
@@ -71,7 +78,7 @@ final class ClassNameDetails
      */
     public function getRelativeName(): string
     {
-        return str_replace($this->namespacePrefix.'\\', '', $this->fullClassName);
+        return \str_replace($this->namespacePrefix . '\\', '', $this->fullClassName);
     }
 
     public function getRelativeNameWithoutSuffix(): string
@@ -97,6 +104,7 @@ final class ClassNameDetails
      * Add a method's details to class information.
      *
      * @param Method $method
+     *
      * @return self
      */
     public function addMethod(Method $method): self
@@ -106,11 +114,11 @@ final class ClassNameDetails
         return $this;
     }
 
-
     /**
      * Add constant to class information.
      *
      * @param Constant $constant
+     *
      * @return self
      */
     public function addConstant(Constant $constant): self
@@ -191,14 +199,14 @@ final class ClassNameDetails
      *
      * eg: [MakerDeclareInterface::class => 'Maker'];
      *
-     * @param array $uses An associative array of a class,interface mapping to an alias.
+     * @param array $uses an associative array of a class,interface mapping to an alias
      *
      * @return self
      */
     public function setUses(array $uses): self
     {
         foreach ($uses as $use => $alias) {
-            if (class_exists($use) || interface_exists($use)) {
+            if (\class_exists($use) || \interface_exists($use)) {
                 $this->uses[$use] = $alias;
             }
         }
@@ -221,7 +229,7 @@ final class ClassNameDetails
         $classType = $namespace->addClass($this->getRelativeName());
         $classType->setExtends($this->extends);
         $classType->setImplements($this->implements);
-        $classType->setComment(join("\n", $this->comments));
+        $classType->setComment(\join("\n", $this->comments));
         $classType->setTraits($this->traits);
         $classType->setConstants($this->constants);
         $classType->setProperties($this->properties);

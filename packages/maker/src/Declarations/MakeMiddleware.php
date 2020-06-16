@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Declarations;
@@ -53,8 +51,13 @@ final class MakeMiddleware extends AbstractDeclaration
     {
         $command
             ->setDescription('Creates a new middleware class')
-            ->addArgument('name', InputArgument::OPTIONAL, 'Choose a class name for your middleware (e.g. <fg=yellow>Redirect</>)')
-            ->setHelp(<<<'EOF'
+            ->addArgument(
+                'name',
+                InputArgument::OPTIONAL,
+                'Choose a class name for your middleware (e.g. <fg=yellow>Redirect</>)'
+            )
+            ->setHelp(
+                <<<'EOF'
 The <info>%command.name%</info> command generates a new middleware class.
 
 <info>php %command.full_name% redirect</info>
@@ -72,8 +75,8 @@ EOF
     {
         $testClassNameDetails = $generator->createClassNameDetails(
             $input->getArgument('name'),
-            is_string($element) ? $generator->getNamespace($element) : 'Middlewares\\',
-            is_string($element) ? $generator->getSuffix($element) : 'Middleware'
+            \is_string($element) ? $generator->getNamespace($element) : 'Middlewares\\',
+            \is_string($element) ? $generator->getSuffix($element) : 'Middleware'
         );
 
         $testClassNameDetails
@@ -92,7 +95,7 @@ EOF
                 MiddlewareInterface::class     => null,
                 RequestHandlerInterface::class => null,
                 ResponseInterface::class       => 'Response',
-                ServerRequestInterface::class  => 'Request'
+                ServerRequestInterface::class  => 'Request',
             ])
             ->setImplements([MiddlewareInterface::class])
         ;
@@ -103,14 +106,7 @@ EOF
 
     public function configureDependencies(DependencyBuilder $dependencies): void
     {
-        $dependencies->addClassDependency(
-            RequestHandlerInterface::class,
-            'psr/http-server-handler'
-        );
-
-        $dependencies->addClassDependency(
-            MiddlewareInterface::class,
-            'psr/http-server-middleware'
-        );
+        $dependencies->addClassDependency(RequestHandlerInterface::class, 'psr/http-server-handler');
+        $dependencies->addClassDependency(MiddlewareInterface::class, 'psr/http-server-middleware');
     }
 }

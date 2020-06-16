@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Declarations;
@@ -35,6 +33,9 @@ use Nette\PhpGenerator\Method;
 use Nette\PhpGenerator\Parameter;
 use Nette\PhpGenerator\PhpLiteral;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -50,11 +51,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class MakeSubscriber extends AbstractDeclaration
 {
     private $eventDispatcher;
+
     private $logger;
 
     public function __construct(EventDispatcherInterface $dispatcher, LoggerInterface $logger = null)
     {
-        $this->logger = $logger;
+        $this->logger          = $logger;
         $this->eventDispatcher = $dispatcher;
     }
 
@@ -73,10 +75,24 @@ final class MakeSubscriber extends AbstractDeclaration
     {
         $command
             ->setDescription('Creates a new event subscriber class')
-            ->addArgument('name', InputArgument::OPTIONAL, 'Choose a class name for your event subscriber (e.g. <fg=yellow>Exception</>)')
-            ->addArgument('event', InputArgument::OPTIONAL, 'What event do you want to subscribe to?')
-            ->addOption('annotation', 'a', InputOption::VALUE_NONE, 'Will use annotation config instean of file')
-            ->setHelp(<<<'EOF'
+            ->addArgument(
+                'name',
+                InputArgument::OPTIONAL,
+                'Choose a class name for your event subscriber (e.g. <fg=yellow>Exception</>)'
+            )
+            ->addArgument(
+                'event',
+                InputArgument::OPTIONAL,
+                'What event do you want to subscribe to?'
+            )
+            ->addOption(
+                'annotation',
+                'a',
+                InputOption::VALUE_NONE,
+                'Will use annotation config instean of file'
+            )
+            ->setHelp(
+                <<<'EOF'
 The <info>%command.name%</info> command generates a new event subscriber class.
 
 <info>php %command.full_name% Exception</info>
@@ -99,7 +115,9 @@ EOF
 
             $io->writeln(' <fg=green>Suggested Events:</>');
             $io->listing($this->listActiveEvents($events));
-            $question = new Question(sprintf(' <fg=green>%s</>', $command->getDefinition()->getArgument('event')->getDescription()));
+            $question = new Question(
+                \sprintf(' <fg=green>%s</>', $command->getDefinition()->getArgument('event')->getDescription())
+            );
             $question->setAutocompleterValues($events);
             $question->setValidator([Validator::class, 'notBlank']);
             $event = $io->askQuestion($question);
@@ -114,25 +132,28 @@ EOF
     {
         $testClassNameDetails = $generator->createClassNameDetails(
             $input->getArgument('name'),
-            is_string($element) ? $generator->getNamespace($element) : 'EventSubscribers\\',
-            is_string($element) ? $generator->getSuffix($element) : 'Subscriber'
+            \is_string($element) ? $generator->getNamespace($element) : 'EventSubscribers\\',
+            \is_string($element) ? $generator->getSuffix($element) : 'Subscriber'
         );
 
-        $event = $input->getArgument('event');
+        $event              = $input->getArgument('event');
         $eventFullClassName = $this->getEventClassName($event);
-        $eventClassName = $eventFullClassName ? HelperUtil::getShortClassName($eventFullClassName) : null;
-        $method = class_exists($event) ? HelperUtil::asEventMethod($eventClassName) : HelperUtil::asEventMethod($event);
-        $annotation = false !== $input->getOption('annotation');
+        $eventClassName     = $eventFullClassName ? HelperUtil::getShortClassName($eventFullClassName) : null;
+        $method             = \class_exists($event)
+            ? HelperUtil::asEventMethod($eventClassName)
+            : HelperUtil::asEventMethod($event);
+        $annotation         = false !== $input->getOption('annotation');
 
-        foreach ((new \ReflectionClass(KernelEvents::class))->getConstants() as $constant => $class) {
+        foreach ((new ReflectionClass(KernelEvents::class))->getConstants() as $constant => $class) {
             if ($event === $class) {
-                $eventClassName = sprintf('%s::%s', HelperUtil::getShortClassName(KernelEvents::class), $constant);
+                $eventClassName = \sprintf('%s::%s', HelperUtil::getShortClassName(KernelEvents::class), $constant);
                 $testClassNameDetails->setUses([KernelEvents::class => null]);
+
                 break;
             }
         }
 
-        $event = class_exists($event) ? new PhpLiteral($eventClassName) : sprintf('\'%s\'', $event);
+        $event     = \class_exists($event) ? new PhpLiteral($eventClassName) : \sprintf('\'%s\'', $event);
         $eventArgs = null !== $eventClassName ? [(new Parameter('event'))->setType($eventFullClassName)] : [];
 
         // Add the event class to use statements...
@@ -146,7 +167,7 @@ EOF
                     ->setStatic(true)
                     ->setComment('{@inheritdoc}')
                     ->addBody('return [')
-                        ->addBody("\t".sprintf('%s => \'%s\',', $event, $method))
+                        ->addBody("\t" . \sprintf('%s => \'%s\',', $event, $method))
                     ->addBody('];')
                 ->setPublic()
             )
@@ -166,16 +187,20 @@ EOF
                 ->setComments([HelperUtil::buildAnnotationLine('@Listener', [])])
                 ->setUses([Listener::class => null]);
         } else {
-            if (!file_exists($path = BR_PATH. 'config/packages/_dispatcher.yaml')) {
-                throw new RuntimeCommandException('The file "config/packages/_dispatcher.yaml" does not exist. This command needs that file to accurately build the event subscriber.');
+            if (!\file_exists($path = BR_PATH . 'config/packages/_dispatcher.yaml')) {
+                throw new RuntimeCommandException(
+                    'The file "config/packages/_dispatcher.yaml" does not exist.'
+                    . ' This command needs that file to accurately build the event subscriber.'
+                );
             }
-            
+
             $injector = new ConfigInjector($path);
+
             if (null !== $this->logger) {
                 $injector->setLogger($this->logger);
             }
 
-            $newData = $injector->getData();
+            $newData                            = $injector->getData();
             $newData['events']['subscribers'][] = $testClassNameDetails->getFullName();
             $injector->setData($newData);
 
@@ -188,10 +213,7 @@ EOF
 
     public function configureDependencies(DependencyBuilder $dependencies): void
     {
-        $dependencies->addClassDependency(
-            EventSubscriberInterface::class,
-            'biurad/biurad-events-bus'
-        );
+        $dependencies->addClassDependency(EventSubscriberInterface::class, 'biurad/biurad-events-bus');
     }
 
     /**
@@ -208,7 +230,7 @@ EOF
             }
         }
 
-        asort($activeEvents);
+        \asort($activeEvents);
 
         return $activeEvents;
     }
@@ -219,29 +241,32 @@ EOF
     private function getEventClassName(string $event)
     {
         // if the event is already a class name, use it
-        if (class_exists($event)) {
+        if (\class_exists($event)) {
             return $event;
         }
 
         $listeners = $this->eventDispatcher->getListener($event);
+
         if (empty($listeners)) {
             return null;
         }
 
         foreach ($listeners as $listener) {
             $listener = $listener->getListener();
-            if (!is_array($listener) || 2 !== count($listener)) {
+
+            if (!\is_array($listener) || 2 !== \count($listener)) {
                 continue;
             }
 
-            $reflectionMethod = new \ReflectionMethod($listener[0], $listener[1]);
-            $args = $reflectionMethod->getParameters();
+            $reflectionMethod = new ReflectionMethod($listener[0], $listener[1]);
+            $args             = $reflectionMethod->getParameters();
+
             if (!$args) {
                 continue;
             }
 
             if (null !== $type = $args[0]->getType()) {
-                $type = $type instanceof \ReflectionNamedType ? $type->getName() : $type->__toString();
+                $type = $type instanceof ReflectionNamedType ? $type->getName() : $type->__toString();
 
                 // ignore an "object" type-hint
                 if ('object' === $type) {

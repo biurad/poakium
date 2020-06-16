@@ -3,24 +3,26 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold;
 
+use ArrayObject;
+use InvalidArgumentException;
+use LogicException;
 use Nette\Neon\Neon;
 use Psr\Log\LoggerInterface;
+use stdClass;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -33,45 +35,57 @@ use Symfony\Component\Yaml\Yaml;
  */
 class ConfigInjector
 {
-    const EMPTY_LINE_PLACEHOLDER_VALUE = '__EMPTY_LINE__';
-    const COMMENT_PLACEHOLDER_VALUE = '__COMMENT__';
+    public const EMPTY_LINE_PLACEHOLDER_VALUE = '__EMPTY_LINE__';
 
-    const UNSET_KEY_FLAG = '__MAKER_VALUE_UNSET';
-    const ARRAY_FORMAT_MULTILINE = 'multi';
-    const ARRAY_FORMAT_INLINE = 'inline';
+    public const COMMENT_PLACEHOLDER_VALUE = '__COMMENT__';
 
-    const ARRAY_TYPE_SEQUENCE = 'sequence';
-    const ARRAY_TYPE_HASH = 'hash';
+    public const UNSET_KEY_FLAG = '__MAKER_VALUE_UNSET';
+
+    public const ARRAY_FORMAT_MULTILINE = 'multi';
+
+    public const ARRAY_FORMAT_INLINE = 'inline';
+
+    public const ARRAY_TYPE_SEQUENCE = 'sequence';
+
+    public const ARRAY_TYPE_HASH = 'hash';
 
     /**
-     * @var LoggerInterface|null
+     * @var null|LoggerInterface
      */
     private $logger;
 
     private $contents;
+
     private $currentData;
+
     private $indentation = 4;
 
     private $currentPosition = 0;
+
     private $previousPath = [];
+
     private $currentPath = [];
+
     private $depth = 0;
+
     private $indentationForDepths = [];
+
     private $arrayFormatForDepths = [];
+
     private $arrayTypeForDepths = [];
 
     public function __construct(string $contents, int $indentation = 4)
     {
-        $this->contents = file_exists($contents) ? file_get_contents($contents) : $contents;
+        $this->contents    = \file_exists($contents) ? \file_get_contents($contents) : $contents;
         $this->currentData = Neon::decode($this->contents);
         $this->indentation = $indentation;
 
         if (!\is_array($this->currentData)) {
-            throw new \InvalidArgumentException('Only YAML with a top-level array structure is supported');
+            throw new InvalidArgumentException('Only YAML with a top-level array structure is supported');
         }
     }
 
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
@@ -86,15 +100,15 @@ class ConfigInjector
         return $this->contents;
     }
 
-    public function setData(array $newData)
+    public function setData(array $newData): void
     {
-        $this->currentPath = [];
-        $this->previousPath = [];
-        $this->currentPosition = 0;
-        $this->depth = -1;
+        $this->currentPath          = [];
+        $this->previousPath         = [];
+        $this->currentPosition      = 0;
+        $this->depth                = -1;
         $this->indentationForDepths = [];
         $this->arrayFormatForDepths = [];
-        $this->arrayTypeForDepths = [];
+        $this->arrayTypeForDepths   = [];
 
         $this->updateData($newData);
         $this->replaceSpecialMetadataCharacters();
@@ -108,7 +122,14 @@ class ConfigInjector
         $newData = $this->removeMetadataKeys($newData);
 
         if ($newData !== $this->currentData) {
-            throw new \InvalidArgumentException(sprintf('Failed updating YAML contents: the process was successful, but something was not updated. Expected new data: %s. Actual new data: %s', var_export($newData, true), var_export($this->currentData, true)));
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Failed updating YAML contents: the process was successful, but something was not updated.'
+                    . ' Expected new data: %s. Actual new data: %s',
+                    \var_export($newData, true),
+                    \var_export($this->currentData, true)
+                )
+            );
         }
     }
 
@@ -119,12 +140,13 @@ class ConfigInjector
 
     public function createCommentLine(string $comment): string
     {
-        return sprintf(self::COMMENT_PLACEHOLDER_VALUE.$comment);
+        return \sprintf(self::COMMENT_PLACEHOLDER_VALUE . $comment);
     }
 
-    private function updateData(array $newData)
+    private function updateData(array $newData): void
     {
         ++$this->depth;
+
         if (0 === $this->depth) {
             $this->indentationForDepths[$this->depth] = 0;
             $this->arrayFormatForDepths[$this->depth] = self::ARRAY_FORMAT_MULTILINE;
@@ -138,9 +160,11 @@ class ConfigInjector
 
         $currentData = $this->getCurrentData();
 
-        $this->arrayTypeForDepths[$this->depth] = $this->isHash($currentData) ? self::ARRAY_TYPE_HASH : self::ARRAY_TYPE_SEQUENCE;
+        $this->arrayTypeForDepths[$this->depth] = $this->isHash($currentData)
+            ? self::ARRAY_TYPE_HASH
+            : self::ARRAY_TYPE_SEQUENCE;
 
-        $this->log(sprintf(
+        $this->log(\sprintf(
             'Changing array type & format via updateData()',
             $this->arrayTypeForDepths[$this->depth],
             $this->arrayFormatForDepths[$this->depth]
@@ -149,6 +173,7 @@ class ConfigInjector
         foreach ($currentData as $key => $currentVal) {
             // path setting is mostly duplicated at the bottom of this method
             $this->previousPath = $this->currentPath;
+
             if (!isset($this->previousPath[$this->depth])) {
                 // if there is no previous flag at this level, mark it with a null
                 $this->previousPath[$this->depth] = null;
@@ -189,11 +214,14 @@ class ConfigInjector
              * this, on each loop, the currentDataIndex will increase until it
              * matches the new data
              */
-            while (($currentDataIndex = array_search($key, array_keys($currentData))) !== array_search($key, array_keys($newData))) {
+            $currentDataIndex = \array_search($key, \array_keys($currentData)) !==
+                \array_search($key, \array_keys($newData));
+
+            while ($currentDataIndex) {
                 // loop until the current key is found at the same position in current & new data
-                $newKey = array_keys($newData)[$currentDataIndex];
+                $newKey = \array_keys($newData)[$currentDataIndex];
                 $newVal = $newData[$newKey];
-                $this->log('Adding new key: '.$newKey);
+                $this->log('Adding new key: ' . $newKey);
 
                 $this->addNewKeyToYaml($newKey, $newVal);
 
@@ -228,7 +256,7 @@ class ConfigInjector
             }
 
             // 3b) value DID change
-            $this->log(sprintf('updating value to {%s}', \is_array($newVal) ? '<array>' : $newVal));
+            $this->log(\sprintf('updating value to {%s}', \is_array($newVal) ? '<array>' : $newVal));
             $this->changeValueInYaml($newVal);
         }
 
@@ -242,11 +270,12 @@ class ConfigInjector
         }
 
         while (\count($currentData) < \count($newData)) {
-            $newKey = array_keys($newData)[\count($currentData)];
+            $newKey = \array_keys($newData)[\count($currentData)];
 
             // manually move the paths forward
             // mostly duplicated above
             $this->previousPath = $this->currentPath;
+
             if (!isset($this->previousPath[$this->depth])) {
                 // if there is no previous flag at this level, mark it with a null
                 $this->previousPath[$this->depth] = null;
@@ -274,15 +303,18 @@ class ConfigInjector
      * @param mixed $key
      * @param mixed $value
      */
-    private function addNewKeyToYaml($key, $value)
+    private function addNewKeyToYaml($key, $value): void
     {
-        $extraOffset = 0;
+        $extraOffset      = 0;
         $firstItemInArray = false;
+
         if (empty($this->getCurrentData(1))) {
             // The array that we're appending is empty:
 
             // First, fix the "type" - it could be changing from a sequence to a hash or vice versa
-            $this->arrayTypeForDepths[$this->depth] = \is_int($key) ? self::ARRAY_TYPE_SEQUENCE : self::ARRAY_TYPE_HASH;
+            $this->arrayTypeForDepths[$this->depth] = \is_int($key)
+                ? self::ARRAY_TYPE_SEQUENCE
+                : self::ARRAY_TYPE_HASH;
 
             // we prefer multi-line, so let's convert to it!
             $this->arrayFormatForDepths[$this->depth] = self::ARRAY_FORMAT_MULTILINE;
@@ -293,13 +325,13 @@ class ConfigInjector
             // we are already 1 character beyond the starting { or [ - so, rewind before it
             --$this->currentPosition;
             // now, rewind any spaces to get back to the : after the key
-            while (' ' === substr($this->contents, $this->currentPosition - 1, 1)) {
+            while (' ' === \substr($this->contents, $this->currentPosition - 1, 1)) {
                 --$this->currentPosition;
             }
 
             // determine an extra offset to "skip" when reconstructing the string
             $endingArrayPosition = $this->findPositionOfNextCharacter(['}', ']']);
-            $extraOffset = $endingArrayPosition - $this->currentPosition;
+            $extraOffset         = $endingArrayPosition - $this->currentPosition;
 
             // increase the indentation of *this* level
             $this->manuallyIncrementIndentation();
@@ -325,7 +357,7 @@ class ConfigInjector
 
         if (\is_int($key)) {
             if ($this->isCurrentArrayMultiline()) {
-                $newYamlValue = (is_array($value) ? '    ' : null).$this->convertToYaml([$value]);
+                $newYamlValue = (\is_array($value) ? '    ' : null) . $this->convertToYaml([$value]);
             } else {
                 $newYamlValue = $this->convertToYaml($value);
             }
@@ -338,27 +370,27 @@ class ConfigInjector
             // no previous blank line is needed, but we DO need to add a blank
             // line after, because the remainder of the content expects the
             // current position the start at the beginning of a new line
-            $newYamlValue = $newYamlValue."\n";
+            $newYamlValue = $newYamlValue . "\n";
         } else {
             if ($this->isCurrentArrayMultiline()) {
                 // because we're inside a multi-line array, put this item
                 // onto the *next* line & indent it
 
-                $newYamlValue = "\n".$this->indentMultilineYamlArray($newYamlValue);
+                $newYamlValue = "\n" . $this->indentMultilineYamlArray($newYamlValue);
             } else {
                 if ($firstItemInArray) {
                     // avoid the starting "," if first item in array
                     // but, DO add an ending ","
-                    $newYamlValue = $newYamlValue.', ';
+                    $newYamlValue = $newYamlValue . ', ';
                 } else {
-                    $newYamlValue = ', '.$newYamlValue;
+                    $newYamlValue = ', ' . $newYamlValue;
                 }
             }
         }
 
-        $newContents = substr($this->contents, 0, $this->currentPosition)
-            .$newYamlValue
-            .substr($this->contents, $this->currentPosition + $extraOffset);
+        $newContents = \substr($this->contents, 0, $this->currentPosition)
+            . $newYamlValue
+            . \substr($this->contents, $this->currentPosition + $extraOffset);
         // manually bump the position: we didn't really move forward
         // any in the existing string, we just added our own new content
         $this->currentPosition = $this->currentPosition + \strlen($newYamlValue);
@@ -382,7 +414,7 @@ class ConfigInjector
         );
     }
 
-    private function removeKeyFromYaml($key, $currentVal)
+    private function removeKeyFromYaml($key, $currentVal): void
     {
         $endKeyPosition = $this->getEndOfKeyPosition($key);
 
@@ -396,18 +428,22 @@ class ConfigInjector
             }
         } else {
             // find next ending character - , } or ]
-            while (!\in_array($currentChar = substr($this->contents, $endKeyPosition, 1), [',', ']', '}'])) {
+            while (!\in_array($currentChar = \substr($this->contents, $endKeyPosition, 1), [',', ']', '}'])) {
                 ++$endKeyPosition;
             }
 
             // if a sequence or hash is ending, and the character before it is a space, keep that
-            if ((']' === $currentChar || '}' === $currentChar) && ' ' === substr($this->contents, $endKeyPosition - 1, 1)) {
+            if (
+                (']' === $currentChar || '}' === $currentChar) &&
+                ' ' === \substr($this->contents, $endKeyPosition - 1, 1)
+            ) {
                 --$endKeyPosition;
             }
         }
 
         $newPositionBump = 0;
-        $extraContent = '';
+        $extraContent    = '';
+
         if (1 === \count($this->getCurrentData(1))) {
             // the key being removed is the *only* key
             // we need to close the new, empty array
@@ -426,9 +462,9 @@ class ConfigInjector
             $this->arrayFormatForDepths[$this->depth] = self::ARRAY_FORMAT_INLINE;
         }
 
-        $newContents = substr($this->contents, 0, $this->currentPosition)
-            .$extraContent
-            .substr($this->contents, $endKeyPosition);
+        $newContents = \substr($this->contents, 0, $this->currentPosition)
+            . $extraContent
+            . \substr($this->contents, $endKeyPosition);
 
         $newData = $this->currentData;
         $newData = $this->removeKeyAtCurrentPath($newData);
@@ -454,33 +490,35 @@ class ConfigInjector
      *
      * @param mixed $value The new value to set into YAML
      */
-    private function changeValueInYaml($value)
+    private function changeValueInYaml($value): void
     {
         $originalVal = $this->getCurrentData();
 
         $endValuePosition = $this->findEndPositionOfValue($originalVal);
 
         $newYamlValue = $this->convertToYaml($value);
+
         if (!\is_array($originalVal) && \is_array($value)) {
             // we're converting from a scalar to a (multiline) array
             // this means we need to break onto the next line
 
             // increase the indentation
             $this->manuallyIncrementIndentation();
-            $newYamlValue = "\n".$this->indentMultilineYamlArray($newYamlValue);
+            $newYamlValue = "\n" . $this->indentMultilineYamlArray($newYamlValue);
         } else {
             // empty space between key & value
-            $newYamlValue = ' '.$newYamlValue;
+            $newYamlValue = ' ' . $newYamlValue;
         }
 
-        $newPosition = $this->currentPosition + \strlen($newYamlValue);
+        $newPosition          = $this->currentPosition + \strlen($newYamlValue);
         $isNextContentComment = $this->isPreviousLineComment($newPosition);
+
         if ($isNextContentComment) {
             ++$newPosition;
         }
 
-        $newContents = substr($this->contents, 0, $this->currentPosition)
-            .$newYamlValue
+        $newContents = \substr($this->contents, 0, $this->currentPosition)
+            . $newYamlValue
             /*
              * If the next line is a comment, this means we probably had
              * a structure that looks like this:
@@ -493,8 +531,8 @@ class ConfigInjector
              *     access_control:
              *         - { path: /foo, roles: ROLE_USER }        # - { path: ^/admin, roles: ROLE_ADMIN }
              */
-            .($isNextContentComment ? "\n" : '')
-            .substr($this->contents, $endValuePosition);
+            . ($isNextContentComment ? "\n" : '')
+            . \substr($this->contents, $endValuePosition);
 
         $newData = $this->currentData;
         $newData = $this->setValueAtCurrentPath($value, $newData);
@@ -506,31 +544,31 @@ class ConfigInjector
         );
     }
 
-    private function advanceBeyondKey($key)
+    private function advanceBeyondKey($key): void
     {
-        $this->log(sprintf('Advancing position beyond key "%s"', $key));
+        $this->log(\sprintf('Advancing position beyond key "%s"', $key));
         $this->advanceCurrentPosition($this->getEndOfKeyPosition($key));
     }
 
-    private function advanceBeyondEndOfPreviousKey($key)
+    private function advanceBeyondEndOfPreviousKey($key): void
     {
         $this->log('Advancing position beyond PREV key');
         $this->advanceCurrentPosition($this->getEndOfPreviousKeyPosition($key));
     }
 
-    private function advanceBeyondValue($value)
+    private function advanceBeyondValue($value): void
     {
         if (\is_array($value)) {
-            throw new \LogicException('Do not pass an array to this method');
+            throw new LogicException('Do not pass an array to this method');
         }
 
-        $this->log(sprintf('Advancing position beyond value "%s"', $value));
+        $this->log(\sprintf('Advancing position beyond value "%s"', $value));
         $this->advanceCurrentPosition($this->findEndPositionOfValue($value));
     }
 
     private function getEndOfKeyPosition($key)
     {
-        preg_match($this->getKeyRegex($key), $this->contents, $matches, PREG_OFFSET_CAPTURE, $this->currentPosition);
+        \preg_match($this->getKeyRegex($key), $this->contents, $matches, \PREG_OFFSET_CAPTURE, $this->currentPosition);
 
         if (empty($matches)) {
             // for integers, the key may not be explicitly printed
@@ -538,7 +576,7 @@ class ConfigInjector
                 return $this->currentPosition;
             }
 
-            throw new \InvalidArgumentException(sprintf('Cannot find the key "%s"', $key));
+            throw new InvalidArgumentException(\sprintf('Cannot find the key "%s"', $key));
         }
 
         return $matches[0][1] + \strlen($matches[0][0]);
@@ -549,7 +587,7 @@ class ConfigInjector
      */
     private function getEndOfPreviousKeyPosition($key): int
     {
-        preg_match($this->getKeyRegex($key), $this->contents, $matches, PREG_OFFSET_CAPTURE, $this->currentPosition);
+        \preg_match($this->getKeyRegex($key), $this->contents, $matches, \PREG_OFFSET_CAPTURE, $this->currentPosition);
 
         if (empty($matches)) {
             // for integers, the key may not be explicitly printed
@@ -557,7 +595,7 @@ class ConfigInjector
                 return $this->currentPosition;
             }
 
-            throw new \InvalidArgumentException(sprintf('Cannot find the key "%s"', $key));
+            throw new InvalidArgumentException(\sprintf('Cannot find the key "%s"', $key));
         }
 
         $startOfKey = $matches[0][1];
@@ -573,26 +611,26 @@ class ConfigInjector
          * back to the first character *after* the previous key started.
          */
         // walk back any spaces
-        while (' ' === substr($this->contents, $startOfKey - 1, 1)) {
+        while (' ' === \substr($this->contents, $startOfKey - 1, 1)) {
             --$startOfKey;
         }
 
         // find either a line break or a , that is the end of the previous key
-        while (\in_array(($char = substr($this->contents, $startOfKey - 1, 1)), [',', "\n"])) {
+        while (\in_array(($char = \substr($this->contents, $startOfKey - 1, 1)), [',', "\n"])) {
             --$startOfKey;
         }
 
         // look for \r\n
-        if ("\r" === substr($this->contents, $startOfKey - 1, 1)) {
+        if ("\r" === \substr($this->contents, $startOfKey - 1, 1)) {
             --$startOfKey;
         }
 
         // if we're at the start of a line, if the prev line is a comment, move before it
-        if ($this->isCharLineBreak(substr($this->contents, $startOfKey, 1))) {
+        if ($this->isCharLineBreak(\substr($this->contents, $startOfKey, 1))) {
             // move one (or two) forward so the code below finds the *previous* line
             ++$startOfKey;
 
-            if ($this->isCharLineBreak(substr($this->contents, $startOfKey, 1))) {
+            if ($this->isCharLineBreak(\substr($this->contents, $startOfKey, 1))) {
                 ++$startOfKey;
             }
 
@@ -604,11 +642,11 @@ class ConfigInjector
             while ($this->isPreviousLineComment($startOfKey)) {
                 --$startOfKey;
                 // if this is a \n\r, we need to go back an extra char
-                if ("\r" === substr($this->contents, $startOfKey - 1, 1)) {
+                if ("\r" === \substr($this->contents, $startOfKey - 1, 1)) {
                     --$startOfKey;
                 }
 
-                while (!$this->isCharLineBreak(substr($this->contents, $startOfKey - 1, 1))) {
+                while (!$this->isCharLineBreak(\substr($this->contents, $startOfKey - 1, 1))) {
                     --$startOfKey;
 
                     // we've reached the start of the file!
@@ -624,7 +662,7 @@ class ConfigInjector
             }
 
             // look for \n\r situation
-            if ("\r" === substr($this->contents, $startOfKey - 1, 1)) {
+            if ("\r" === \substr($this->contents, $startOfKey - 1, 1)) {
                 --$startOfKey;
             }
         }
@@ -634,10 +672,10 @@ class ConfigInjector
 
     private function getKeyRegex($key)
     {
-        return sprintf('#%s( )*:#', preg_quote((string) $key));
+        return \sprintf('#%s( )*:#', \preg_quote((string) $key));
     }
 
-    private function updateContents(string $newContents, array $newData, int $newPosition)
+    private function updateContents(string $newContents, array $newData, int $newPosition): void
     {
         $this->log('updateContents()');
 
@@ -647,18 +685,32 @@ class ConfigInjector
 
             // normalize indexes on sequences to avoid comparison problems
             $parsedContentsData = $this->normalizeSequences($parsedContentsData);
-            $newData = $this->normalizeSequences($newData);
+            $newData            = $this->normalizeSequences($newData);
+
             if ($parsedContentsData !== $newData) {
                 //dd(Neon::decode($newContents), $newData, $newContents);
-                throw new \InvalidArgumentException(sprintf('Content was updated, but updated content does not match expected data. %s Original source: "%s", %s updated source: "%s", %s updated data: %s', "\n", $this->contents, "\n", $newContents, "\n", var_export($newData, true)));
+                throw new InvalidArgumentException(
+                    \sprintf(
+                        'Content was updated, but updated content does not match expected data. %s '
+                        . 'Original source: "%s", %s updated source: "%s", %s updated data: %s',
+                        "\n",
+                        $this->contents,
+                        "\n",
+                        $newContents,
+                        "\n",
+                        \var_export($newData, true)
+                    )
+                );
             }
         } catch (ParseException $e) {
-            throw new \InvalidArgumentException(sprintf('Could not update YAML: a parse error occurred in the new content: "%s"', $newContents));
+            throw new InvalidArgumentException(
+                \sprintf('Could not update YAML: a parse error occurred in the new content: "%s"', $newContents)
+            );
         }
 
         // must be called before changing the contents
         $this->advanceCurrentPosition($newPosition);
-        $this->contents = $newContents;
+        $this->contents    = $newContents;
         $this->currentData = $newData;
     }
 
@@ -666,7 +718,7 @@ class ConfigInjector
     {
         $newDataString = Yaml::dump($data, $this->indentation);
         // new line is appended: remove it
-        $newDataString = rtrim($newDataString, "\n");
+        $newDataString = \rtrim($newDataString, "\n");
 
         return $newDataString;
     }
@@ -686,7 +738,7 @@ class ConfigInjector
             return [$key => $value] + $data;
         }
 
-        $offset = array_search($this->previousPath[$this->depth], array_keys($data));
+        $offset = \array_search($this->previousPath[$this->depth], \array_keys($data));
 
         // if the target is currently the end of the array, just append
         if ($offset === (\count($data) - 1)) {
@@ -695,7 +747,7 @@ class ConfigInjector
             return $data;
         }
 
-        return array_merge(
+        return \array_merge(
             \array_slice($data, 0, $offset + 1),
             [$key => $value],
             \array_slice($data, $offset + 1, null)
@@ -709,10 +761,18 @@ class ConfigInjector
 
         // start depth at $limitLevels (instead of 0) to properly detect when to set the key
         $depth = $limitLevels;
-        $path = \array_slice($this->currentPath, 0, \count($this->currentPath) - $limitLevels);
+        $path  = \array_slice($this->currentPath, 0, \count($this->currentPath) - $limitLevels);
+
         foreach ($path as $key) {
             if (!\array_key_exists($key, $dataRef)) {
-                throw new \LogicException(sprintf('Could not find the key "%s" from the current path "%s" in data "%s"', $key, implode(', ', $path), var_export($data, true)));
+                throw new LogicException(
+                    \sprintf(
+                        'Could not find the key "%s" from the current path "%s" in data "%s"',
+                        $key,
+                        \implode(', ', $path),
+                        \var_export($data, true)
+                    )
+                );
             }
 
             if ($depth === $this->depth) {
@@ -722,7 +782,7 @@ class ConfigInjector
 
                     // if this is a sequence, reindex the keys
                     if ($this->isCurrentArraySequence()) {
-                        $dataRef = array_values($dataRef);
+                        $dataRef = \array_values($dataRef);
                     }
                 } else {
                     $dataRef[$key] = $value;
@@ -737,7 +797,7 @@ class ConfigInjector
             ++$depth;
         }
 
-        throw new \LogicException('The value was not updated.');
+        throw new LogicException('The value was not updated.');
     }
 
     private function removeKeyAtCurrentPath(array $data): array
@@ -759,9 +819,17 @@ class ConfigInjector
     {
         $data = $this->currentData;
         $path = \array_slice($this->currentPath, 0, \count($this->currentPath) - $limitLevels);
+
         foreach ($path as $key) {
             if (!\array_key_exists($key, $data)) {
-                throw new \LogicException(sprintf('Could not find the key "%s" from the current path "%s" in data "%s"', $key, implode(', ', $path), var_export($this->currentData, true)));
+                throw new LogicException(
+                    \sprintf(
+                        'Could not find the key "%s" from the current path "%s" in data "%s"',
+                        $key,
+                        \implode(', ', $path),
+                        \var_export($this->currentData, true)
+                    )
+                );
             }
 
             $data = $data[$key];
@@ -776,20 +844,20 @@ class ConfigInjector
             $currentPosition = $this->currentPosition;
             $this->log('Walking across array to find end position of array');
             $this->updateData($value);
-            $endKeyPosition = $this->currentPosition;
+            $endKeyPosition        = $this->currentPosition;
             $this->currentPosition = $currentPosition;
 
             return $endKeyPosition;
         }
 
-        if (is_scalar($value) || null === $value) {
+        if (\is_scalar($value) || null === $value) {
             if (\is_bool($value)) {
                 // (?i) & (?-i) opens/closes case insensitive match
-                $pattern = sprintf('(?i)%s(?-i)', $value ? 'true' : 'false');
+                $pattern = \sprintf('(?i)%s(?-i)', $value ? 'true' : 'false');
             } elseif (null === $value) {
                 $pattern = '(~|NULL|null|\n)';
             } else {
-                $pattern = sprintf('\'?"?%s\'?"?', preg_quote((string) $value, '#'));
+                $pattern = \sprintf('\'?"?%s\'?"?', \preg_quote((string) $value, '#'));
             }
 
             $offset = null === $offset ? $this->currentPosition : $offset;
@@ -800,21 +868,22 @@ class ConfigInjector
                 return $offset;
             }
 
-            preg_match(sprintf('#%s#', $pattern), $this->contents, $matches, PREG_OFFSET_CAPTURE, $offset);
+            \preg_match(\sprintf('#%s#', $pattern), $this->contents, $matches, \PREG_OFFSET_CAPTURE, $offset);
+
             if (empty($matches)) {
-                throw new \InvalidArgumentException(sprintf('Cannot find the original value "%s"', $value));
+                throw new InvalidArgumentException(\sprintf('Cannot find the original value "%s"', $value));
             }
 
             return $matches[0][1] + \strlen($matches[0][0]);
         }
 
         // there are other possible values, but we don't support them
-        throw new \InvalidArgumentException(sprintf('Unsupported Yaml value of type "%s"', \gettype($value)));
+        throw new InvalidArgumentException(\sprintf('Unsupported Yaml value of type "%s"', \gettype($value)));
     }
 
-    private function advanceCurrentPosition(int $newPosition)
+    private function advanceCurrentPosition(int $newPosition): void
     {
-        $originalPosition = $this->currentPosition;
+        $originalPosition      = $this->currentPosition;
         $this->currentPosition = $newPosition;
 
         // if we're not changing, or moving backwards, don't count indent
@@ -832,21 +901,24 @@ class ConfigInjector
          * character backwards, so that the first line is considered a valid line
          * to look for indentation.
          */
-        if ($this->isCharLineBreak(substr($this->contents, $originalPosition - 1, 1))) {
+        if ($this->isCharLineBreak(\substr($this->contents, $originalPosition - 1, 1))) {
             --$originalPosition;
         }
 
         // look for empty lines and track the current indentation
-        $advancedContent = substr($this->contents, $originalPosition, $newPosition - $originalPosition);
+        $advancedContent     = \substr($this->contents, $originalPosition, $newPosition - $originalPosition);
         $previousIndentation = $this->indentationForDepths[$this->depth];
-        $newIndentation = $previousIndentation;
-        if (false !== strpos($advancedContent, "\n")) {
-            $lines = explode("\n", $advancedContent);
+        $newIndentation      = $previousIndentation;
+
+        if (false !== \strpos($advancedContent, "\n")) {
+            $lines = \explode("\n", $advancedContent);
+
             if (!empty($lines)) {
-                $lastLine = $lines[\count($lines) - 1];
-                $lastLine = trim($lastLine, "\r");
+                $lastLine    = $lines[\count($lines) - 1];
+                $lastLine    = \trim($lastLine, "\r");
                 $indentation = 0;
-                while (' ' === substr($lastLine, $indentation, 1)) {
+
+                while (' ' === \substr($lastLine, $indentation, 1)) {
                     ++$indentation;
                 }
 
@@ -854,44 +926,54 @@ class ConfigInjector
             }
         }
 
-        $this->log(sprintf('Calculating new indentation: changing from %d to %d', $this->indentationForDepths[$this->depth], $newIndentation), true);
+        $this->log(
+            \sprintf(
+                'Calculating new indentation: changing from %d to %d',
+                $this->indentationForDepths[$this->depth],
+                $newIndentation
+            ),
+            true
+        );
         $this->indentationForDepths[$this->depth] = $newIndentation;
     }
 
-    private function decrementDepth()
+    private function decrementDepth(): void
     {
-        unset($this->indentationForDepths[$this->depth]);
-        unset($this->arrayFormatForDepths[$this->depth]);
-        unset($this->arrayTypeForDepths[$this->depth]);
-        unset($this->currentPath[$this->depth]);
-        unset($this->previousPath[$this->depth]);
+        unset(
+            $this->indentationForDepths[$this->depth],
+            $this->arrayFormatForDepths[$this->depth],
+            $this->arrayTypeForDepths[$this->depth],
+            $this->currentPath[$this->depth],
+            $this->previousPath[$this->depth]
+        );
+
         --$this->depth;
     }
 
     private function getCurrentIndentation(): string
     {
-        return str_repeat(' ', $this->indentationForDepths[$this->depth]);
+        return \str_repeat(' ', $this->indentationForDepths[$this->depth]);
     }
 
-    private function log(string $message, $includeContent = false)
+    private function log(string $message, $includeContent = false): void
     {
         if (null === $this->logger) {
             return;
         }
 
         $context = [
-            'key' => isset($this->currentPath[$this->depth]) ? $this->currentPath[$this->depth] : 'n/a',
-            'depth' => $this->depth,
-            'position' => $this->currentPosition,
+            'key'         => isset($this->currentPath[$this->depth]) ? $this->currentPath[$this->depth] : 'n/a',
+            'depth'       => $this->depth,
+            'position'    => $this->currentPosition,
             'indentation' => $this->indentationForDepths[$this->depth],
-            'type' => $this->arrayTypeForDepths[$this->depth],
-            'format' => $this->arrayFormatForDepths[$this->depth],
+            'type'        => $this->arrayTypeForDepths[$this->depth],
+            'format'      => $this->arrayFormatForDepths[$this->depth],
         ];
 
         if ($includeContent) {
-            $context['content'] = sprintf(
+            $context['content'] = \sprintf(
                 '>%s<',
-                str_replace(["\r\n", "\n"], ['\r\n', '\n'], substr($this->contents, $this->currentPosition, 50))
+                \str_replace(["\r\n", "\n"], ['\r\n', '\n'], \substr($this->contents, $this->currentPosition, 50))
             );
         }
 
@@ -916,11 +998,11 @@ class ConfigInjector
     {
         while (true) {
             if ($this->isEOF()) {
-                throw new \LogicException('Could not determine array type');
+                throw new LogicException('Could not determine array type');
             }
 
             // get the next char & advance immediately
-            $nextCharacter = substr($this->contents, $this->currentPosition, 1);
+            $nextCharacter = \substr($this->contents, $this->currentPosition, 1);
             // advance, but without advanceCurrentPosition()
             // because we are either moving along one line until [ {
             // or we are finding a line break and stopping: indentation
@@ -943,13 +1025,14 @@ class ConfigInjector
     private function findPositionOfNextCharacter(array $chars)
     {
         $currentPosition = $this->currentPosition;
+
         while (true) {
             if ($this->isEOF($currentPosition)) {
-                throw new \LogicException(sprintf('Could not find any characters: %s', implode(', ', $chars)));
+                throw new LogicException(\sprintf('Could not find any characters: %s', \implode(', ', $chars)));
             }
 
             // get the next char & advance immediately
-            $nextCharacter = substr($this->contents, $currentPosition, 1);
+            $nextCharacter = \substr($this->contents, $currentPosition, 1);
             ++$currentPosition;
 
             if (\in_array($nextCharacter, $chars)) {
@@ -958,9 +1041,9 @@ class ConfigInjector
         }
     }
 
-    private function advanceBeyondWhitespace()
+    private function advanceBeyondWhitespace(): void
     {
-        while (' ' === substr($this->contents, $this->currentPosition, 1)) {
+        while (' ' === \substr($this->contents, $this->currentPosition, 1)) {
             if ($this->isEOF()) {
                 return;
             }
@@ -969,9 +1052,9 @@ class ConfigInjector
         }
     }
 
-    private function advanceToEndOfLine()
+    private function advanceToEndOfLine(): void
     {
-        while (!$this->isCharLineBreak(substr($this->contents, $this->currentPosition, 1))) {
+        while (!$this->isCharLineBreak(\substr($this->contents, $this->currentPosition, 1))) {
             if ($this->isEOF()) {
                 // found the end of the file!
                 return;
@@ -990,10 +1073,11 @@ class ConfigInjector
      */
     private function isHash($value): bool
     {
-        if ($value instanceof \stdClass || $value instanceof \ArrayObject) {
+        if ($value instanceof stdClass || $value instanceof ArrayObject) {
             return true;
         }
         $expectedKey = 0;
+
         foreach ($value as $key => $val) {
             if ($key !== $expectedKey++) {
                 return true;
@@ -1005,9 +1089,10 @@ class ConfigInjector
 
     private function normalizeSequences(array $data)
     {
-        // https://stackoverflow.com/questions/173400/how-to-check-if-php-array-is-associative-or-sequential/4254008#4254008
+        // https://stackoverflow.com/questions/173400/how-to-check-if-php-array-is-associative-or-sequential/
+        // 4254008#4254008
         $hasStringKeys = function (array $array) {
-            return \count(array_filter(array_keys($array), 'is_string')) > 0;
+            return \count(\array_filter(\array_keys($array), 'is_string')) > 0;
         };
 
         foreach ($data as $key => $val) {
@@ -1018,7 +1103,7 @@ class ConfigInjector
             if (!$hasStringKeys($val)) {
                 // avoid indexed arrays with non-sequential keys
                 // e.g. if a key was removed. This causes comparison issues
-                $val = array_values($val);
+                $val        = \array_values($val);
                 $data[$key] = $val;
             }
 
@@ -1041,7 +1126,7 @@ class ConfigInjector
                 unset($data[$key]);
             }
 
-            if (0 === strpos((string) $val, self::COMMENT_PLACEHOLDER_VALUE)) {
+            if (0 === \strpos((string) $val, self::COMMENT_PLACEHOLDER_VALUE)) {
                 unset($data[$key]);
             }
         }
@@ -1049,20 +1134,20 @@ class ConfigInjector
         return $data;
     }
 
-    private function replaceSpecialMetadataCharacters()
+    private function replaceSpecialMetadataCharacters(): void
     {
-        while (preg_match('#\n.*'.self::EMPTY_LINE_PLACEHOLDER_VALUE.'.*\n#', $this->contents, $matches)) {
-            $this->contents = str_replace($matches[0], "\n\n", $this->contents);
+        while (\preg_match('#\n.*' . self::EMPTY_LINE_PLACEHOLDER_VALUE . '.*\n#', $this->contents, $matches)) {
+            $this->contents = \str_replace($matches[0], "\n\n", $this->contents);
         }
 
-        while (preg_match('#\n(\s*).*\''.self::COMMENT_PLACEHOLDER_VALUE.'(.*)\'#', $this->contents, $matches)) {
-            $fullMatch = $matches[0];
+        while (\preg_match('#\n(\s*).*\'' . self::COMMENT_PLACEHOLDER_VALUE . '(.*)\'#', $this->contents, $matches)) {
+            $fullMatch   = $matches[0];
             $indentation = $matches[1];
-            $comment = $matches[2];
+            $comment     = $matches[2];
 
-            $this->contents = str_replace(
+            $this->contents = \str_replace(
                 $fullMatch,
-                sprintf("\n%s#%s", $indentation, $comment),
+                \sprintf("\n%s#%s", $indentation, $comment),
                 $this->contents
             );
         }
@@ -1073,7 +1158,8 @@ class ConfigInjector
      */
     private function getPreferredIndentationSize(): int
     {
-        return isset($this->indentationForDepths[1]) && $this->indentationForDepths[1] > 0 ? $this->indentationForDepths[1] : 4;
+        return isset($this->indentationForDepths[1]) &&
+            $this->indentationForDepths[1] > 0 ? $this->indentationForDepths[1] : 4;
     }
 
     /**
@@ -1085,9 +1171,10 @@ class ConfigInjector
         return null === $this->previousPath[$this->depth];
     }
 
-    private function manuallyIncrementIndentation()
+    private function manuallyIncrementIndentation(): void
     {
-        $this->indentationForDepths[$this->depth] = $this->indentationForDepths[$this->depth] + $this->getPreferredIndentationSize();
+        $this->indentationForDepths[$this->depth] =
+            $this->indentationForDepths[$this->depth] + $this->getPreferredIndentationSize();
     }
 
     private function isEOF(int $position = null)
@@ -1106,7 +1193,7 @@ class ConfigInjector
         }
 
         // adopted from Parser::isCurrentLineComment() from symfony/yaml
-        $ltrimmedLine = ltrim($line, ' ');
+        $ltrimmedLine = \ltrim($line, ' ');
 
         return '' !== $ltrimmedLine && '#' === $ltrimmedLine[0];
     }
@@ -1115,13 +1202,15 @@ class ConfigInjector
     {
         //var_dump(substr($this->contents, $position, 10), $this->contents);die;
         // find the previous \n by finding the last one in the content up to the position
-        $endPos = strrpos(substr($this->contents, 0, $position), "\n");
+        $endPos = \strrpos(\substr($this->contents, 0, $position), "\n");
+
         if (false === $endPos) {
             // there is no previous line
             return null;
         }
 
-        $startPos = strrpos(substr($this->contents, 0, $endPos), "\n");
+        $startPos = \strrpos(\substr($this->contents, 0, $endPos), "\n");
+
         if (false === $startPos) {
             // we're at the beginning of the file
             $startPos = 0;
@@ -1130,15 +1219,15 @@ class ConfigInjector
             ++$startPos;
         }
 
-        $previousLine = substr($this->contents, $startPos, $endPos - $startPos);
+        $previousLine = \substr($this->contents, $startPos, $endPos - $startPos);
 
-        return trim($previousLine, "\r");
+        return \trim($previousLine, "\r");
     }
 
     private function findNextLineBreak(int $position)
     {
-        $nextNPos = strpos($this->contents, "\n", $position);
-        $nextRPos = strpos($this->contents, "\r", $position);
+        $nextNPos = \strpos($this->contents, "\n", $position);
+        $nextRPos = \strpos($this->contents, "\r", $position);
 
         if (false === $nextNPos) {
             return false;
@@ -1149,7 +1238,7 @@ class ConfigInjector
         }
 
         // find the first possible line break character
-        $nextLinePos = min($nextNPos, $nextRPos);
+        $nextLinePos = \min($nextNPos, $nextRPos);
 
         // check for a \r\n situation
         if (($nextLinePos + 1) === $nextNPos) {
@@ -1175,9 +1264,9 @@ class ConfigInjector
     {
         // But, if the *value* is an array, then ITS children will
         // also need to be indented artificially by the same amount
-        $yaml = str_replace("\n", "\n".$this->getCurrentIndentation(), $yaml);
+        $yaml = \str_replace("\n", "\n" . $this->getCurrentIndentation(), $yaml);
 
         // now indent this level
-        return $this->getCurrentIndentation().$yaml;
+        return $this->getCurrentIndentation() . $yaml;
     }
 }

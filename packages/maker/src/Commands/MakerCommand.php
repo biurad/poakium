@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Commands;
@@ -27,14 +25,14 @@ final class MakerCommand extends AbstractCommand
 {
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $return = parent::execute($input, $output);
+        $return  = parent::execute($input, $output);
         $message = [
-            sprintf('Next: open your new %s class and customize it!', $this->maker::getCommandName()),
+            \sprintf('Next: open your new %s class and customize it!', $this->maker::getCommandName()),
             'Find the documentation at <fg=yellow>https://docs.biurad.com/doc/scaffold-maker</>',
         ];
-        
-        if (method_exists($this->maker, 'writeMessage')) {
-            $message = $this->maker->writeMessage() ? $this->maker->writeMessage(): $message;
+
+        if (\method_exists($this->maker, 'writeMessage')) {
+            $message = $this->maker->writeMessage() ? $this->maker->writeMessage() : $message;
         }
 
         $this->io->text($message);

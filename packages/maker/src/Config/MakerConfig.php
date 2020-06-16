@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Config;
@@ -28,11 +26,11 @@ class MakerConfig
 {
     /** @var array */
     protected $config = [
-        'header'       => [],
+        'header'         => [],
         'root_directory' => '',
         'view_directory' => '',
-        'namespace'    => '',
-        'declarations' => [],
+        'namespace'      => '',
+        'declarations'   => [],
     ];
 
     /**
@@ -50,7 +48,7 @@ class MakerConfig
      */
     public function headerLines(): array
     {
-        return unserialize(current($this->config['header']));
+        return \unserialize(\current($this->config['header']));
     }
 
     /**
@@ -66,13 +64,15 @@ class MakerConfig
      */
     public function baseNamespace(): string
     {
-        return trim($this->config['namespace'], '\\');
+        return \trim($this->config['namespace'], '\\');
     }
 
     /**
      * @param string $element
-     * @return string
+     *
      * @throws MakerException
+     *
+     * @return string
      */
     public function declarationClass(string $element): string
     {
@@ -91,6 +91,7 @@ class MakerConfig
      * Declaration options.
      *
      * @param string $element
+     *
      * @return array
      */
     public function declarationOptions(string $element): array
@@ -115,21 +116,27 @@ class MakerConfig
      * @param string $declaration
      * @param string $namespace
      * @param string $postfix
-     * @param array $options
+     * @param array  $options
      */
-    public function addDeclaration(string $element, string $declaration, string $namespace, string $postfix = '', array $options = []): void
-    {
+    public function addDeclaration(
+        string $element,
+        string $declaration,
+        string $namespace,
+        string $postfix = '',
+        array $options = []
+    ): void {
         $this->config['declarations'][$element] = [
             'namspace' => $namespace,
-            'postfix' => $postfix,
-            'class' => $declaration,
-            'options' => $options,
+            'postfix'  => $postfix,
+            'class'    => $declaration,
+            'options'  => $options,
         ];
     }
 
     /**
      * @param string $element
      * @param string $section
+     *
      * @return mixed
      */
     public function getOption(string $element, string $section)
@@ -138,10 +145,10 @@ class MakerConfig
             throw new MakerException("Undefined declaration '{$element}'.");
         }
 
-        if (array_key_exists($section, $this->config['declarations'][$element])) {
+        if (\array_key_exists($section, $this->config['declarations'][$element])) {
             return $this->config['declarations'][$element][$section];
         }
 
-        throw new MakerException(sprintf('%s doesn\'t exist in %s declaration', $section, $element));
+        throw new MakerException(\sprintf('%s doesn\'t exist in %s declaration', $section, $element));
     }
 }

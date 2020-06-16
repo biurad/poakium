@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Declarations;
@@ -58,8 +56,16 @@ class MakeCommand extends AbstractDeclaration implements LoggerAwareInterface
     {
         $command
             ->setDescription('Creates a new console command class')
-            ->addArgument('name', InputArgument::OPTIONAL, sprintf('Choose a command name (e.g. <fg=yellow>app:%s</>)', HelperUtil::asCommand(HelperUtil::getRandomTerm())))
-            ->setHelp(<<<'EOF'
+            ->addArgument(
+                'name',
+                InputArgument::OPTIONAL,
+                \sprintf(
+                    'Choose a command name (e.g. <fg=yellow>app:%s</>)',
+                    HelperUtil::asCommand(HelperUtil::getRandomTerm())
+                )
+            )
+            ->setHelp(
+                <<<'EOF'
 The <info>%command.name%</info> command generates a new command:
 
 <info>php %command.full_name% app:something</info>
@@ -75,27 +81,40 @@ EOF
      */
     public function generate(InputInterface $input, $element, Generator $generator): void
     {
-        $commandName = trim($input->getArgument('name'));
-        $commandNameHasAppPrefix = 0 === strpos($commandName, 'app:');
+        $commandName             = \trim($input->getArgument('name'));
+        $commandNameHasAppPrefix = 0 === \strpos($commandName, 'app:');
 
         $commandClassDetails = $generator->createClassNameDetails(
-            $commandNameHasAppPrefix ? substr($commandName, 4) : $commandName,
-            is_string($element) ? $generator->getNamespace($element) : 'Commands\\',
-            is_string($element) ? $generator->getSuffix($element) : 'Command',
-            sprintf('The "%s" command name is not valid because it would be implemented by "%s" class, which is not valid as a PHP class name (it must start with a letter or underscore, followed by any number of letters, numbers, or underscores).', $commandName, HelperUtil::asClassName($commandName, 'Command'))
+            $commandNameHasAppPrefix ? \substr($commandName, 4) : $commandName,
+            \is_string($element) ? $generator->getNamespace($element) : 'Commands\\',
+            \is_string($element) ? $generator->getSuffix($element) : 'Command',
+            \sprintf(
+                'The "%s" command name is not valid because it would be implemented by "%s" class,'
+                . ' which is not valid as a PHP class name (it must start with a letter or underscore,'
+                . ' followed by any number of letters, numbers, or underscores).',
+                $commandName,
+                HelperUtil::asClassName($commandName, 'Command')
+            )
         );
 
-        if (!file_exists($path = BR_PATH. 'config/packages/_terminal.yaml')) {
-            throw new RuntimeCommandException('The file "config/packages/_terminal.yaml" does not exist. This command needs that file to accurately build the console commands.');
+        if (!\file_exists($path = BR_PATH . 'config/packages/_terminal.yaml')) {
+            throw new RuntimeCommandException(
+                'The file "config/packages/_terminal.yaml" does not exist.'
+                . ' This command needs that file to accurately build the console commands.'
+            );
         }
 
         $injector = new ConfigInjector($path, 1);
+
         if (null !== $this->logger) {
             $injector->setLogger($this->logger);
         }
 
-        $newData = $injector->getData();
-        $newData['terminal']['commands'][] = ['class' => $commandClassDetails->getFullName(), 'tags' => ['console.command' => $commandName]];
+        $newData                           = $injector->getData();
+        $newData['terminal']['commands'][] = [
+            'class' => $commandClassDetails->getFullName(),
+            'tags'  => ['console.command' => $commandName],
+        ];
         $injector->setData($newData);
 
         $generator->generateClass($this->declareStructure($commandClassDetails, $commandName), null);
@@ -109,17 +128,14 @@ EOF
      */
     public function configureDependencies(DependencyBuilder $dependencies): void
     {
-        $dependencies->addClassDependency(
-            Command::class,
-            'symfony/console'
-        );
+        $dependencies->addClassDependency(Command::class, 'symfony/console');
     }
 
     /**
      * Write a Command Delcaration
      *
      * @param ClassNameDetails $declare
-     * @param string $commandName
+     * @param string           $commandName
      *
      * @return ClassNameDetails
      */
@@ -181,9 +197,12 @@ EOF
             ->addMethod(
                 (new Method('execute'))
                     ->addBody('if ($arg1 = $input->getArgument(\'arg1\')) {')
-                        ->addBody("\t".'$this->io->note(sprintf(\'You passed an argument: %s\', $arg1));'."\n}\n")
+                        ->addBody("\t" . '$this->io->note(sprintf(\'You passed an argument: %s\', $arg1));' . "\n}\n")
                         ->addBody('if ($input->getOption(\'option1\')) {' . "\n\t// ...\n}\n")
-                        ->addBody('$this->io->success(\'You have a new command! Now make it your own! Pass --help to see your options.\');')
+                        ->addBody(
+                            '$this->io->success(\'You have a new command! Now make it your own!'
+                            . ' Pass --help to see your options.\');'
+                        )
                     ->addBody("\nreturn 0;")
                     ->setComment('{@inheritdoc}')
                     ->setReturnType('void')

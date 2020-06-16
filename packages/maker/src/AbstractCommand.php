@@ -3,31 +3,31 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold;
 
+use BiuradPHP\DependencyInjection\Interfaces\FactoryInterface;
+use BiuradPHP\Scaffold\Exceptions\RuntimeCommandException;
+use BiuradPHP\Scaffold\Interfaces\ApplicationAwareInterface;
+use BiuradPHP\Scaffold\Interfaces\MakerDeclareInterface;
+use LogicException;
+use RuntimeException;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use BiuradPHP\Scaffold\Exceptions\RuntimeCommandException;
-use BiuradPHP\Scaffold\Interfaces\MakerDeclareInterface;
-use BiuradPHP\DependencyInjection\Interfaces\FactoryInterface;
-use BiuradPHP\Scaffold\Interfaces\ApplicationAwareInterface;
-use Symfony\Component\Console\Application;
 
 abstract class AbstractCommand extends Command
 {
@@ -42,33 +42,67 @@ abstract class AbstractCommand extends Command
     protected $io;
 
     protected $maker;
+
     protected $files;
+
     protected $config;
+
     protected $factory;
+
     protected $generator;
+
     protected $inputConfig;
+
     protected $checkDependencies = true;
 
     /**
-     * @param Config\MakerConfig $config
-     * @param FactoryInterface $container
+     * @param Config\MakerConfig           $config
+     * @param FactoryInterface             $container
+     * @param FileManager                  $fileManager
+     * @param Generator                    $generator
      * @param MakerDeclareInterface|string $element
      */
-    public function __construct(Config\MakerConfig $config, FactoryInterface $container, FileManager $fileManager = null, Generator $generator = null, $element = null)
-    {
-        $this->config = $config;
+    public function __construct(
+        Config\MakerConfig $config,
+        FactoryInterface $container,
+        FileManager $fileManager = null,
+        Generator $generator = null,
+        $element = null
+    ) {
+        $this->config  = $config;
         $this->factory = $container;
-        $this->maker = $element;
+        $this->maker   = $element;
 
         $this->inputConfig = new InputConfiguration();
-        $this->files = $fileManager ?? new FileManager($config->baseDirectory(), $config->baseNamespace());
-        $this->generator = $generator ?? new Generator($this->config, $this->files);
+        $this->files       = $fileManager ?? new FileManager($config->baseDirectory(), $config->baseNamespace());
+        $this->generator   = $generator ?? new Generator($this->config, $this->files);
 
         if (!$this->maker instanceof MakerDeclareInterface) {
             $this->maker = $this->declarationClass($element ?? $this->element);
         }
 
-        parent::__construct(is_string($element) ? sprintf('make:%s', $this->maker::getCommandName()) : null);
+        parent::__construct(\is_string($element) ? \sprintf('make:%s', $this->maker::getCommandName()) : null);
+    }
+
+    public function setApplication(Application $application = null): void
+    {
+        parent::setApplication($application);
+
+        if ($this->maker instanceof ApplicationAwareInterface) {
+            if (null === $application) {
+                throw new RuntimeException('Application cannot be null.');
+            }
+
+            $this->maker->setApplication($application);
+        }
+    }
+
+    /**
+     * @internal Used for testing commands
+     */
+    public function setCheckDependencies(bool $checkDeps): void
+    {
+        $this->checkDependencies = $checkDeps;
     }
 
     /**
@@ -115,7 +149,11 @@ abstract class AbstractCommand extends Command
                 continue;
             }
 
-            $value = $this->io->ask($argument->getDescription(), $argument->getDefault(), [Validator::class, 'notBlank']);
+            $value = $this->io->ask(
+                $argument->getDescription(),
+                $argument->getDefault(),
+                [Validator::class, 'notBlank']
+            );
             $input->setArgument($argument->getName(), $value);
         }
 
@@ -131,7 +169,7 @@ abstract class AbstractCommand extends Command
 
         // sanity check for custom makers
         if ($this->generator->hasPendingOperations()) {
-            throw new \LogicException('Make sure to call the writeChanges() method on the generator.');
+            throw new LogicException('Make sure to call the writeChanges() method on the generator.');
         }
 
         return 0;
@@ -150,26 +188,5 @@ abstract class AbstractCommand extends Command
             $this->config->declarationClass($element),
             $this->config->declarationOptions($element)
         );
-    }
-
-    public function setApplication(Application $application = null)
-    {
-        parent::setApplication($application);
-
-        if ($this->maker instanceof ApplicationAwareInterface) {
-            if (null === $application) {
-                throw new \RuntimeException('Application cannot be null.');
-            }
-
-            $this->maker->setApplication($application);
-        }
-    }
-
-    /**
-     * @internal Used for testing commands
-     */
-    public function setCheckDependencies(bool $checkDeps)
-    {
-        $this->checkDependencies = $checkDeps;
     }
 }

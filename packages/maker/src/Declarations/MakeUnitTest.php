@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold\Declarations;
@@ -53,9 +51,19 @@ final class MakeUnitTest extends AbstractDeclaration
     {
         $command
             ->setDescription('Creates a new phpunit test class')
-            ->addArgument('name', InputArgument::OPTIONAL, 'The name of the unit test class (e.g. <fg=yellow>Util</>)')
-            ->addArgument('type', InputArgument::OPTIONAL, 'The type of the testing (e.g. <fg=yellow>unit, feature, or console</>)', 'unit')
-            ->setHelp(<<<'EOF'
+            ->addArgument(
+                'name',
+                InputArgument::OPTIONAL,
+                'The name of the unit test class (e.g. <fg=yellow>Util</>)'
+            )
+            ->addArgument(
+                'type',
+                InputArgument::OPTIONAL,
+                'The type of the testing (e.g. <fg=yellow>unit, feature, or console</>)',
+                'unit'
+            )
+            ->setHelp(
+                <<<'EOF'
 The <info>%command.name%</info> command generates a new unit test class.
 
 <info>php %command.full_name% UtilTest</info>
@@ -71,18 +79,20 @@ EOF
      */
     public function generate(InputInterface $input, $element, Generator $generator): void
     {
-        if (!in_array($type = $input->getArgument('type'), ['unit', 'feature', 'console'], true)) {
-            throw new InvalidArgumentException(sprintf('Expected any of [%s], %s given', implode(', ', ['unit', 'feature', 'console'], $type)));
+        if (!\in_array($type = $input->getArgument('type'), ['unit', 'feature', 'console'], true)) {
+            throw new InvalidArgumentException(
+                \sprintf('Expected any of [%s], %s given', \implode(', ', ['unit', 'feature', 'console'], $type))
+            );
         }
 
-        $namespace = is_string($element)
-            ? $generator->getNamespace(rtrim($element, '\\').'\\'.ucfirst($type))
-            : 'Tests\\'.ucfirst($type);
+        $namespace = \is_string($element)
+            ? $generator->getNamespace(\rtrim($element, '\\') . '\\' . \ucfirst($type))
+            : 'Tests\\' . \ucfirst($type);
 
         $testClassNameDetails = $generator->createClassNameDetails(
             $input->getArgument('name'),
             $namespace,
-            is_string($element) ? $generator->getSuffix($element) : 'Test'
+            \is_string($element) ? $generator->getSuffix($element) : 'Test'
         );
 
         $testClassNameDetails
@@ -101,10 +111,6 @@ EOF
 
     public function configureDependencies(DependencyBuilder $dependencies): void
     {
-        $dependencies->addClassDependency(
-            PHPUnitTestCase::class,
-            'phpunit/phpunit',
-            true, true
-        );
+        $dependencies->addClassDependency(PHPUnitTestCase::class, 'phpunit/phpunit', true, true);
     }
 }

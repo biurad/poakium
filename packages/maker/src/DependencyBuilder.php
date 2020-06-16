@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  Scaffolds Maker
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/scaffoldsmaker
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Scaffold;
@@ -22,6 +20,7 @@ namespace BiuradPHP\Scaffold;
 final class DependencyBuilder
 {
     private $dependencies = [];
+
     private $devDependencies = [];
 
     private $minimumPHPVersion = 70200;
@@ -33,24 +32,28 @@ final class DependencyBuilder
      * the user if other required dependencies are missing. An example
      * is the "validator" when trying to work with forms.
      */
-    public function addClassDependency(string $class, string $package, bool $required = true, bool $devDependency = false)
-    {
+    public function addClassDependency(
+        string $class,
+        string $package,
+        bool $required = true,
+        bool $devDependency = false
+    ): void {
         if ($devDependency) {
             $this->devDependencies[] = [
-                'class' => $class,
-                'name' => $package,
+                'class'    => $class,
+                'name'     => $package,
                 'required' => $required,
             ];
         } else {
             $this->dependencies[] = [
-                'class' => $class,
-                'name' => $package,
+                'class'    => $class,
+                'name'     => $package,
                 'required' => $required,
             ];
         }
     }
 
-    public function requirePHP71()
+    public function requirePHP71(): void
     {
         $this->minimumPHPVersion = 70100;
     }
@@ -92,7 +95,7 @@ final class DependencyBuilder
      */
     public function getMissingPackagesMessage(string $commandName, $message = null): string
     {
-        $packages = $this->getMissingDependencies();
+        $packages    = $this->getMissingDependencies();
         $packagesDev = $this->getMissingDevDependencies();
 
         if (empty($packages) && empty($packagesDev)) {
@@ -101,18 +104,18 @@ final class DependencyBuilder
 
         $packagesCount = \count($packages) + \count($packagesDev);
 
-        $message = sprintf(
+        $message = \sprintf(
             "Missing package%s: %s, run:\n",
             $packagesCount > 1 ? 's' : '',
-            $message ?: sprintf('to use the %s command', $commandName)
+            $message ?: \sprintf('to use the %s command', $commandName)
         );
 
         if (!empty($packages)) {
-            $message .= sprintf("\ncomposer require %s", implode(' ', $packages));
+            $message .= \sprintf("\ncomposer require %s", \implode(' ', $packages));
         }
 
         if (!empty($packagesDev)) {
-            $message .= sprintf("\ncomposer require %s --dev", implode(' ', $packagesDev));
+            $message .= \sprintf("\ncomposer require %s --dev", \implode(' ', $packagesDev));
         }
 
         return $message;
@@ -129,6 +132,7 @@ final class DependencyBuilder
     private function getRequiredDependencyNames(array $dependencies): array
     {
         $packages = [];
+
         foreach ($dependencies as $package) {
             if (!$package['required']) {
                 continue;
@@ -136,27 +140,34 @@ final class DependencyBuilder
             $packages[] = $package['name'];
         }
 
-        return array_unique($packages);
+        return \array_unique($packages);
     }
 
     private function calculateMissingDependencies(array $dependencies): array
     {
-        $missingPackages = [];
+        $missingPackages         = [];
         $missingOptionalPackages = [];
+
         foreach ($dependencies as $package) {
-            if (class_exists($package['class']) || interface_exists($package['class']) || trait_exists($package['class'])) {
+            if (
+                \class_exists($package['class']) ||
+                \interface_exists($package['class']) ||
+                \trait_exists($package['class'])
+            ) {
                 continue;
             }
+
             if (true === $package['required']) {
                 $missingPackages[] = $package['name'];
             } else {
                 $missingOptionalPackages[] = $package['name'];
             }
         }
+
         if (empty($missingPackages)) {
             return [];
         }
 
-        return array_unique(array_merge($missingPackages, $missingOptionalPackages));
+        return \array_unique(\array_merge($missingPackages, $missingOptionalPackages));
     }
 }
