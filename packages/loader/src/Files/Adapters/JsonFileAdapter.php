@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files\Adapters;
@@ -34,36 +32,36 @@ final class JsonFileAdapter extends AbstractAdapter
      */
     public function supports(string $file): bool
     {
-        return 'json' === strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        return 'json' === \strtolower(\pathinfo($file, \PATHINFO_EXTENSION));
     }
 
     /**
      * Reads configuration from JSON data.
      *
-     * @param  string $string
+     * @param string $string
      *
      * @return array
      */
     protected function processFrom(string $string): array
     {
-        return json_decode($string, true);
+        return \json_decode($string, true);
     }
-
 
     /**
      * Generates configuration in JSON format.
      *
      * @param array $data
+     *
      * @return false|string
      */
-	protected function processDump(array $data): string
-	{
-        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    protected function processDump(array $data): string
+    {
+        $json = \json_encode($data, \JSON_UNESCAPED_SLASHES | \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (\json_last_error() !== \JSON_ERROR_NONE) {
             throw new FileGeneratingException('Unable to generate json from provided data');
         }
 
         return $json;
-	}
+    }
 }

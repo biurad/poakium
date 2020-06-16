@@ -3,23 +3,22 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Aliases;
 
 use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
+use InvalidArgumentException;
 
 class NamespaceAlias implements AliasTypeInterface
 {
@@ -49,9 +48,10 @@ class NamespaceAlias implements AliasTypeInterface
 
     private function validate(string $prefix): void
     {
-        $length = strlen($prefix);
+        $length = \strlen($prefix);
+
         if ('\\' !== $prefix[$length - 1]) {
-            throw new \InvalidArgumentException("A non-empty PSR-4 prefix must end with a namespace separator.");
+            throw new InvalidArgumentException('A non-empty PSR-4 prefix must end with a namespace separator.');
         }
     }
 }

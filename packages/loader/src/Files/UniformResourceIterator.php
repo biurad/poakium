@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files;
@@ -70,8 +68,8 @@ class UniformResourceIterator extends FilesystemIterator
      * UniformResourceIterator constructor.
      *
      * @param $path
-     * @param null $flags
-     * @param UniformResourceLocator|null $locator
+     * @param null                        $flags
+     * @param null|UniformResourceLocator $locator
      */
     public function __construct($path, $flags = null, UniformResourceLocator $locator = null)
     {
@@ -83,6 +81,11 @@ class UniformResourceIterator extends FilesystemIterator
         $this->setFlags($flags);
         $this->locator = $locator;
         $this->rewind();
+    }
+
+    public function __toString()
+    {
+        return $this->iterator->__toString();
     }
 
     public function current()
@@ -99,7 +102,7 @@ class UniformResourceIterator extends FilesystemIterator
         return $this->iterator->key();
     }
 
-    public function next()
+    public function next(): void
     {
         do {
             $found = $this->findNext();
@@ -116,7 +119,7 @@ class UniformResourceIterator extends FilesystemIterator
         return $this->iterator && $this->iterator->valid();
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         $this->found = [];
         $this->stack = $this->locator->findResources($this->path);
@@ -125,12 +128,12 @@ class UniformResourceIterator extends FilesystemIterator
 
     public function getUrl()
     {
-        $path = $this->path.(substr($this->path, -1, 1) === '/' ? '' : '/');
+        $path = $this->path . (\substr($this->path, -1, 1) === '/' ? '' : '/');
 
-        return $path.$this->iterator->getFilename();
+        return $path . $this->iterator->getFilename();
     }
 
-    public function seek($position)
+    public function seek($position): void
     {
         throw new RuntimeException('Seek not implemented');
     }
@@ -240,17 +243,12 @@ class UniformResourceIterator extends FilesystemIterator
         return $this->iterator->isWritable();
     }
 
-    public function __toString()
-    {
-        return $this->iterator->__toString();
-    }
-
     public function getFlags()
     {
         return $this->flags;
     }
 
-    public function setFlags($flags = null)
+    public function setFlags($flags = null): void
     {
         $this->flags = $flags === null ? static::KEY_AS_PATHNAME | static::CURRENT_AS_SELF | static::SKIP_DOTS : $flags;
 
@@ -268,7 +266,7 @@ class UniformResourceIterator extends FilesystemIterator
         if (!$this->valid()) {
             do {
                 // Move to the next iterator if it exists.
-                $path = array_shift($this->stack);
+                $path = \array_shift($this->stack);
 
                 if (!isset($path)) {
                     return null;

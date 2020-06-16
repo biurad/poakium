@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/loadermanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Tests;
 
-use BiuradPHP\Loader\DataLoader;
+use BiuradPHP\Loader\FIles\DataLoader;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use TypeError;
 
 /**
  * @requires PHP 7.1.30
@@ -26,13 +28,13 @@ use PHPUnit\Framework\TestCase;
  */
 class DataTest extends TestCase
 {
-    public function testGetData()
+    public function testGetData(): void
     {
         $data = [
             'config' => [
                 'dir' => [
                     'root' => __DIR__,
-                    'lib' => __DIR__.'/lib/',
+                    'lib'  => __DIR__ . '/lib/',
                 ],
                 'forbidden_file_extensions' => [
                     'php',
@@ -51,12 +53,12 @@ class DataTest extends TestCase
             ],
             'settings' => [
                 'Company' => [
-                    'logo' => true,
+                    'logo'         => true,
                     'company_name' => 'Simtech',
                 ],
                 'Image_verification' => [
                     'use_for' => [
-                        'register' => 'Y',
+                        'register'     => 'Y',
                         'form_builder' => 'Y',
                     ],
                 ],
@@ -65,13 +67,13 @@ class DataTest extends TestCase
 
         $config = new DataLoader($data);
         $config->setWritable();
-        $test = 'Test';
-        $config->test = [];
-        $config->test->one = $test;
-        $config->test->two = $test;
+        $test                = 'Test';
+        $config->test        = [];
+        $config->test->one   = $test;
+        $config->test->two   = $test;
         $config->test->three = $test;
-        $config->test->four = $test;
-        $config->test->six = $test;
+        $config->test->four  = $test;
+        $config->test->six   = $test;
 
         $this->assertSame('Test', $config->get('test.one'));
         $this->assertSame('Test', $config->get('test.two'));
@@ -87,8 +89,12 @@ class DataTest extends TestCase
         $this->assertEquals($data['runtime']['company_id'], $config->get('runtime.company_id'));
         $this->assertisArray($data['settings']['Company']);
         $this->assertisObject($config->get('settings.Company'));
-        $this->assertEquals($data['settings']['Company']['company_name'], $config->get('settings.Company.company_name'));
-        $this->assertEquals($data['settings']['Image_verification']['use_for']['form_builder'], $config->get('settings.Image_verification.use_for.form_builder'));
+        $this->assertEquals($data['settings']['Company']['company_name'], $config->get(
+            'settings.Company.company_name'
+        ));
+        $this->assertEquals($data['settings']['Image_verification']['use_for']['form_builder'], $config->get(
+            'settings.Image_verification.use_for.form_builder'
+        ));
 
         $this->assertNull($config->get('undefined'));
         $this->assertNull($config->get('undefined.undefined'));
@@ -96,7 +102,7 @@ class DataTest extends TestCase
         $this->assertNull($config->get('config.dir.undefined'));
     }
 
-    public function testDataExist()
+    public function testDataExist(): void
     {
         $config = new DataLoader(['test' => 'foo']);
 
@@ -106,7 +112,7 @@ class DataTest extends TestCase
         $this->assertTrue($config->offsetExists('test'));
     }
 
-    public function testIfGetData()
+    public function testIfGetData(): void
     {
         $config = new DataLoader();
         $config->setWritable();
@@ -114,7 +120,7 @@ class DataTest extends TestCase
         $this->assertEquals('IfGet', $config->get('test1.foo', 'IfGet'));
         $this->assertEquals('IfGet', $config->get('test2.bar', 'IfGet'));
 
-        $config->offsetSet('file', array('dir' => array('root' => __DIR__)));
+        $config->offsetSet('file', ['dir' => ['root' => __DIR__]]);
         $this->assertEquals(__DIR__, $config->get('file.dir.root', '/'));
         $this->assertEquals('/', $config->get('file.dir.lib', '/'));
 
@@ -123,7 +129,7 @@ class DataTest extends TestCase
         $this->assertEquals('/', $config->get('file.dir.root', '/'));
     }
 
-    public function testSetData()
+    public function testSetData(): void
     {
         $config = new DataLoader([
             'test' => [
@@ -138,14 +144,14 @@ class DataTest extends TestCase
         $config->offsetSet('test', ['hello' => ['world2' => 'Test SetData']]);
         $this->assertEquals('Test SetData', $config->get('test.hello.world2'));
 
-        $config->offsetSet('file', array('dir' => array('root' => __DIR__)));
+        $config->offsetSet('file', ['dir' => ['root' => __DIR__]]);
         $this->assertEquals(__DIR__, $config->get('file.dir.root'));
 
-        $config->offsetSet('config', array('debugger__token' => 'debug'));
+        $config->offsetSet('config', ['debugger__token' => 'debug']);
         $this->assertEquals('debug', $config->get('config.debugger__token'));
     }
 
-    public function testDeleteData()
+    public function testDeleteData(): void
     {
         $config = new DataLoader([
             'file' => [
@@ -159,7 +165,7 @@ class DataTest extends TestCase
         $config->offsetUnset('file');
         $this->assertNull($config->get('file.dir.root'));
 
-        $config->offsetSet('config', array('dir' => array('root' => __DIR__)));
+        $config->offsetSet('config', ['dir' => ['root' => __DIR__]]);
         $config->offsetUnset('config');
 
         $this->assertNull($config->offsetGet('config.dir.root'));
@@ -169,7 +175,7 @@ class DataTest extends TestCase
         $this->assertNull($config->get('config'));
     }
 
-    public function testReadingData()
+    public function testReadingData(): void
     {
         $config = new DataLoader([
             'hello' => [
@@ -183,15 +189,15 @@ class DataTest extends TestCase
         $this->assertEquals('Test Push', $config->offsetGet('hello.world'));
 
         $config->setReadOnly();
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Config is read only');
         $config->offsetSet('hello.world', 'Test Push');
     }
 
-    public function testMergeData()
+    public function testMergeData(): void
     {
         $config = new DataLoader([
-            'this' => 'is',
+            'this'   => 'is',
             'nested' => [
                 'values' => 'awesome',
             ],
@@ -206,10 +212,10 @@ class DataTest extends TestCase
         ]));
 
         $expected = [
-            'this' => 'is',
+            'this'   => 'is',
             'nested' => [
                 'values' => 'awesome',
-                'thing' => 'added',
+                'thing'  => 'added',
             ],
             'set' => [1, 2, 3, 'yeah'],
         ];
@@ -217,7 +223,7 @@ class DataTest extends TestCase
         $this->assertEquals($expected, $config->toArray());
 
         $config = new DataLoader();
-        $this->expectException(\TypeError::class);
+        $this->expectException(TypeError::class);
         $config->merge(1);
     }
 }

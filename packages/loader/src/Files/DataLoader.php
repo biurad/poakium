@@ -3,24 +3,23 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files;
 
 use BiuradPHP\Loader\Interfaces\DataInterface;
 use BiuradPHP\Loader\Locators\ConfigLocator;
+use Closure;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use RuntimeException;
@@ -67,59 +66,25 @@ class DataLoader implements DataInterface
      * on construction.
      *
      * @param array|string $array
-     * @param bool $allowModifications
+     * @param bool         $allowModifications
+     *
      * @throws InvalidArgumentException
      */
     public function __construct($array = [], $allowModifications = false)
     {
         $this->allowModifications = (bool) $allowModifications;
 
-        if (is_string($array) && file_exists($array)) {
-            $array = (array) (new ConfigLocator)->loadFile($array);
+        if (\is_string($array) && \file_exists($array)) {
+            $array = (array) (new ConfigLocator())->loadFile($array);
         }
 
         foreach ($array as $key => $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $this->data[$key] = new static($value, $this->allowModifications);
             } else {
                 $this->data[$key] = $value;
             }
         }
-    }
-
-    /**
-     * Retrieve a value and return $default if there is no element set.
-     *
-     * @param string $name
-     * @param mixed  $default
-     *
-     * @return mixed
-     */
-    public function get($name, $default = null)
-    {
-        $default = $default instanceof \Closure ? $default() : $default;
-
-        $resolved = function ($array, $key) use ($default) {
-            foreach (explode('.', $key) as $segment) {
-                if (!isset($array[$segment])) {
-                    return $default;
-                }
-
-                $array = $array[$segment];
-            }
-
-            return $array;
-        };
-
-        if (strpos($name, '.')) {
-            return $resolved($this->data, $name);
-        }
-
-        if (array_key_exists($name, $this->data)) {
-            return $this->data[$name];
-        }
-
-        return $default;
     }
 
     /**
@@ -141,17 +106,17 @@ class DataLoader implements DataInterface
      * on construction. Otherwise, throw an exception.
      *
      * @param string $name
-     * @param mixed $value
+     * @param mixed  $value
      *
      * @throws InvalidArgumentException
      */
-    public function __set($name, $value)
+    public function __set($name, $value): void
     {
         if ($this->allowModifications) {
-            $keys = is_array($name) && null === $value ? $name : [$name => $value];
+            $keys = \is_array($name) && null === $value ? $name : [$name => $value];
 
             foreach ($keys as $key => $var) {
-                if (is_array($var)) {
+                if (\is_array($var)) {
                     $var = new static($var, true);
                 }
 
@@ -186,6 +151,74 @@ class DataLoader implements DataInterface
     }
 
     /**
+     * isset() overloading.
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function __isset($name)
+    {
+        $key = $this->__get($name);
+
+        return isset($key);
+    }
+
+    /**
+     * unset() overloading.
+     *
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __unset($name): void
+    {
+        if (!$this->allowModifications) {
+            throw new InvalidArgumentException('Config is read only');
+        }
+
+        if ($this->__isset($name)) {
+            unset($this->data[$name]);
+            $this->skipNextIteration = true;
+        }
+    }
+
+    /**
+     * Retrieve a value and return $default if there is no element set.
+     *
+     * @param string $name
+     * @param mixed  $default
+     *
+     * @return mixed
+     */
+    public function get($name, $default = null)
+    {
+        $default = $default instanceof Closure ? $default() : $default;
+
+        $resolved = function ($array, $key) use ($default) {
+            foreach (\explode('.', $key) as $segment) {
+                if (!isset($array[$segment])) {
+                    return $default;
+                }
+
+                $array = $array[$segment];
+            }
+
+            return $array;
+        };
+
+        if (\strpos($name, '.')) {
+            return $resolved($this->data, $name);
+        }
+
+        if (\array_key_exists($name, $this->data)) {
+            return $this->data[$name];
+        }
+
+        return $default;
+    }
+
+    /**
      * Return an associative array of the stored data.
      *
      * @return array
@@ -193,7 +226,7 @@ class DataLoader implements DataInterface
     public function toArray()
     {
         $array = [];
-        $data = $this->data;
+        $data  = $this->data;
 
         /** @var self $value */
         foreach ($data as $key => $value) {
@@ -216,36 +249,6 @@ class DataLoader implements DataInterface
     }
 
     /**
-     * isset() overloading.
-     *
-     * @param string $name
-     *
-     * @return bool
-     */
-    public function __isset($name)
-    {
-        $key = $this->__get($name);
-        return isset($key);
-    }
-
-    /**
-     * unset() overloading.
-     *
-     * @param string $name
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __unset($name)
-    {
-        if (!$this->allowModifications) {
-            throw new InvalidArgumentException('Config is read only');
-        } elseif ($this->__isset($name)) {
-            unset($this->data[$name]);
-            $this->skipNextIteration = true;
-        }
-    }
-
-    /**
      * count(): defined by Countable interface.
      *
      * @see    Countable::count()
@@ -254,7 +257,7 @@ class DataLoader implements DataInterface
      */
     public function count()
     {
-        return count($this->data);
+        return \count($this->data);
     }
 
     /**
@@ -268,7 +271,7 @@ class DataLoader implements DataInterface
     {
         $this->skipNextIteration = false;
 
-        return current($this->data);
+        return \current($this->data);
     }
 
     /**
@@ -280,7 +283,7 @@ class DataLoader implements DataInterface
      */
     public function key()
     {
-        return key($this->data);
+        return \key($this->data);
     }
 
     /**
@@ -288,7 +291,7 @@ class DataLoader implements DataInterface
      *
      * @see    Iterator::next()
      */
-    public function next()
+    public function next(): void
     {
         if ($this->skipNextIteration) {
             $this->skipNextIteration = false;
@@ -296,7 +299,7 @@ class DataLoader implements DataInterface
             return;
         }
 
-        next($this->data);
+        \next($this->data);
     }
 
     /**
@@ -304,10 +307,10 @@ class DataLoader implements DataInterface
      *
      * @see    Iterator::rewind()
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->skipNextIteration = false;
-        reset($this->data);
+        \reset($this->data);
     }
 
     /**
@@ -357,9 +360,10 @@ class DataLoader implements DataInterface
      * @param mixed $value
      *
      * @throws InvalidArgumentException
+     *
      * @see    ArrayAccess::offsetSet()
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->__set($offset, $value);
     }
@@ -371,7 +375,7 @@ class DataLoader implements DataInterface
      *
      * @param mixed $offset
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->__unset($offset);
     }
@@ -386,15 +390,16 @@ class DataLoader implements DataInterface
      *
      * @param DataInterface $merge
      *
-     * @return self
      * @throws InvalidArgumentException
+     *
+     * @return self
      */
     public function merge(DataInterface $merge)
     {
         /** @var DataLoader $value */
         foreach ($merge as $key => $value) {
-            if (array_key_exists($key, $this->data)) {
-                if (is_int($key)) {
+            if (\array_key_exists($key, $this->data)) {
+                if (\is_int($key)) {
                     $this->data[] = $value;
                 } elseif ($value instanceof self && $this->data[$key] instanceof self) {
                     $this->data[$key]->merge($value);
@@ -423,7 +428,7 @@ class DataLoader implements DataInterface
      * Useful after merge() has been used to merge multiple Config objects
      * into one object which should then not be modified again.
      */
-    public function setReadOnly()
+    public function setReadOnly(): void
     {
         $this->allowModifications = false;
 
@@ -438,7 +443,7 @@ class DataLoader implements DataInterface
     /**
      * Allow modifications being made to this instance.
      */
-    public function setWritable()
+    public function setWritable(): void
     {
         $this->allowModifications = true;
     }
@@ -457,10 +462,11 @@ class DataLoader implements DataInterface
      * Merge the given configuration with the existing configuration.
      *
      * @param array|string $source could be file or array
-     * @param string $name key name to load as file
+     * @param string       $name   key name to load as file
+     *
+     * @throws InvalidArgumentException
      *
      * @return $this|array
-     * @throws InvalidArgumentException
      */
     public function mergeFrom($source, $name)
     {

@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files\Adapters;
@@ -53,7 +51,7 @@ final class YamlFileAdapter implements FileAdapterInterface
      * Constructor.
      *
      * @param callable             $yamlDecoder
-     * @param callable|string|null $yamlEncoder
+     * @param null|callable|string $yamlEncoder
      */
     public function __construct($yamlDecoder = null, $yamlEncoder = null)
     {
@@ -65,14 +63,14 @@ final class YamlFileAdapter implements FileAdapterInterface
         }
 
         // Try native PECL YAML PHP extension first if available.
-        if (function_exists('yaml_parse') && function_exists('yaml_emit')) {
+        if (\function_exists('yaml_parse') && \function_exists('yaml_emit')) {
             $this->setYamlDecoder('yaml_parse');
             $this->setYamlEncoder('yaml_emit');
 
             return;
         }
 
-        if (class_exists(Yaml::class) && !function_exists('yaml_emit')) {
+        if (\class_exists(Yaml::class) && !\function_exists('yaml_emit')) {
             $this->setYamlDecoder([new Yaml(), 'parse']);
             $this->setYamlEncoder([new Yaml(), 'dump']);
         }
@@ -83,21 +81,21 @@ final class YamlFileAdapter implements FileAdapterInterface
      */
     public function supports(string $file): bool
     {
-        return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['yml', 'yaml'], true);
+        return \in_array(\strtolower(\pathinfo($file, \PATHINFO_EXTENSION)), ['yml', 'yaml'], true);
     }
 
     /**
      * Set callback for decoding YAML.
      *
-     * @param string|callable $yamlDecoder the decoder to set
-     *
-     * @return self
+     * @param callable|string $yamlDecoder the decoder to set
      *
      * @throws RuntimeException
+     *
+     * @return self
      */
     public function setYamlDecoder($yamlDecoder)
     {
-        if (!is_callable($yamlDecoder)) {
+        if (!\is_callable($yamlDecoder)) {
             throw new RuntimeException('Invalid parameter to setYamlDecoder() - must be callable');
         }
         $this->yamlDecoder = $yamlDecoder;
@@ -130,13 +128,13 @@ final class YamlFileAdapter implements FileAdapterInterface
      *
      * @param callable $yamlEncoder the decoder to set
      *
-     * @return self
-     *
      * @throws InvalidArgumentException
+     *
+     * @return self
      */
     public function setYamlEncoder($yamlEncoder)
     {
-        if (!is_callable($yamlEncoder)) {
+        if (!\is_callable($yamlEncoder)) {
             throw new InvalidArgumentException('Invalid parameter to setYamlEncoder() - must be callable');
         }
         $this->yamlEncoder = $yamlEncoder;
@@ -149,21 +147,22 @@ final class YamlFileAdapter implements FileAdapterInterface
      *
      * @param string $filename
      *
-     * @return array
-     *
      * @throws RuntimeException
+     *
+     * @return array
      */
     public function fromFile(string $filename): array
     {
-        if (!is_file($filename) || !is_readable($filename)) {
-            throw new FileLoadingException(sprintf('File \'%s\' doesn\'t exist or not readable', $filename));
+        if (!\is_file($filename) || !\is_readable($filename)) {
+            throw new FileLoadingException(\sprintf('File \'%s\' doesn\'t exist or not readable', $filename));
         }
 
         if (null === $this->getYamlDecoder()) {
             throw new RuntimeException('You didn\'t specify a Yaml\Yml callback decoder');
         }
 
-        $config = $this->yamlBound($this->getYamlDecoder(), file_get_contents($filename));
+        $config = $this->yamlBound($this->getYamlDecoder(), \file_get_contents($filename));
+
         if (null === $config) {
             throw new FileLoadingException('Error parsing YAML\YML file');
         }
@@ -176,20 +175,22 @@ final class YamlFileAdapter implements FileAdapterInterface
      *
      * @param string $string
      *
-     * @return array|bool
-     *
      * @throws RuntimeException
+     *
+     * @return array|bool
      */
     public function fromString($string): array
     {
         if (null === $this->getYamlDecoder()) {
             throw new RuntimeException('You didn\'t specify a Yaml\YML callback decoder');
         }
+
         if (empty($string)) {
             return [];
         }
 
         $config = $this->yamlBound($this->getYamlDecoder(), $string);
+
         if (null === $config) {
             throw new RuntimeException('Error parsing YAML\YML data');
         }
@@ -202,9 +203,9 @@ final class YamlFileAdapter implements FileAdapterInterface
      *
      * @param array $config
      *
-     * @return string
-     *
      * @throws RuntimeException
+     *
+     * @return string
      */
     public function dump($config): string
     {
@@ -223,7 +224,7 @@ final class YamlFileAdapter implements FileAdapterInterface
 
     /**
      * @param callable|string $function
-     * @param mixed $arguments
+     * @param mixed           $arguments
      *
      * @return mixed
      */

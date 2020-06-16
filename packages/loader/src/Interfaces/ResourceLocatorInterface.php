@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Interfaces;
@@ -30,7 +28,7 @@ interface ResourceLocatorInterface
      *
      * @param $uri
      *
-     * @return string|bool
+     * @return bool|string
      */
     public function __invoke($uri);
 
@@ -39,7 +37,7 @@ interface ResourceLocatorInterface
      *
      * @param string       $scheme
      * @param string       $prefix
-     * @param string|array $paths
+     * @param array|string $paths
      * @param bool|string  $override True to add path as override, string
      * @param bool         $force    true to add paths even if them do not exist
      *
@@ -75,24 +73,26 @@ interface ResourceLocatorInterface
     /**
      * Find all instances from a resource.
      *
-     * @param string $uri input URI to be searched
-     * @param bool $absolute whether to return absolute path
-     * @param bool $all whether to return all paths even if they don't exist
+     * @param string $uri      input URI to be searched
+     * @param bool   $absolute whether to return absolute path
+     * @param bool   $all      whether to return all paths even if they don't exist
+     *
+     * @throws BadMethodCallException
      *
      * @return array
-     * @throws BadMethodCallException
      */
     public function findResources($uri, $absolute = true, $all = false): array;
 
     /**
      * Find all instances from a list of resources.
      *
-     * @param array $uris input URIs to be searched
-     * @param bool $absolute whether to return absolute path
-     * @param bool $all whether to return all paths even if they don't exist
+     * @param array $uris     input URIs to be searched
+     * @param bool  $absolute whether to return absolute path
+     * @param bool  $all      whether to return all paths even if they don't exist
+     *
+     * @throws BadMethodCallException
      *
      * @return array
-     * @throws BadMethodCallException
      */
     public function mergeResources(array $uris, $absolute = true, $all = false): array;
 
@@ -100,7 +100,7 @@ interface ResourceLocatorInterface
      * Return iterator for the resource URI.
      *
      * @param string $uri
-     * @param int $flags see constants from FilesystemIterator class
+     * @param int    $flags see constants from FilesystemIterator class
      *
      * @return UniformResourceIterator
      */
@@ -110,7 +110,7 @@ interface ResourceLocatorInterface
      * Return recursive iterator for the resource URI.
      *
      * @param string $uri
-     * @param int $flags see constants from FilesystemIterator class
+     * @param int    $flags see constants from FilesystemIterator class
      *
      * @return RecursiveUniformResourceIterator
      */

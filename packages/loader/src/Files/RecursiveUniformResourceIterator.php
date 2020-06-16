@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files;
@@ -43,7 +41,9 @@ class RecursiveUniformResourceIterator extends UniformResourceIterator implement
 
     public function hasChildren($allow_links = null)
     {
-        $allow_links = (bool) ($allow_links !== null ? $allow_links : $this->flags & FilesystemIterator::FOLLOW_SYMLINKS);
+        $allow_links = (bool) (
+            $allow_links !== null ? $allow_links : $this->flags & FilesystemIterator::FOLLOW_SYMLINKS
+        );
 
         return $this->iterator && $this->isDir() && !$this->isDot() && ($allow_links || !$this->isLink());
     }
@@ -55,7 +55,7 @@ class RecursiveUniformResourceIterator extends UniformResourceIterator implement
 
     public function getSubPathName()
     {
-        return ($this->subPath ? $this->subPath.'/' : '').$this->getFilename();
+        return ($this->subPath ? $this->subPath . '/' : '') . $this->getFilename();
     }
 
     /**

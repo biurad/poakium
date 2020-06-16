@@ -3,46 +3,30 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Locators;
 
 use BiuradPHP\Loader\Exceptions\FileLoadingException;
-use InvalidArgumentException;
-use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
-use BiuradPHP\Loader\Interfaces\DataInterface;
 use BiuradPHP\Loader\Files\Adapters;
+use BiuradPHP\Loader\Interfaces\DataInterface;
+use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
+use InvalidArgumentException;
 use RuntimeException;
 
 class ConfigLocator
 {
     protected const INCLUDES_KEY = 'includes';
-
-    /**
-     * @var FileAdapterInterface[] drivers
-     */
-    private $adapters = [
-        Adapters\PhpFileAdapter::class,
-        Adapters\IniFileAdapter::class,
-        Adapters\XmlFileAdapter::class,
-        Adapters\NeonFileAdapter::class,
-        Adapters\JsonFileAdapter::class,
-        Adapters\YamlFileAdapter::class,
-        Adapters\MoFileAdapter::class,
-        Adapters\CsvFileAdapter::class,
-    ];
 
     /**
      * @var array
@@ -60,13 +44,28 @@ class ConfigLocator
     protected $parameters = [];
 
     /**
+     * @var FileAdapterInterface[] drivers
+     */
+    private $adapters = [
+        Adapters\PhpFileAdapter::class,
+        Adapters\IniFileAdapter::class,
+        Adapters\XmlFileAdapter::class,
+        Adapters\NeonFileAdapter::class,
+        Adapters\JsonFileAdapter::class,
+        Adapters\YamlFileAdapter::class,
+        Adapters\MoFileAdapter::class,
+        Adapters\CsvFileAdapter::class,
+    ];
+
+    /**
      * Reads configuration from file.
      *
-     * @param string $file
-     * @param bool|null $merge
+     * @param string    $file
+     * @param null|bool $merge
+     *
+     * @throws InvalidArgumentException
      *
      * @return array
-     * @throws InvalidArgumentException
      */
     public function loadFile(string $file, ?bool $merge = true): array
     {
@@ -76,16 +75,20 @@ class ConfigLocator
         $this->loadedFiles[$file] = true;
 
         $this->dependencies[] = $file;
-        $data = $this->getAdapter($file)->fromFile($file);
+        $data                 = $this->getAdapter($file)->fromFile($file);
 
         $res = [];
+
         if (isset($data[self::INCLUDES_KEY])) {
             if (!$this->isList($data[self::INCLUDES_KEY])) {
-                throw new InvalidArgumentException(sprintf('Expected \'included\' to contain a list of paths, invalid type supplied'));
+                throw new InvalidArgumentException(
+                    \sprintf('Expected \'included\' to contain a list of paths, invalid type supplied')
+                );
             }
+
             foreach ($data[self::INCLUDES_KEY] as $include) {
                 $include = $this->expandIncludedFile($include, $file);
-                $res = $this->mergeTree($this->loadFile($include, $merge), $res);
+                $res     = $this->mergeTree($this->loadFile($include, $merge), $res);
             }
         }
         unset($data[self::INCLUDES_KEY], $this->loadedFiles[$file]);
@@ -103,10 +106,11 @@ class ConfigLocator
      * Read configuration from multiple files and merge them.
      *
      * @param array $files
-     * @param bool $merge
+     * @param bool  $merge
+     *
+     * @throws InvalidArgumentException
      *
      * @return array
-     * @throws InvalidArgumentException
      */
     public function loadFiles(array $files, $merge = true)
     {
@@ -123,24 +127,27 @@ class ConfigLocator
      * Save's configuration to file.
      *
      * @param array|DataInterface $data
-     * @param string       $file
+     * @param string              $file
      */
     public function saveFile(array $data, string $file): void
     {
-        if (!is_file($file) || !is_readable($file)) {
+        if (!\is_file($file) || !\is_readable($file)) {
             throw new FileLoadingException("File '$file' is missing or is not readable.");
         }
 
-        $fileStatus = file_put_contents($file, $this->getAdapter($file)->dump($data));
+        $fileStatus = \file_put_contents($file, $this->getAdapter($file)->dump($data));
 
         // Invalidate configuration file from the opcache.
-        if (\function_exists('opcache_invalidate') && filter_var(ini_get('opcache.enable'), FILTER_VALIDATE_BOOLEAN)) {
+        if (
+            \function_exists('opcache_invalidate') &&
+            \filter_var(\ini_get('opcache.enable'), \FILTER_VALIDATE_BOOLEAN)
+        ) {
             // PHP 5.5.5+
             @opcache_invalidate($file, true);
         }
 
         // Touch the directory as well, thus marking it modified.
-        @touch(dirname($file));
+        @\touch(\dirname($file));
 
         if (false === $fileStatus) {
             throw new InvalidArgumentException("Cannot write file '$file'.");
@@ -152,11 +159,12 @@ class ConfigLocator
      */
     public function getDependencies(): array
     {
-        return array_unique($this->dependencies);
+        return \array_unique($this->dependencies);
     }
 
     /**
      * Expands included file name.
+     *
      * @param string $includedFile
      * @param string $mainFile
      *
@@ -164,9 +172,9 @@ class ConfigLocator
      */
     public function expandIncludedFile(string $includedFile, string $mainFile): string
     {
-        return preg_match('#([a-z]+:)?[/\\\\]#Ai', $includedFile) // is absolute
+        return \preg_match('#([a-z]+:)?[/\\\\]#Ai', $includedFile) // is absolute
             ? $includedFile
-            : dirname($mainFile) . '/' . $includedFile;
+            : \dirname($mainFile) . '/' . $includedFile;
     }
 
     /**
@@ -185,8 +193,8 @@ class ConfigLocator
 
     public function getAdapter(string $file): FileAdapterInterface
     {
-        $adapters = array_map(function ($adapter) {
-            return is_object($adapter) ? $adapter : new $adapter();
+        $adapters = \array_map(function ($adapter) {
+            return \is_object($adapter) ? $adapter : new $adapter();
         }, $this->adapters);
 
         foreach ($adapters as $adapter) {
@@ -195,16 +203,19 @@ class ConfigLocator
             }
         }
 
-        throw new RuntimeException(sprintf('Filename "%s" is missing an extension and cannot be auto-detected', $file));
+        throw new RuntimeException(
+            \sprintf('Filename "%s" is missing an extension and cannot be auto-detected', $file)
+        );
     }
 
     /**
      * Finds whether a variable is a zero-based integer indexed array.
-     * @param  mixed  $value
+     *
+     * @param mixed $value
      */
     private function isList($value): bool
     {
-        return is_array($value) && (!$value || array_keys($value) === range(0, count($value) - 1));
+        return \is_array($value) && (!$value || \array_keys($value) === \range(0, \count($value) - 1));
     }
 
     /**
@@ -213,11 +224,13 @@ class ConfigLocator
     private function mergeTree(array $arr1, array $arr2): array
     {
         $res = $arr1 + $arr2;
-        foreach (array_intersect_key($arr1, $arr2) as $k => $v) {
-            if (is_array($v) && is_array($arr2[$k])) {
-                $res[$k] = self::mergeTree($v, $arr2[$k]);
+
+        foreach (\array_intersect_key($arr1, $arr2) as $k => $v) {
+            if (\is_array($v) && \is_array($arr2[$k])) {
+                $res[$k] = $this->mergeTree($v, $arr2[$k]);
             }
         }
+
         return $res;
     }
 }

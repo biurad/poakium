@@ -1,27 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LocatorManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/locatormanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Tests;
 
-use PHPUnit\Framework\TestCase;
-use BiuradPHP\Loader\Resources\UniformResourceLocator;
-use BiuradPHP\Loader\Resources\UniformResourceIterator;
-use BiuradPHP\Loader\Resources\RecursiveUniformResourceIterator;
+use BiuradPHP\Loader\Files\RecursiveUniformResourceIterator;
+use BiuradPHP\Loader\Files\UniformResourceIterator;
 use BiuradPHP\Loader\Interfaces\ResourceLocatorInterface;
+use BiuradPHP\Loader\Locators\UniformResourceLocator;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @requires PHP 7.1.30
@@ -32,7 +33,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @var UniformResourceLocator
      */
-    static protected $locator;
+    protected static $locator;
 
     public static function setUpBeforeClass(): void
     {
@@ -40,9 +41,9 @@ class UniformResourceLocatorTest extends TestCase
         self::$locator = new UniformResourceLocator(__DIR__ . '/Fixtures');
     }
 
-    public function testGetBase()
+    public function testGetBase(): void
     {
-        $this->assertEquals(str_replace('\\', '/', __DIR__ . '/Fixtures'), self::$locator->getBase());
+        $this->assertEquals(\str_replace('\\', '/', __DIR__ . '/Fixtures'), self::$locator->getBase());
     }
 
     /**
@@ -52,7 +53,7 @@ class UniformResourceLocatorTest extends TestCase
      *
      * @dataProvider addPathProvider
      */
-    public function testAddPath($scheme, $path, $lookup)
+    public function testAddPath($scheme, $path, $lookup): void
     {
         $locator = self::$locator;
 
@@ -63,7 +64,8 @@ class UniformResourceLocatorTest extends TestCase
         $this->assertTrue($locator->schemeExists($scheme));
     }
 
-    public function addPathProvider() {
+    public function addPathProvider()
+    {
         return [
             ['base', '', 'base'],
             ['local', '', 'local'],
@@ -75,7 +77,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @depends testAddPath
      */
-    public function testGetSchemes()
+    public function testGetSchemes(): void
     {
         $this->assertEquals(
             ['base', 'local', 'override', 'all'],
@@ -87,13 +89,12 @@ class UniformResourceLocatorTest extends TestCase
      * @depends testAddPath
      * @dataProvider getPathsProvider
      */
-    public function testGetPaths($scheme, $expected)
+    public function testGetPaths($scheme, $expected): void
     {
         $locator = self::$locator;
 
         $this->assertEquals($expected, $locator->getPaths($scheme));
     }
-
 
     public function getPathsProvider()
     {
@@ -102,14 +103,14 @@ class UniformResourceLocatorTest extends TestCase
             ['local', ['' => ['local']]],
             ['override', ['' => ['override']]],
             ['all', ['' => [['override', 'all'], ['local', 'all'], ['base', 'all']]]],
-            ['fail', []]
+            ['fail', []],
         ];
     }
 
     /**
      * @depends testAddPath
      */
-    public function testSchemeExists()
+    public function testSchemeExists(): void
     {
         $locator = self::$locator;
 
@@ -121,7 +122,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @depends testAddPath
      */
-    public function testGetIterator()
+    public function testGetIterator(): void
     {
         $locator = self::$locator;
 
@@ -130,7 +131,7 @@ class UniformResourceLocatorTest extends TestCase
             $locator->getIterator('all://')
         );
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid resource fail://');
         $locator->getIterator('fail://');
     }
@@ -138,7 +139,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @depends testAddPath
      */
-    public function testGetRecursiveIterator()
+    public function testGetRecursiveIterator(): void
     {
         $locator = self::$locator;
 
@@ -147,7 +148,7 @@ class UniformResourceLocatorTest extends TestCase
             $locator->getRecursiveIterator('all://')
         );
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid resource fail://');
         $locator->getRecursiveIterator('fail://');
     }
@@ -155,7 +156,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @depends testAddPath
      */
-    public function testIsStream($uri)
+    public function testIsStream($uri): void
     {
         $locator = self::$locator;
 
@@ -172,7 +173,7 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @dataProvider normalizeProvider
      */
-    public function testNormalize($uri, $path)
+    public function testNormalize($uri, $path): void
     {
         $locator = self::$locator;
 
@@ -183,40 +184,39 @@ class UniformResourceLocatorTest extends TestCase
      * @depends testAddPath
      * @dataProvider findResourcesProvider
      */
-    public function testFindResource($uri, $paths)
+    public function testFindResource($uri, $paths): void
     {
-        $locator = self::$locator;
-        $path = $paths ? reset($paths) : false;
+        $locator  = self::$locator;
+        $path     = $paths ? \reset($paths) : false;
         $fullPath = !$path ? false : __DIR__ . "/Fixtures/{$path}";
 
-        $this->assertEquals(str_replace('\\', '/', $fullPath), $locator->findResource($uri));
-        $this->assertEquals(str_replace('\\', '/', $path), $locator->findResource($uri, false));
+        $this->assertEquals(\str_replace('\\', '/', $fullPath), $locator->findResource($uri));
+        $this->assertEquals(\str_replace('\\', '/', $path), $locator->findResource($uri, false));
     }
 
     /**
      * @depends testAddPath
      * @dataProvider findResourcesProvider
      */
-    public function testFindResources($uri, $paths)
+    public function testFindResources($uri, $paths): void
     {
         $locator = self::$locator;
 
-        $this->assertEquals(str_replace('\\', '/', $paths), $locator->findResources($uri, false));
+        $this->assertEquals(\str_replace('\\', '/', $paths), $locator->findResources($uri, false));
     }
 
     /**
      * @depends testFindResource
      * @dataProvider findResourcesProvider
      */
-    public function testInvoke($uri, $paths)
+    public function testInvoke($uri, $paths): void
     {
-        $locator = self::$locator;
-        $path = $paths ? reset($paths) : false;
+        $locator  = self::$locator;
+        $path     = $paths ? \reset($paths) : false;
         $fullPath = !$path ? false : __DIR__ . "/Fixtures/{$path}";
 
-        $this->assertEquals(str_replace('\\', '/', $fullPath), $locator($uri));
+        $this->assertEquals(\str_replace('\\', '/', $fullPath), $locator($uri));
     }
-
 
     public function normalizeProvider()
     {
@@ -272,21 +272,21 @@ class UniformResourceLocatorTest extends TestCase
     /**
      * @depends testAddPath
      */
-    public function testMergeResources()
+    public function testMergeResources(): void
     {
         $locator = self::$locator;
 
         $this->assertInstanceOf(ResourceLocatorInterface::class, $locator);
     }
 
-    public function testReset()
+    public function testReset(): void
     {
         $locator = self::$locator;
 
         $this->assertInstanceOf(ResourceLocatorInterface::class, $locator);
     }
 
-    public function testResetScheme()
+    public function testResetScheme(): void
     {
         $locator = self::$locator;
 

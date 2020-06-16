@@ -3,23 +3,22 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Files\Adapters;
 
 use BiuradPHP\Loader\Exceptions\FileGeneratingException;
+use Exception;
 
 /**
  * Reading and generating Csv files.
@@ -34,58 +33,59 @@ final class CsvFileAdapter extends AbstractAdapter
      */
     public function supports(string $file): bool
     {
-        return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['csv', 'tsv'], true);
+        return \in_array(\strtolower(\pathinfo($file, \PATHINFO_EXTENSION)), ['csv', 'tsv'], true);
     }
 
     /**
      * Reads configuration from Csv data.
      *
-     * @param  string $string
+     * @param string $string
      *
      * @return array
      */
     protected function processFrom(string $string): array
     {
-        $lines = preg_split('/\r\n|\r|\n/', $string);
+        $lines = \preg_split('/\r\n|\r|\n/', $string);
 
         if ($lines === false) {
             throw new FileGeneratingException('Decoding CSV failed');
         }
 
         // Get the field names
-        $header = str_getcsv(array_shift($lines), ',');
+        $header = \str_getcsv(\array_shift($lines), ',');
 
         // Get the data
         $list = [];
         $line = null;
+
         try {
             foreach ($lines as $line) {
                 if (!empty($line)) {
-                    $csv_line = str_getcsv($line, ',');
+                    $csv_line = \str_getcsv($line, ',');
 
-                    $list[] = array_combine($header, $csv_line);
+                    $list[] = \array_combine($header, $csv_line);
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new FileGeneratingException('Badly formatted CSV line: ' . $line, 0, $e);
         }
 
         return $list;
     }
 
-
     /**
      * Generates configuration in Csv format.
      *
      * @param array $data
+     *
      * @return false|string
      */
-	protected function processDump(array $data): string
-	{
-        if (count($data) === 0) {
+    protected function processDump(array $data): string
+    {
+        if (\count($data) === 0) {
             return '';
         }
-        $header = array_keys(reset($data));
+        $header = \array_keys(\reset($data));
 
         // Encode the field names
         $string = $this->encodeLine($header, ',');
@@ -101,17 +101,17 @@ final class CsvFileAdapter extends AbstractAdapter
     protected function encodeLine(array $line, $delimiter = null): string
     {
         foreach ($line as $key => &$value) {
-            $value = $this->escape((string)$value);
+            $value = $this->escape((string) $value);
         }
         unset($value);
 
-        return implode($delimiter, $line). "\n";
+        return \implode($delimiter, $line) . "\n";
     }
 
     protected function escape(string $value)
     {
-        if (preg_match('/[,"\r\n]/u', $value)) {
-            $value = '"' . preg_replace('/"/', '""', $value) . '"';
+        if (\preg_match('/[,"\r\n]/u', $value)) {
+            $value = '"' . \preg_replace('/"/', '""', $value) . '"';
         }
 
         return $value;

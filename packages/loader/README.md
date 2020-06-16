@@ -1,6 +1,6 @@
-# A robust package for loading files, classes, class aliases, annotations, and store data loader...
+# A robust package for loading files, classes, class aliases, and store data loader...
 
-This dependency provides a few fluent and convenient wrappers for working files, class aliases, annotations, classes with a data loader that collect's data (scalar, object, array) and then populate's the data into object mapping.
+This dependency provides a few fluent and convenient wrappers for working files, class aliases, classes with a data loader that collect's data (scalar, object, array) and then populate's the data into object mapping.
 
 **`Please note that this documentation is currently work-in-progress. Feel free to contribute.`**
 

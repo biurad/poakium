@@ -3,41 +3,59 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Locators;
 
+use AppendIterator;
 use BiuradPHP\Loader\Exceptions\FileNotFoundException;
 use BiuradPHP\Loader\Exceptions\LoaderException;
 use BiuradPHP\Loader\Interfaces\ClassInterface;
+use BiuradPHP\Loader\Interfaces\FileLocatorInterface;
+use CallbackFilterIterator;
+use Countable;
+use InvalidArgumentException;
+use Iterator;
+use IteratorAggregate;
+use OuterIterator;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use ReflectionClass;
-use ReflectionException;
+use SplFileInfo;
 
-class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggregate, \Countable
+class FileLocator implements ClassInterface, FileLocatorInterface, LoggerAwareInterface, IteratorAggregate, Countable
 {
     use LoggerAwareTrait;
 
-    public const IGNORE_VCS_FILES = ['.svn', '_svn', 'CVS', '_darcs', '.arch-params', '.monotone', '.bzr', '.git', '.hg'];
+    public const IGNORE_VCS_FILES = [
+        '.svn',
+        '_svn',
+        'CVS',
+        '_darcs',
+        '.arch-params',
+        '.monotone',
+        '.bzr',
+        '.git',
+        '.hg',
+    ];
 
     private $paths = [];
+
     private $excludes = [];
-	private $maxDepth = -1;
+
+    private $maxDepth = -1;
 
     /**
      * @param array $directories
@@ -64,10 +82,10 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
      */
     public function setExcludes(array $paths): void
     {
-        array_walk($paths, function (string $path) {
+        \array_walk($paths, function (string $path): void {
             $this->excludes[] = function (RecursiveDirectoryIterator $file) use ($path): bool {
                 return !$file->isDot()
-                    && !strpos(strtr($file->getPathname(), '\\', '/'), $path);
+                    && !\strpos(\strtr($file->getPathname(), '\\', '/'), $path);
             };
         });
     }
@@ -77,7 +95,8 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
      *
      * @return ClassLocator
      */
-    public function getClassLocator(): ClassLocator {
+    public function getClassLocator(): ClassLocator
+    {
         $classLocator = new ClassLocator($this);
 
         if (null !== $this->logger) {
@@ -88,30 +107,30 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
     }
 
     /**
-	 * Get the number of found files and/or directories.
-	 */
-	public function count(): int
-	{
-		return iterator_count($this->getIterator());
-	}
+     * Get the number of found files and/or directories.
+     */
+    public function count(): int
+    {
+        return \iterator_count($this->getIterator());
+    }
 
-
-	/**
-	 * Returns iterator.
+    /**
+     * Returns iterator.
      *
-     * @return \Iterator|\SplFIleInfo[]
-	 */
-	public function getIterator(): \Iterator
-	{
-		if (!$this->paths) {
+     * @return Iterator|SplFIleInfo[]
+     */
+    public function getIterator(): Iterator
+    {
+        if (!$this->paths) {
             throw new LoaderException('Call specify directory to search on constructor method.');
         }
 
-        if (count($this->paths) === 1) {
-			return $this->buildIterator((string) $this->paths[0]);
+        if (\count($this->paths) === 1) {
+            return $this->buildIterator((string) $this->paths[0]);
         }
 
-        $iterator = new \AppendIterator();
+        $iterator = new AppendIterator();
+
         foreach ($this->paths as $path) {
             $iterator->append($this->buildIterator((string) $path));
         }
@@ -122,9 +141,9 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
     /**
      * Extract the class name from the file at the given path.
      *
-     * @param  string  $path
+     * @param string $path
      *
-     * @return string|null
+     * @return null|string
      */
     public function findClass(string $path): ?string
     {
@@ -134,68 +153,64 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
     /**
      * Fiind all files in a list of directories.
      *
-     * @param string|array $extension
+     * @param array|string $extension
      *
-     * @return array
+     * @return null|iterable
      */
-    public function findFiles(string $extension = 'php'): array
+    public function findFiles(string $extension = 'php'): ?iterable
     {
-        $classes = [];
-
-        /** @var \SplFileInfo $file */
+        /** @var SplFileInfo $file */
         foreach ($this->getIterator() as $file) {
             if (('*' !== $extension && $file->getExtension() !== $extension) || !$file->isFile()) {
                 continue;
             }
 
-            $classes[] = $file->getPathname();
+            yield from [$file->getPathname() => $file];
         }
 
-        return $classes;
+        return null;
     }
 
     /**
      * Fiind all directories in a list of directories.
      *
-     * @return array
+     * @return null|iterable
      */
-    public function findDirectories(): array
+    public function findDirectories(): ?iterable
     {
-        $directories = [];
-
-        /** @var \SplFileInfo $path */
+        /** @var SplFileInfo $path */
         foreach ($this->getIterator() as $path) {
             if ($path->isFile() || ('.' === $path->getFilename() || '..' === $path->getFilename())) {
                 continue;
             }
 
-            $directories[] = $path->getPathname();
+            yield from [$path->getPathname() => $path];
         }
 
-        return $directories;
+        return null;
     }
 
     /**
      * Returns a full path for a given file name.
      *
      * @param string      $name        The file name to locate
-     * @param string|null $currentPath The current path
+     * @param null|string $currentPath The current path
      * @param bool        $first       Whether to return the first occurrence or an array of filenames
      *
-     * @return string|array The full path to the file or an array of file paths
-     *
-     * @throws \InvalidArgumentException        If $name is empty
+     * @throws InvalidArgumentException         If $name is empty
      * @throws FileLocatorFileNotFoundException If a file is not found
+     *
+     * @return array|string The full path to the file or an array of file paths
      */
     public function locate(string $name, string $currentPath = null, bool $first = true)
     {
         if ('' === $name) {
-            throw new \InvalidArgumentException('An empty file name is not valid to be located.');
+            throw new InvalidArgumentException('An empty file name is not valid to be located.');
         }
 
         if ($this->isAbsolutePath($name)) {
-            if (!file_exists($name)) {
-                throw new FileNotFoundException(sprintf('The file "%s" does not exist.', $name), 0, null, [$name]);
+            if (!\file_exists($name)) {
+                throw new FileNotFoundException(\sprintf('The file "%s" does not exist.', $name), 0, null, [$name]);
             }
 
             return $name;
@@ -204,14 +219,14 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
         $paths = $this->paths;
 
         if (null !== $currentPath) {
-            array_unshift($paths, $currentPath);
+            \array_unshift($paths, $currentPath);
         }
 
-        $paths = array_unique($paths);
+        $paths     = \array_unique($paths);
         $filepaths = [];
 
         foreach ($paths as $path) {
-            if (@file_exists($file = $path.\DIRECTORY_SEPARATOR.$name)) {
+            if (@\file_exists($file = $path . \DIRECTORY_SEPARATOR . $name)) {
                 if (true === $first) {
                     return $file;
                 }
@@ -220,7 +235,13 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
         }
 
         if (!$filepaths) {
-            throw new FileNotFoundException(sprintf('The file "%s" does not exist (in: "%s").', $name, implode('", "', $paths)));
+            throw new FileNotFoundException(
+                \sprintf(
+                    'The file "%s" does not exist (in: "%s").',
+                    $name,
+                    \implode('", "', $paths)
+                )
+            );
         }
 
         return $filepaths;
@@ -232,13 +253,14 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
      * used only for static analysis.
      *
      * @param mixed $target Class, interface or trait parent. By default - null (all classes).
-     *                       Parent (class) will also be included to classes list as one of
-     *                       results.
+     *                      Parent (class) will also be included to classes list as one of
+     *                      results.
      *
-     * @return ReflectionClass[]
      * @throws ReflectionException
+     *
+     * @return null|iterable|ReflectionClass[]
      */
-    public function getClasses($target = null): array
+    public function getClasses($target = null): ?iterable
     {
         return $this->getClassLocator()->getClasses($target);
     }
@@ -248,12 +270,20 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
      */
     private function isAbsolutePath(string $file): bool
     {
-        if ('/' === $file[0] || '\\' === $file[0]
-            || (\strlen($file) > 3 && ctype_alpha($file[0])
-                && ':' === $file[1]
-                && ('\\' === $file[2] || '/' === $file[2])
-            )
-            || null !== parse_url($file, PHP_URL_SCHEME)
+        if (
+            (
+                '/' === $file[0] ||
+                '\\' === $file[0]
+            ) ||
+            (
+                \strlen($file) > 3 && \ctype_alpha($file[0]) &&
+                ':' === $file[1] &&
+                (
+                    '\\' === $file[2] ||
+                    '/' === $file[2]
+                )
+            ) ||
+            null !== \parse_url($file, \PHP_URL_SCHEME)
         ) {
             return true;
         }
@@ -262,39 +292,42 @@ class FileLocator implements ClassInterface, LoggerAwareInterface, \IteratorAggr
     }
 
     /**
-	 * Returns per-path iterator.
-	 */
-	private function buildIterator(string $path): \Iterator
-	{
-		$iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::FOLLOW_SYMLINKS);
+     * Returns per-path iterator.
+     */
+    private function buildIterator(string $path): Iterator
+    {
+        $iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::FOLLOW_SYMLINKS);
 
-		if ($this->excludes) {
-			$iterator = new \RecursiveCallbackFilterIterator($iterator, function ($foo, $bar, RecursiveDirectoryIterator $file): bool {
-				if (!$file->isDot() && !$file->isFile()) {
-					foreach ($this->excludes as $filter) {
-						if (!$filter($file)) {
-							return false;
-						}
-					}
+        if ($this->excludes) {
+            $iterator = new RecursiveCallbackFilterIterator(
+                $iterator,
+                function ($foo, $bar, RecursiveDirectoryIterator $file): bool {
+                    if (!$file->isDot() && !$file->isFile()) {
+                        foreach ($this->excludes as $filter) {
+                            if (!$filter($file)) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
                 }
-
-				return true;
-			});
+            );
         }
 
-		if ($this->maxDepth !== 0) {
-			$iterator = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
-			$iterator->setMaxDepth($this->maxDepth);
-		}
+        if ($this->maxDepth !== 0) {
+            $iterator = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST);
+            $iterator->setMaxDepth($this->maxDepth);
+        }
 
-		$iterator = new \CallbackFilterIterator($iterator, function ($foo, $bar, \Iterator $file): bool {
-			while ($file instanceof \OuterIterator) {
-				$file = $file->getInnerIterator();
+        $iterator = new CallbackFilterIterator($iterator, function ($foo, $bar, Iterator $file): bool {
+            while ($file instanceof OuterIterator) {
+                $file = $file->getInnerIterator();
             }
 
-			return true;
-		});
+            return true;
+        });
 
-		return $iterator;
+        return $iterator;
     }
 }

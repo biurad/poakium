@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
  * PHP version 7 and above required
- *
- * @category  LoaderManager
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/biurad-loader
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Loader\Locators;
@@ -45,21 +43,24 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
     public function __construct(string $composerDirectory = null, string $prefix = 'composer.json')
     {
         $this->prefix = $prefix;
-        $this->path = $composerDirectory ?? dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2) . '/';
+        $this->path   = $composerDirectory ??
+            \dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2) . '/';
     }
 
     /**
      * {@inheritdoc}
      *
-     * @return ClassLoader
      * @throws RuntimeException
+     *
+     * @return ClassLoader
      */
     public function getClassLoader(bool $spl_functiion = false): ClassLoader
     {
-        if ($spl_functiion !== false && function_exists('spl_autoload_functions')) {
-            $autoloadFunctions = spl_autoload_functions();
+        if ($spl_functiion !== false && \function_exists('spl_autoload_functions')) {
+            $autoloadFunctions = \spl_autoload_functions();
+
             foreach ($autoloadFunctions as $autoloader) {
-                if (!is_array($autoloader)) {
+                if (!\is_array($autoloader)) {
                     continue;
                 }
 
@@ -69,11 +70,11 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
             }
         }
 
-        if (file_exists(__DIR__ . '/../../../../autoload.php')) {
+        if (\file_exists(__DIR__ . '/../../../../autoload.php')) {
             return include __DIR__ . '/../../../../autoload.php';
         }
 
-        if (file_exists(__DIR__ . '/../../../vendor/autoload.php')) {
+        if (\file_exists(__DIR__ . '/../../../vendor/autoload.php')) {
             return include __DIR__ . '/../../../vendor/autoload.php';
         }
 
@@ -85,9 +86,9 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
      * You need not to add packages to the framework
      * The package just need to have composer.json file
      */
-    public function processComposerPaths()
+    public function processComposerPaths(): void
     {
-        if (is_dir($this->path)) {
+        if (\is_dir($this->path)) {
             /** @var RecursiveIteratorIterator|SplFileInfo[] $iterator */
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($this->path),
@@ -97,7 +98,7 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
             foreach (@$iterator as $entryPath) {
                 if (
                     ($entryPath->isDir() && $entryPath->getFilename() != '.') &&
-                    file_exists($entryPath->getPath() . '/' . $this->prefix)
+                    \file_exists($entryPath->getPath() . '/' . $this->prefix)
                 ) {
                     $this->loadPaths[] = $entryPath->getPath();
                 }
@@ -106,12 +107,14 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
             return;
         }
 
-        if (!file_exists($this->path) && pathinfo($this->path, PATHINFO_EXTENSION) !== 'json') {
-            throw new UnexpectedValueException('Expected a json file containing packagists or composer\'s vendor directory');
+        if (!\file_exists($this->path) && \pathinfo($this->path, \PATHINFO_EXTENSION) !== 'json') {
+            throw new UnexpectedValueException(
+                'Expected a json file containing packagists or composer\'s vendor directory'
+            );
         }
 
-        foreach (json_decode(file_get_contents($this->path.'composer/installed.json'), true) as $composer) {
-            $this->loadPaths[] = $this->path. $composer['name'];
+        foreach (\json_decode(\file_get_contents($this->path . 'composer/installed.json'), true) as $composer) {
+            $this->loadPaths[] = $this->path . $composer['name'];
         }
     }
 
@@ -139,7 +142,7 @@ class ComposerLocator implements ComposerInterface, Countable, IteratorAggregate
 
     public function count()
     {
-        return count($this->loadPaths);
+        return \count($this->loadPaths);
     }
 
     /**
