@@ -3,21 +3,23 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Cookie;
+
+use DateTime;
+use DateTimeZone;
+use InvalidArgumentException;
 
 final class CookieUtil
 {
@@ -45,24 +47,24 @@ final class CookieUtil
      *
      * @param string $dateValue
      *
-     * @return \DateTime
+     * @throws UnexpectedValueException if we cannot parse the cookie date string
      *
-     * @throws UnexpectedValueException if we cannot parse the cookie date string.
+     * @return DateTime
      */
     public static function parseDate($dateValue)
     {
         foreach (self::$dateFormats as $dateFormat) {
-            if (false !== $date = \DateTime::createFromFormat($dateFormat, $dateValue, new \DateTimeZone('GMT'))) {
+            if (false !== $date = DateTime::createFromFormat($dateFormat, $dateValue, new DateTimeZone('GMT'))) {
                 return $date;
             }
         }
 
         // attempt a fallback for unusual formatting
-        if (false !== $date = date_create($dateValue, new \DateTimeZone('GMT'))) {
+        if (false !== $date = \date_create($dateValue, new DateTimeZone('GMT'))) {
             return $date;
         }
 
-        throw new \UnexpectedValueException(sprintf('Unparseable cookie date string "%s"', $dateValue));
+        throw new \UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
     }
 
     /**
@@ -75,26 +77,26 @@ final class CookieUtil
     public static function toString(CookieFactory $cookie): string
     {
         $header = [
-            rawurlencode($cookie->getName()) . '=' . rawurlencode($cookie->getValue() ?? 'deleted'),
+            \rawurlencode($cookie->getName()) . '=' . \rawurlencode($cookie->getValue() ?? 'deleted'),
         ];
 
         if ($cookie->getExpires() > 0) {
-            $header[] = 'Expires='.gmdate(self::DATE_FORMAT, $cookie->getExpires());
-            $header[] = 'Max-Age='.$cookie->getMaxAge();
+            $header[] = 'Expires=' . \gmdate(self::DATE_FORMAT, $cookie->getExpires());
+            $header[] = 'Max-Age=' . $cookie->getMaxAge();
         } elseif (
             null === $cookie->getValue() &&
-            (0 === $cookie->getExpires() ||null == $cookie->getExpires())
+            (0 === $cookie->getExpires() || null == $cookie->getExpires())
         ) {
-            $header[] = 'Expires='.gmdate(self::DATE_FORMAT, time() - 31536001);
+            $header[] = 'Expires=' . \gmdate(self::DATE_FORMAT, \time() - 31536001);
             $header[] = 'Max-Age=0';
         }
 
         if (!empty($cookie->getPath())) {
-            $header[] = 'Path='.$cookie->getPath();
+            $header[] = 'Path=' . $cookie->getPath();
         }
 
         if (!empty($cookie->getDomain())) {
-            $header[] = 'Domain='.$cookie->getDomain();
+            $header[] = 'Domain=' . $cookie->getDomain();
         }
 
         if ($cookie->isSecure()) {
@@ -106,10 +108,10 @@ final class CookieUtil
         }
 
         if (null !== $cookie->getSameSite()) {
-            $header[] = 'SameSite='.$cookie->getSameSite();
+            $header[] = 'SameSite=' . $cookie->getSameSite();
         }
 
-        return join('; ', $header);
+        return \join('; ', $header);
     }
 
     /**
@@ -119,21 +121,23 @@ final class CookieUtil
      *
      * @param string $name
      *
-     * @throws \InvalidArgumentException If the name is empty or contains invalid characters.
+     * @throws InvalidArgumentException if the name is empty or contains invalid characters
      */
-    public static function validateName($name)
+    public static function validateName($name): void
     {
-        if (strlen($name) < 1) {
-            throw new \InvalidArgumentException('The name cannot be empty');
+        if (\strlen($name) < 1) {
+            throw new InvalidArgumentException('The name cannot be empty');
         }
 
-        if (preg_match("/[=,; \t\r\n\013\014]/", $name)) {
-            throw new \InvalidArgumentException("Cookie name cannot contain these characters: =,; \\t\\r\\n\\013\\014 ({$name})");
+        if (\preg_match("/[=,; \t\r\n\013\014]/", $name)) {
+            throw new InvalidArgumentException(
+                "Cookie name cannot contain these characters: =,; \\t\\r\\n\\013\\014 ({$name})"
+            );
         }
 
         // Name attribute is a token as per spec in RFC 2616
-        if (preg_match('/[\x00-\x20\x22\x28-\x29\x2C\x2F\x3A-\x40\x5B-\x5D\x7B\x7D\x7F]/', $name)) {
-            throw new \InvalidArgumentException(sprintf('The cookie name "%s" contains invalid characters.', $name));
+        if (\preg_match('/[\x00-\x20\x22\x28-\x29\x2C\x2F\x3A-\x40\x5B-\x5D\x7B\x7D\x7F]/', $name)) {
+            throw new InvalidArgumentException(\sprintf('The cookie name "%s" contains invalid characters.', $name));
         }
     }
 
@@ -146,23 +150,27 @@ final class CookieUtil
      *
      * @see http://tools.ietf.org/html/rfc6265#section-4.1.1
      *
-     * @param string|null $value
+     * @param null|string $value
      *
-     * @throws \InvalidArgumentException If the value contains invalid characters.
+     * @throws InvalidArgumentException if the value contains invalid characters
      */
-    public static function validateValue($value)
+    public static function validateValue($value): void
     {
         if (isset($value)) {
             // Look for:
             // \n not preceded by \r, OR
             // \r not followed by \n, OR
             // \r\n not followed by space or horizontal tab; these are all CRLF attacks
-            if (preg_match("#(?:(?:(?<!\r)\n)|(?:\r(?!\n))|(?:\r\n(?![ \t])))#", $value)) {
-                throw new \InvalidArgumentException(sprintf('The cookie value "%s" contains invalid characters.', $value));
+            if (\preg_match("#(?:(?:(?<!\r)\n)|(?:\r(?!\n))|(?:\r\n(?![ \t])))#", $value)) {
+                throw new InvalidArgumentException(
+                    \sprintf('The cookie value "%s" contains invalid characters.', $value)
+                );
             }
 
-            if (preg_match('/[^\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]/', $value)) {
-                throw new \InvalidArgumentException(sprintf('The cookie value "%s" contains invalid characters.', $value));
+            if (\preg_match('/[^\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]/', $value)) {
+                throw new InvalidArgumentException(
+                    \sprintf('The cookie value "%s" contains invalid characters.', $value)
+                );
             }
         }
     }
@@ -170,15 +178,15 @@ final class CookieUtil
     /**
      * Validates a Max-Age attribute.
      *
-     * @param int|null $maxAge
+     * @param null|int $maxAge
      *
-     * @throws \InvalidArgumentException If the Max-Age is not an empty or integer value.
+     * @throws InvalidArgumentException if the Max-Age is not an empty or integer value
      */
-    public static function validateMaxAge($maxAge)
+    public static function validateMaxAge($maxAge): void
     {
         if (isset($maxAge)) {
-            if (!is_int($maxAge)) {
-                throw new \InvalidArgumentException('Max-Age must be integer');
+            if (!\is_int($maxAge)) {
+                throw new InvalidArgumentException('Max-Age must be integer');
             }
         }
     }
@@ -190,14 +198,14 @@ final class CookieUtil
      * @see http://tools.ietf.org/html/rfc6265#section-5.1.3
      * @see http://tools.ietf.org/html/rfc6265#section-5.2.3
      *
-     * @param string|null $domain
+     * @param null|string $domain
      *
      * @return string
      */
     public static function normalizeDomain($domain)
     {
         if (isset($domain)) {
-            $domain = ltrim(strtolower($domain), '.');
+            $domain = \ltrim(\strtolower($domain), '.');
         }
 
         return $domain;
@@ -209,15 +217,15 @@ final class CookieUtil
      * @see http://tools.ietf.org/html/rfc6265#section-5.1.4
      * @see http://tools.ietf.org/html/rfc6265#section-5.2.4
      *
-     * @param string|null $path
+     * @param null|string $path
      *
      * @return string
      */
     public static function normalizePath($path)
     {
-        $path = rtrim($path, '/');
+        $path = \rtrim($path, '/');
 
-        if (empty($path) || '/' !== substr($path, 0, 1)) {
+        if (empty($path) || '/' !== \substr($path, 0, 1)) {
             $path = '/';
         }
 

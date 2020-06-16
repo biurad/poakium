@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http;
@@ -57,7 +55,8 @@ class Uri implements UriInterface
      * - relative-path references, e.g. 'subpath'
      *
      * @return bool
-     * @link https://tools.ietf.org/html/rfc3986#section-4
+     *
+     * @see https://tools.ietf.org/html/rfc3986#section-4
      */
     public function isAbsolute(): bool
     {
@@ -70,7 +69,8 @@ class Uri implements UriInterface
      * A relative reference that begins with two slash characters is termed an network-path reference.
      *
      * @return bool
-     * @link https://tools.ietf.org/html/rfc3986#section-4.2
+     *
+     * @see https://tools.ietf.org/html/rfc3986#section-4.2
      */
     public function isNetworkPathReference(): bool
     {
@@ -83,7 +83,8 @@ class Uri implements UriInterface
      * A relative reference that begins with a single slash character is termed an absolute-path reference.
      *
      * @return bool
-     * @link https://tools.ietf.org/html/rfc3986#section-4.2
+     *
+     * @see https://tools.ietf.org/html/rfc3986#section-4.2
      */
     public function isAbsolutePathReference(): bool
     {
@@ -96,7 +97,8 @@ class Uri implements UriInterface
      * A relative reference that does not begin with a slash character is termed a relative-path reference.
      *
      * @return bool
-     * @link https://tools.ietf.org/html/rfc3986#section-4.2
+     *
+     * @see https://tools.ietf.org/html/rfc3986#section-4.2
      */
     public function isRelativePathReference(): bool
     {
@@ -110,8 +112,10 @@ class Uri implements UriInterface
      * component, identical to the base URI. When no base URI is given, only an empty
      * URI reference (apart from its fragment) is considered a same-document reference.
      *
-     * @param UriInterface|null $base An optional base URI to compare against
+     * @param null|UriInterface $base An optional base URI to compare against
+     *
      * @return bool
+     *
      * @link https://tools.ietf.org/html/rfc3986#section-4.4
      */
     public function isSameDocumentReference(UriInterface $base = null): bool

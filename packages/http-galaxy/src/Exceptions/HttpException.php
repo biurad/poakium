@@ -3,28 +3,28 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Exceptions;
 
 use BiuradPHP\Http\Interfaces\RequestExceptionInterface;
+use DomainException;
+use UnexpectedValueException;
 
 /**
  * General HttpDispatcher exception.
  */
-class HttpException extends \DomainException implements RequestExceptionInterface
+class HttpException extends DomainException implements RequestExceptionInterface
 {
     protected static $phrases = [
         // CLIENT ERROR
@@ -81,16 +81,20 @@ class HttpException extends \DomainException implements RequestExceptionInterfac
      *
      * @param int            $code     A valid http error code
      * @param array          $context
-     * @param Throwable|null $previous
+     * @param null|Throwable $previous
      */
-    public function __construct($message = "", $code = 0, ?\Throwable $previous = null)
+    public function __construct($message = '', $code = 0, ?\Throwable $previous = null)
     {
         if (!isset(self::$phrases[$code])) {
-            throw new \UnexpectedValueException("Http error - Not valid ({$code})");
+            throw new UnexpectedValueException("Http error - Not valid ({$code})");
         }
 
         // Add data context used in the error handler
-        return parent::__construct(!empty($this->message) ? $this->message : $message, $code, $this->customPrevious ?? $previous);
+        return parent::__construct(
+            !empty($this->message) ? $this->message : $message,
+            $code,
+            $this->customPrevious ?? $previous
+        );
     }
 
     /**
@@ -107,7 +111,6 @@ class HttpException extends \DomainException implements RequestExceptionInterfac
      * Writes a new previous exception.
      *
      * @param \Throwable $previous
-     * @return void
      */
     public function withPreviousException(\Throwable $previous): void
     {

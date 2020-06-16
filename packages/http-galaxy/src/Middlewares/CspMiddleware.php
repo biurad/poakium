@@ -3,28 +3,26 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Middlewares;
 
 use BiuradPHP\Http\Csp\ContentSecurityPolicy;
 use BiuradPHP\Http\Csp\NonceGenerator;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use BiuradPHP\Http\Interfaces\CspInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 /**
@@ -57,7 +55,7 @@ class CspMiddleware implements MiddlewareInterface
     /**
      * {@inheritDoc}
      *
-     * @param Request $request
+     * @param Request        $request
      * @param RequestHandler $handler
      *
      * @return ResponseInterface
@@ -65,7 +63,7 @@ class CspMiddleware implements MiddlewareInterface
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
         $response = clone $handler->handle($request);
-        $nonce = $this->csp->updateResponseHeaders($request, $response);
+        $nonce    = $this->csp->updateResponseHeaders($request, $response);
 
         // Incase it's disabled
         if ($nonce instanceof ResponseInterface) {

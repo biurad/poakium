@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Factories;
@@ -28,13 +26,13 @@ use Laminas\Diactoros\UploadedFileFactory;
 use Laminas\Diactoros\UriFactory;
 use Psr\Http\Message\ServerRequestInterface;
 
-use function Laminas\Diactoros\normalizeServer;
-use function Laminas\Diactoros\normalizeUploadedFiles;
 use function Laminas\Diactoros\marshalHeadersFromSapi;
-use function Laminas\Diactoros\parseCookieHeader;
-use function Laminas\Diactoros\marshalUriFromSapi;
 use function Laminas\Diactoros\marshalMethodFromSapi;
 use function Laminas\Diactoros\marshalProtocolVersionFromSapi;
+use function Laminas\Diactoros\marshalUriFromSapi;
+use function Laminas\Diactoros\normalizeServer;
+use function Laminas\Diactoros\normalizeUploadedFiles;
+use function Laminas\Diactoros\parseCookieHeader;
 
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
@@ -51,34 +49,21 @@ final class LaminasPsr7Factory extends Psr17Factory
     /**
      * {@inheritdoc}
      */
-    protected function setFactoryCandidates(): void
-    {
-        $this->responseFactoryClass         = ResponseFactory::class;
-        $this->serverRequestFactoryClass    = ServerRequestFactory::class;
-        $this->requestFactoryClass          = RequestFactory::class;
-        $this->uploadedFilesFactoryClass    = UploadedFileFactory::class;
-        $this->streamFactoryClass           = StreamFactory::class;
-        $this->uriFactoryClass              = UriFactory::class;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public static function fromGlobalRequest(
         array $server = null,
         array $query = null,
         array $body = null,
         array $cookies = null,
         array $files = null
-    ) : ServerRequestInterface {
+    ): ServerRequestInterface {
         $server = normalizeServer(
             $server ?: $_SERVER,
-            is_callable(self::$apacheRequestHeaders) ? self::$apacheRequestHeaders : 'getallheaders'
+            \is_callable(self::$apacheRequestHeaders) ? self::$apacheRequestHeaders : 'getallheaders'
         );
         $files   = normalizeUploadedFiles($files ?: $_FILES);
         $headers = self::getHeaders(marshalHeadersFromSapi($server));
 
-        if (null === $cookies && array_key_exists('cookie', $headers)) {
+        if (null === $cookies && \array_key_exists('cookie', $headers)) {
             $cookies = parseCookieHeader($headers['cookie']);
         }
 
@@ -97,6 +82,19 @@ final class LaminasPsr7Factory extends Psr17Factory
     }
 
     /**
+     * {@inheritdoc}
+     */
+    protected function setFactoryCandidates(): void
+    {
+        $this->responseFactoryClass         = ResponseFactory::class;
+        $this->serverRequestFactoryClass    = ServerRequestFactory::class;
+        $this->requestFactoryClass          = RequestFactory::class;
+        $this->uploadedFilesFactoryClass    = UploadedFileFactory::class;
+        $this->streamFactoryClass           = StreamFactory::class;
+        $this->uriFactoryClass              = UriFactory::class;
+    }
+
+    /**
      * Gets the HTTP headers.
      *
      * @return array
@@ -104,13 +102,14 @@ final class LaminasPsr7Factory extends Psr17Factory
     private static function getHeaders(array $parameters): array
     {
         $headers = [];
+
         foreach ($parameters as $key => $value) {
             $headers[$key] = $value;
         }
 
         if (isset($parameters['PHP_AUTH_USER'])) {
             $headers['PHP_AUTH_USER'] = $parameters['PHP_AUTH_USER'];
-            $headers['PHP_AUTH_PW'] = isset($parameters['PHP_AUTH_PW']) ? $parameters['PHP_AUTH_PW'] : '';
+            $headers['PHP_AUTH_PW']   = $parameters['PHP_AUTH_PW'] ?? '';
         } else {
             /*
              * php-cgi under Apache does not pass HTTP Basic user/pass to PHP by default
@@ -127,22 +126,24 @@ final class LaminasPsr7Factory extends Psr17Factory
              */
 
             $authorizationHeader = null;
+
             if (isset($parameters['AUTHORIZATION'])) {
                 $authorizationHeader = $parameters['AUTHORIZATION'];
             }
 
             if (null !== $authorizationHeader) {
-                if (0 === stripos($authorizationHeader, 'basic ')) {
+                if (0 === \stripos($authorizationHeader, 'basic ')) {
                     // Decode AUTHORIZATION header into PHP_AUTH_USER and PHP_AUTH_PW when authorization header is basic
-                    $exploded = explode(':', base64_decode(substr($authorizationHeader, 6)), 2);
-                    if (2 == count($exploded)) {
+                    $exploded = \explode(':', \base64_decode(\substr($authorizationHeader, 6)), 2);
+
+                    if (2 == \count($exploded)) {
                         [$headers['PHP_AUTH_USER'], $headers['PHP_AUTH_PW']] = $exploded;
                     }
-                } elseif (empty($parameters['PHP_AUTH_DIGEST']) && (0 === stripos($authorizationHeader, 'digest '))) {
+                } elseif (empty($parameters['PHP_AUTH_DIGEST']) && (0 === \stripos($authorizationHeader, 'digest '))) {
                     // In some circumstances PHP_AUTH_DIGEST needs to be set
-                    $headers['PHP_AUTH_DIGEST'] = $authorizationHeader;
+                    $headers['PHP_AUTH_DIGEST']    = $authorizationHeader;
                     $parameters['PHP_AUTH_DIGEST'] = $authorizationHeader;
-                } elseif (0 === stripos($authorizationHeader, 'bearer ')) {
+                } elseif (0 === \stripos($authorizationHeader, 'bearer ')) {
                     /*
                      * XXX: Since there is no PHP_AUTH_BEARER in PHP predefined variables,
                      *      I'll just set $headers['AUTHORIZATION'] here.
@@ -159,7 +160,9 @@ final class LaminasPsr7Factory extends Psr17Factory
 
         // PHP_AUTH_USER/PHP_AUTH_PW
         if (isset($headers['PHP_AUTH_USER'])) {
-            $headers['AUTHORIZATION'] = 'Basic '.base64_encode($headers['PHP_AUTH_USER'].':'.$headers['PHP_AUTH_PW']);
+            $headers['AUTHORIZATION'] = 'Basic '
+                . \base64_encode($headers['PHP_AUTH_USER'] . ':'
+                . $headers['PHP_AUTH_PW']);
         } elseif (isset($headers['PHP_AUTH_DIGEST'])) {
             $headers['AUTHORIZATION'] = $headers['PHP_AUTH_DIGEST'];
         }

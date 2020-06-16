@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http;
@@ -28,14 +26,20 @@ class UploadedFile implements UploadedFileInterface
     use Traits\UploadedFileDecoratorTrait;
 
     /**
-     * @param StreamInterface|string|resource $streamOrFile
+     * @param resource|StreamInterface|string $streamOrFile
      * @param int                             $size
      * @param int                             $errorStatus
-     * @param string|null                     $clientFilename
-     * @param string|null                     $clientMediaType
+     * @param null|string                     $clientFilename
+     * @param null|string                     $clientMediaType
      */
     public function __construct($streamOrFile, $size, $errorStatus, $clientFilename = null, $clientMediaType = null)
     {
-        $this->uploadedFile = new Psr7UploadedFile($streamOrFile, $size, $errorStatus, $clientFilename, $clientMediaType);
+        $this->uploadedFile = new Psr7UploadedFile(
+            $streamOrFile,
+            $size,
+            $errorStatus,
+            $clientFilename,
+            $clientMediaType
+        );
     }
 }

@@ -3,24 +3,20 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Middlewares;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use BiuradPHP\Http\Exceptions\ClientException;
 use BiuradPHP\Http\Exceptions\ClientExceptions\AccessDeniedException;
 use BiuradPHP\Http\Exceptions\ClientExceptions\BadRequestException;
@@ -38,7 +34,9 @@ use BiuradPHP\Http\Exceptions\ClientExceptions\TooManyRequestsException;
 use BiuradPHP\Http\Exceptions\ClientExceptions\UnauthorizedException;
 use BiuradPHP\Http\Exceptions\ClientExceptions\UnprocessableEntityException;
 use BiuradPHP\Http\Exceptions\ClientExceptions\UnsupportedMediaTypeException;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 /**
@@ -51,7 +49,7 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
     /**
      * {@inheritDoc}
      *
-     * @param Request $request
+     * @param Request        $request
      * @param RequestHandler $handler
      *
      * @return ResponseInterface
@@ -63,7 +61,7 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
         // Incase response is empty
         if ($this->isResponseEmpty($response)) {
             // prevent PHP from sending the Content-Type header based on default_mimetype
-            ini_set('default_mimetype', '');
+            \ini_set('default_mimetype', '');
 
             $response = $response
                 ->withoutHeader('Allow')
@@ -72,23 +70,26 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
                 ->withoutHeader('Content-Length');
         }
 
-         // Handle Headers Error
-         if ($response->getStatusCode() >= 400) {
+        // Handle Headers Error
+        if ($response->getStatusCode() >= 400) {
             for ($i = 400; $i < 600; $i++) {
                 switch ($i) {
                     case 400:
                         $exception = new BadRequestException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 401:
                         $exception = new UnauthorizedException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 403:
                         $exception = new AccessDeniedException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 404:
@@ -100,46 +101,55 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
                     case 406:
                         $exception = new NotAcceptableException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 409:
                         $exception = new ConflictException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 410:
                         $exception = new GoneException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 411:
                         $exception = new LengthRequiredException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 412:
                         $exception = new PreconditionFailedException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 415:
                         $exception = new UnsupportedMediaTypeException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 422:
                         $exception = new UnprocessableEntityException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 428:
                         $exception = new PreconditionRequiredException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 429:
                         $exception = new TooManyRequestsException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     case 500:
@@ -148,12 +158,13 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
                     case 503:
                         $exception = new ServiceUnavailableException();
                         $exception->withResponse($response);
+
                         throw $exception;
 
                     default:
                         throw new ClientException($i);
                 }
-            };
+            }
         }
 
         // remove headers that MUST NOT be included with 304 Not Modified responses
@@ -173,6 +184,6 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
 
         return empty($contents) ||
             ($response->getStatusCode() >= 100 && $response->getStatusCode() < 200) ||
-            (in_array($response->getStatusCode(), [204, 304]));
+            (\in_array($response->getStatusCode(), [204, 304]));
     }
 }

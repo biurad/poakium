@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http;
@@ -35,17 +33,17 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class Matcher implements RequestMatcherInterface
 {
     /**
-     * @var string|null
+     * @var null|string
      */
     private $path;
 
     /**
-     * @var string|null
+     * @var null|string
      */
     private $host;
 
     /**
-     * @var int|null
+     * @var null|int
      */
     private $port;
 
@@ -70,12 +68,19 @@ class Matcher implements RequestMatcherInterface
     private $schemes = [];
 
     /**
-     * @param string|string[]|null $methods
-     * @param string|string[]|null $ips
-     * @param string|string[]|null $schemes
+     * @param null|string|string[] $methods
+     * @param null|string|string[] $ips
+     * @param null|string|string[] $schemes
      */
-    public function __construct(string $path = null, string $host = null, $methods = null, $ips = null, array $attributes = [], $schemes = null, int $port = null)
-    {
+    public function __construct(
+        string $path = null,
+        string $host = null,
+        $methods = null,
+        $ips = null,
+        array $attributes = [],
+        $schemes = null,
+        int $port = null
+    ) {
         $this->matchPath($path);
         $this->matchHost($host);
         $this->matchMethod($methods);
@@ -91,17 +96,17 @@ class Matcher implements RequestMatcherInterface
     /**
      * Adds a check for the HTTP scheme.
      *
-     * @param string|string[]|null $scheme An HTTP scheme or an array of HTTP schemes
+     * @param null|string|string[] $scheme An HTTP scheme or an array of HTTP schemes
      */
-    public function matchScheme($scheme)
+    public function matchScheme($scheme): void
     {
-        $this->schemes = null !== $scheme ? array_map('strtolower', (array) $scheme) : [];
+        $this->schemes = null !== $scheme ? \array_map('strtolower', (array) $scheme) : [];
     }
 
     /**
      * Adds a check for the URL host name.
      */
-    public function matchHost(?string $regexp)
+    public function matchHost(?string $regexp): void
     {
         $this->host = $regexp;
     }
@@ -109,9 +114,9 @@ class Matcher implements RequestMatcherInterface
     /**
      * Adds a check for the the URL port.
      *
-     * @param int|null $port The port number to connect to
+     * @param null|int $port The port number to connect to
      */
-    public function matchPort(?int $port)
+    public function matchPort(?int $port): void
     {
         $this->port = $port;
     }
@@ -119,7 +124,7 @@ class Matcher implements RequestMatcherInterface
     /**
      * Adds a check for the URL path info.
      */
-    public function matchPath(?string $regexp)
+    public function matchPath(?string $regexp): void
     {
         $this->path = $regexp;
     }
@@ -129,7 +134,7 @@ class Matcher implements RequestMatcherInterface
      *
      * @param string $ip A specific IP address or a range specified using IP/netmask like 192.168.1.0/24
      */
-    public function matchIp(string $ip)
+    public function matchIp(string $ip): void
     {
         $this->matchIps($ip);
     }
@@ -137,9 +142,9 @@ class Matcher implements RequestMatcherInterface
     /**
      * Adds a check for the client IP.
      *
-     * @param string|string[]|null $ips A specific IP address or a range specified using IP/netmask like 192.168.1.0/24
+     * @param null|string|string[] $ips A specific IP address or a range specified using IP/netmask like 192.168.1.0/24
      */
-    public function matchIps($ips)
+    public function matchIps($ips): void
     {
         $this->ips = null !== $ips ? (array) $ips : [];
     }
@@ -147,17 +152,17 @@ class Matcher implements RequestMatcherInterface
     /**
      * Adds a check for the HTTP method.
      *
-     * @param string|string[]|null $method An HTTP method or an array of HTTP methods
+     * @param null|string|string[] $method An HTTP method or an array of HTTP methods
      */
-    public function matchMethod($method)
+    public function matchMethod($method): void
     {
-        $this->methods = null !== $method ? array_map('strtoupper', (array) $method) : [];
+        $this->methods = null !== $method ? \array_map('strtoupper', (array) $method) : [];
     }
 
     /**
      * Adds a check for request attribute.
      */
-    public function matchAttribute(string $key, string $regexp)
+    public function matchAttribute(string $key, string $regexp): void
     {
         $this->attributes[$key] = $regexp;
     }
@@ -178,20 +183,23 @@ class Matcher implements RequestMatcherInterface
         }
 
         foreach ($this->attributes as $key => $pattern) {
-            if (!preg_match('{'.$pattern.'}', $request->getAttribute($key))) {
+            if (!\preg_match('{' . $pattern . '}', $request->getAttribute($key))) {
                 return false;
             }
         }
 
-        if (strpos($uri = $requestUri->getPath(), $basePath = dirname($request->getServerParams()['SCRIPT_NAME'])) !== false) {
-            $uri = strlen($basePath) > 1 ? substr($uri, strlen($basePath)) ?: '/' : $uri;
+        $uri      = $requestUri->getPath();
+        $basePath = \dirname($request->getServerParams()['SCRIPT_NAME']);
+
+        if (\strpos($uri, $basePath) !== false) {
+            $uri = \strlen($basePath) > 1 ? \substr($uri, \strlen($basePath)) ?? '/' : $uri;
         }
 
-        if (null !== $this->path && !preg_match('{'.$this->path.'}', rawurldecode($uri))) {
+        if (null !== $this->path && !\preg_match('{' . $this->path . '}', \rawurldecode($uri))) {
             return false;
         }
 
-        if (null !== $this->host && !preg_match('{'.$this->host.'}i', $requestUri->getHost())) {
+        if (null !== $this->host && !\preg_match('{' . $this->host . '}i', $requestUri->getHost())) {
             return false;
         }
 
@@ -199,7 +207,7 @@ class Matcher implements RequestMatcherInterface
             return false;
         }
 
-        if (method_exists($request, 'remoteAddress') && IpUtils::checkIp($request->remoteAddress(), $this->ips)) {
+        if (\method_exists($request, 'remoteAddress') && IpUtils::checkIp($request->remoteAddress(), $this->ips)) {
             return true;
         }
 

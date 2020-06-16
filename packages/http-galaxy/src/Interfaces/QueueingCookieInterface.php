@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Interfaces;
@@ -31,7 +29,7 @@ interface QueueingCookieInterface
     /**
      * Queue a cookie to send with the next response.
      *
-     * @param CookieInterface|array $parameters
+     * @param array|CookieInterface $parameters
      */
     public function addCookie(...$parameters): void;
 
@@ -47,7 +45,7 @@ interface QueueingCookieInterface
      *
      * @param string $name cookie name to search for
      *
-     * @return CookieInterface|null cookie that was found or null if not found
+     * @return null|CookieInterface cookie that was found or null if not found
      */
     public function getCookieByName($name): ?CookieInterface;
 
@@ -59,7 +57,7 @@ interface QueueingCookieInterface
     /**
      * Returns the cookies which have been queued for the next request.
      *
-     * @return CookieInterface[]|array
+     * @return array|CookieInterface[]
      */
     public function getCookies(): array;
 
@@ -82,7 +80,7 @@ interface QueueingCookieInterface
      *
      * @param Cookie $cookie
      *
-     * @return CookieFactory[]|array
+     * @return array|CookieFactory[]
      */
     public function getMatchingCookies(CookieInterface $cookie): array;
 

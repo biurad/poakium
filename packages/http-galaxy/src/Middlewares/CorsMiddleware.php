@@ -3,27 +3,25 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Middlewares;
 
 use BiuradPHP\Http\Cors\AccessControl;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use BiuradPHP\Http\Matcher;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 /**
@@ -51,7 +49,7 @@ class CorsMiddleware implements MiddlewareInterface
     /**
      * {@inheritDoc}
      *
-     * @param Request $request
+     * @param Request        $request
      * @param RequestHandler $handler
      *
      * @return ResponseInterface
@@ -71,7 +69,7 @@ class CorsMiddleware implements MiddlewareInterface
         }
 
         // If the request is not allowed, return 403
-        if (! $this->cors->isActualRequestAllowed($request)) {
+        if (!$this->cors->isActualRequestAllowed($request)) {
             return $response->withStatus(403, 'Not allowed in CORS policy.');
         }
 
@@ -82,7 +80,8 @@ class CorsMiddleware implements MiddlewareInterface
     /**
      * Determine if the request has a URI that should pass through the CORS flow.
      *
-     * @param  Request  $request
+     * @param Request $request
+     *
      * @return bool
      */
     private function shouldRun(Request $request): bool
@@ -98,22 +97,23 @@ class CorsMiddleware implements MiddlewareInterface
     /**
      * The the path from the config, to see if the CORS Service should run
      *
-     * @param  Request  $request
+     * @param Request $request
      *
      * @return bool
      */
     private function isMatchingPath(Request $request): bool
     {
         // Get the paths from the config or the middleware
-        $paths = $this->cors->getPaths();
+        $paths   = $this->cors->getPaths();
         $matcher =  new Matcher();
 
         foreach ($paths as $path) {
             if ($path !== '/') {
-                $path = trim($path, '/');
+                $path = \trim($path, '/');
             }
 
             $matcher->matchPath($path);
+
             if ($matcher->matches($request)) {
                 return true;
             }
@@ -125,8 +125,9 @@ class CorsMiddleware implements MiddlewareInterface
     /**
      * Add the headers to the Response, if they don't exist yet.
      *
-     * @param Request $request
+     * @param Request  $request
      * @param Response $response
+     *
      * @return Response
      */
     private function addHeaders(Request $request, ResponseInterface $response): ResponseInterface

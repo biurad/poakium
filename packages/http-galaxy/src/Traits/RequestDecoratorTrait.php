@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Traits;
@@ -51,11 +49,12 @@ trait RequestDecoratorTrait
      * Exchanges the underlying request with another.
      *
      * @param RequestInterface $request
+     *
      * @return self
      */
     public function withRequest(RequestInterface $request): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $request;
 
         return $new;
@@ -74,7 +73,7 @@ trait RequestDecoratorTrait
      */
     public function withRequestTarget($requestTarget): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->getRequest()->withRequestTarget($requestTarget);
 
         return $new;
@@ -93,7 +92,7 @@ trait RequestDecoratorTrait
      */
     public function withMethod($method): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->getRequest()->withMethod($method);
 
         return $new;
@@ -112,7 +111,7 @@ trait RequestDecoratorTrait
      */
     public function withUri(UriInterface $uri, $preserveHost = false): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->getRequest()->withUri($uri, $preserveHost);
 
         return $new;

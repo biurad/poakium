@@ -1,6 +1,7 @@
 .idea/
 .env
 composer.lock
+.php_cs
 vendor/
 *.db
 clover.xml

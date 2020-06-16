@@ -3,25 +3,23 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Middlewares;
 
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 /**
@@ -43,7 +41,7 @@ class HttpMiddleware implements MiddlewareInterface
     /**
      * {@inheritDoc}
      *
-     * @param Request $request
+     * @param Request        $request
      * @param RequestHandler $handler
      *
      * @return ResponseInterface
@@ -70,22 +68,23 @@ class HttpMiddleware implements MiddlewareInterface
     {
         $config     = $this->config;
         $policies   = $config['policies'] ?? [];
-        $headers    = array_map('strval', $config['headers']['response'] ?? []);
+        $headers    = \array_map('strval', $config['headers']['response'] ?? []);
 
         if (($frames = $policies['frame_policy']) === false) {
             $frames = 'DENY';
-        } elseif (preg_match('#^https?:#', $policies['frame_policy'])) {
+        } elseif (\preg_match('#^https?:#', $policies['frame_policy'])) {
             $frames = "ALLOW-FROM $frames";
         }
 
         $headers['X-Frame-Options'] = $frames;
+
         foreach (['content_security_policy', 'csp_report_only'] as $key) {
             if (!isset($policies[$key])) {
                 continue;
             }
 
-            $value = self::buildPolicy($policies[$key]);
-            $headers['Content-Security-Policy' . ($key === 'content_security_policy' ? '' : '-Report-Only')] = $value;
+            $cpKey                                       = ($key === 'content_security_policy' ? '' : '-Report-Only');
+            $headers['Content-Security-Policy' . $cpKey] = $value = $this->buildPolicy($policies[$key]);
         }
 
         if (isset($config['feature_policy'])) {
@@ -100,25 +99,25 @@ class HttpMiddleware implements MiddlewareInterface
     }
 
     private function buildPolicy(array $config): string
-	{
-		$nonQuoted = ['require-sri-for' => 1, 'sandbox' => 1];
-        $value = '';
+    {
+        $nonQuoted = ['require-sri-for' => 1, 'sandbox' => 1];
+        $value     = '';
 
-		foreach ($config as $type => $policy) {
-			if ($policy === false) {
-				continue;
+        foreach ($config as $type => $policy) {
+            if ($policy === false) {
+                continue;
             }
 
-			$policy = $policy === true ? [] : (array) $policy;
+            $policy = $policy === true ? [] : (array) $policy;
             $value .= $type;
 
-			foreach ($policy as $item) {
-				$value .= !isset($nonQuoted[$type]) && preg_match('#^[a-z-]+\z#', $item) ? " '$item'" : " $item";
+            foreach ($policy as $item) {
+                $value .= !isset($nonQuoted[$type]) && \preg_match('#^[a-z-]+\z#', $item) ? " '$item'" : " $item";
             }
 
-			$value .= '; ';
+            $value .= '; ';
         }
 
-		return $value;
-	}
+        return $value;
+    }
 }

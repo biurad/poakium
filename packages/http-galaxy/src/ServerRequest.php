@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http;
@@ -22,10 +20,11 @@ namespace BiuradPHP\Http;
 use BiuradPHP\Http\Concerns\IpUtils;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\LazyOpenStream;
+use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
 
 /**
  * Class ServerRequest
@@ -35,27 +34,33 @@ class ServerRequest implements ServerRequestInterface
     use Traits\ServerRequestDecoratorTrait;
 
     public const HEADER_FORWARDED = 0b00001; // When using RFC 7239
+
     public const HEADER_X_FORWARDED_FOR = 0b00010;
+
     public const HEADER_X_FORWARDED_HOST = 0b00100;
+
     public const HEADER_X_FORWARDED_PROTO = 0b01000;
+
     public const HEADER_X_FORWARDED_PORT = 0b10000;
+
     public const HEADER_X_FORWARDED_ALL = 0b11110; // All "X-Forwarded-*" headers
+
     public const HEADER_X_FORWARDED_AWS_ELB = 0b11010; // AWS ELB doesn't send X-Forwarded-Host
 
     /**
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
      */
     private const HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES = [
-        'must_revalidate' => false,
-        'no_cache' => false,
-        'no_store' => false,
-        'no_transform' => false,
-        'public' => false,
-        'private' => false,
+        'must_revalidate'  => false,
+        'no_cache'         => false,
+        'no_store'         => false,
+        'no_transform'     => false,
+        'public'           => false,
+        'private'          => false,
         'proxy_revalidate' => false,
-        'max_age' => true,
-        's_maxage' => true,
-        'immutable' => false,
+        'max_age'          => true,
+        's_maxage'         => true,
+        'immutable'        => false,
     ];
 
     /**
@@ -67,12 +72,18 @@ class ServerRequest implements ServerRequestInterface
      * @param string                               $method       HTTP method
      * @param string|UriInterface                  $uri          URI
      * @param array                                $headers      Request headers
-     * @param string|null|resource|StreamInterface $body         Request body
+     * @param null|resource|StreamInterface|string $body         Request body
      * @param string                               $version      Protocol version
      * @param array                                $serverParams Typically the $_SERVER superglobal
      */
-    public function __construct(string $method, $uri, array $headers = [], $body = null, string $version = '1.1', array $serverParams = [])
-    {
+    public function __construct(
+        string $method,
+        $uri,
+        array $headers = [],
+        $body = null,
+        string $version = '1.1',
+        array $serverParams = []
+    ) {
         $this->message = new Psr7ServerRequest($method, $uri, $headers, $body, $version, $serverParams);
     }
 
@@ -88,11 +99,11 @@ class ServerRequest implements ServerRequestInterface
      */
     public static function fromGlobals()
     {
-        $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
-        $headers = getallheaders();
-        $uri = Psr7ServerRequest::getUriFromGlobals();
-        $body = new CachingStream(new LazyOpenStream('php://input', 'r+'));
-        $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL']) : '1.1';
+        $method   = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $headers  = getallheaders();
+        $uri      = Psr7ServerRequest::getUriFromGlobals();
+        $body     = new CachingStream(new LazyOpenStream('php://input', 'r+'));
+        $protocol = \str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL'] ?? 'Http/1.1');
 
         $serverRequest = new static($method, $uri, $headers, $body, $protocol, $_SERVER);
 
@@ -127,12 +138,12 @@ class ServerRequest implements ServerRequestInterface
      *
      * @param array $proxies A list of trusted proxies, the string 'REMOTE_ADDR' will be replaced with ip address
      *
-     * @throws \InvalidArgumentException When $trustedHeaderSet is invalid
+     * @throws InvalidArgumentException When $trustedHeaderSet is invalid
      */
-    public static function withTrustedProxies($proxies): self
+    public function withTrustedProxies($proxies): self
     {
-        $new = clone $this;
-        $new->trustedProxies = array_reduce($proxies, function ($proxies, $proxy) {
+        $new                 = clone $this;
+        $new->trustedProxies = \array_reduce($proxies, function ($proxies, $proxy) {
             if ('REMOTE_ADDR' !== $proxy) {
                 $proxies[] = $proxy;
             } elseif (isset($_SERVER['REMOTE_ADDR'])) {
@@ -152,7 +163,7 @@ class ServerRequest implements ServerRequestInterface
      *
      * @return array An array of trusted proxies
      */
-    public static function getTrustedProxies(): array
+    public function getTrustedProxies(): array
     {
         return $this->trustedProxies;
     }
@@ -160,36 +171,42 @@ class ServerRequest implements ServerRequestInterface
     /**
      * Sets the request's cache headers (validation and/or expiration).
      *
-     * Available options are: must_revalidate, no_cache, no_store, no_transform, public, private, proxy_revalidate, max_age, s_maxage, and immutable.
+     * Available options are: must_revalidate, no_cache, no_store, no_transform, public,
+     *       private, proxy_revalidate, max_age, s_maxage, and immutable.
      *
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param array $options
      *
-     * @return ServerRequest
+     * @throws InvalidArgumentException
      *
-     * @throws \InvalidArgumentException
+     * @return ServerRequest
      *
      * @final
      */
     public function withCacheControl(array $options): self
     {
         $cacheControl = [];
-        $request = $this->getRequest();
+        $request      = $this->getRequest();
 
-        if ($diff = array_diff(array_keys($options), array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
-            throw new \InvalidArgumentException(sprintf('Response does not support the following options: "%s".', implode('", "', $diff)));
+        if ($diff = \array_diff(\array_keys($options), \array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
+            throw new InvalidArgumentException(
+                \sprintf(
+                    'Response does not support the following options: "%s".',
+                    \implode('", "', $diff)
+                )
+            );
         }
 
-        $cacheControl['max-age'] = isset($options['max_age']) ? sprintf('=%s', $options['max_age']) : null;
-        $cacheControl['s-maxage'] = isset($options['s_maxage']) ? sprintf('=%s', $options['s_maxage']) : null;
+        $cacheControl['max-age']  = isset($options['max_age']) ? \sprintf('=%s', $options['max_age']) : null;
+        $cacheControl['s-maxage'] = isset($options['s_maxage']) ? \sprintf('=%s', $options['s_maxage']) : null;
 
         foreach (self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES as $directive => $hasValue) {
             if (!$hasValue && isset($options[$directive])) {
                 if ($options[$directive]) {
-                    $cacheControl[str_replace('_', '-', $directive)] = true;
+                    $cacheControl[\str_replace('_', '-', $directive)] = true;
                 } else {
-                    unset($cacheControl[str_replace('_', '-', $directive)]);
+                    unset($cacheControl[\str_replace('_', '-', $directive)]);
                 }
             }
         }
@@ -204,16 +221,17 @@ class ServerRequest implements ServerRequestInterface
             unset($cacheControl['public']);
         }
 
-        ksort($cacheControl);
-        $cacheControl = array_filter($cacheControl);
+        \ksort($cacheControl);
+        $cacheControl = \array_filter($cacheControl);
 
-        $directives = array_reduce(array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
-            $add = implode(' ', (array) $cacheControl[$name]);
-            return ('' !== $res ? $res.', ' : '').sprintf('%s%s', $name, '1' === $add ? '' : $add);
+        $directives = \array_reduce(\array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
+            $add = \implode(' ', (array) $cacheControl[$name]);
+
+            return ('' !== $res ? $res . ', ' : '') . \sprintf('%s%s', $name, '1' === $add ? '' : $add);
         }, '');
 
-        $new = clone $this;
-        $new->message = $request->withHeader('Cache-Control', strtr($directives, ' 1', ''));
+        $new          = clone $this;
+        $new->message = $request->withHeader('Cache-Control', \strtr($directives, ' 1', ''));
 
         return $new;
     }
@@ -223,7 +241,7 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null
+     * @return null|string
      */
     public function getContentCharset(): ?string
     {
@@ -241,7 +259,7 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null The serverRequest content type, if known
+     * @return null|string The serverRequest content type, if known
      */
     public function getContentType(): ?string
     {
@@ -255,11 +273,11 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null The request content type, if known
+     * @return null|string The request content type, if known
      */
     public function withContentType($contentName)
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->getRequest()->withHeader('Content-Type', $contentName);
 
         return $new;
@@ -270,7 +288,7 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return int|null
+     * @return null|int
      */
     public function getContentLength(): ?int
     {
@@ -284,15 +302,15 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @param string $key     The attribute name.
-     * @param mixed  $default Default value to return if the attribute does not exist.
+     * @param string $key     the attribute name
+     * @param mixed  $default default value to return if the attribute does not exist
      *
      * @return mixed
      */
     public function getCookieParam($key, $default = null)
     {
         $cookies = $this->getRequest()->getCookieParams();
-        $result = $default;
+        $result  = $default;
 
         if (isset($cookies[$key])) {
             $result = $cookies[$key];
@@ -320,18 +338,20 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null The serverRequest media type, minus content-type params
+     * @return null|string The serverRequest media type, minus content-type params
      */
     public function getMediaType(): ?string
     {
         $contentType = $this->getContentType();
 
         if ($contentType) {
-            $contentTypeParts = preg_split('/\s*[;,]\s*/', $contentType);
+            $contentTypeParts = \preg_split('/\s*[;,]\s*/', $contentType);
+
             if ($contentTypeParts === false) {
                 return null;
             }
-            return strtolower($contentTypeParts[0]);
+
+            return \strtolower($contentTypeParts[0]);
         }
 
         return null;
@@ -346,16 +366,18 @@ class ServerRequest implements ServerRequestInterface
      */
     public function getMediaTypeParams(): array
     {
-        $contentType = $this->getContentType();
+        $contentType       = $this->getContentType();
         $contentTypeParams = [];
 
         if ($contentType) {
-            $contentTypeParts = preg_split('/\s*[;,]\s*/', $contentType);
+            $contentTypeParts = \preg_split('/\s*[;,]\s*/', $contentType);
+
             if ($contentTypeParts !== false) {
-                $contentTypePartsLength = count($contentTypeParts);
+                $contentTypePartsLength = \count($contentTypeParts);
+
                 for ($i = 1; $i < $contentTypePartsLength; $i++) {
-                    $paramParts = explode('=', $contentTypeParts[$i]);
-                    $contentTypeParams[strtolower($paramParts[0])] = $paramParts[1];
+                    $paramParts                                     = \explode('=', $contentTypeParts[$i]);
+                    $contentTypeParams[\strtolower($paramParts[0])] = $paramParts[1];
                 }
             }
         }
@@ -368,22 +390,22 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @param  string $key The parameter key.
-     * @param  string $default The default value.
+     * @param string $key     the parameter key
+     * @param string $default the default value
      *
-     * @return mixed The parameter value.
+     * @return mixed the parameter value
      */
     public function getParam($key, $default = null)
     {
         $request = $this->getRequest();
 
         $postParams = $request->getParsedBody();
-        $getParams = $request->getQueryParams();
-        $result = $default;
+        $getParams  = $request->getQueryParams();
+        $result     = $default;
 
-        if (is_array($postParams) && isset($postParams[$key])) {
+        if (\is_array($postParams) && isset($postParams[$key])) {
             $result = $postParams[$key];
-        } elseif (is_object($postParams) && property_exists($postParams, $key)) {
+        } elseif (\is_object($postParams) && \property_exists($postParams, $key)) {
             $result = $postParams->$key;
         } elseif (isset($getParams[$key])) {
             $result = $getParams[$key];
@@ -403,11 +425,11 @@ class ServerRequest implements ServerRequestInterface
     {
         $request = $this->getRequest();
 
-        $params = $request->getQueryParams();
+        $params     = $request->getQueryParams();
         $postParams = $request->getParsedBody();
 
         if ($postParams) {
-            $params = array_merge($params, (array) $postParams);
+            $params = \array_merge($params, (array) $postParams);
         }
 
         return $params;
@@ -419,18 +441,18 @@ class ServerRequest implements ServerRequestInterface
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param string $key
-     * @param mixed $default
+     * @param mixed  $default
      *
      * @return mixed
      */
     public function getParsedBodyParam($key, $default = null)
     {
         $postParams = $this->getRequest()->getParsedBody();
-        $result = $default;
+        $result     = $default;
 
-        if (is_array($postParams) && isset($postParams[$key])) {
+        if (\is_array($postParams) && isset($postParams[$key])) {
             $result = $postParams[$key];
-        } elseif (is_object($postParams) && property_exists($postParams, $key)) {
+        } elseif (\is_object($postParams) && \property_exists($postParams, $key)) {
             $result = $postParams->{$key};
         }
 
@@ -443,14 +465,14 @@ class ServerRequest implements ServerRequestInterface
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param string $key
-     * @param mixed $default
+     * @param mixed  $default
      *
      * @return mixed
      */
     public function getQueryParam($key, $default = null)
     {
         $getParams = $this->getRequest()->getQueryParams();
-        $result = $default;
+        $result    = $default;
 
         if (isset($getParams[$key])) {
             $result = $getParams[$key];
@@ -464,8 +486,9 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @param  string $key
-     * @param  mixed  $default
+     * @param string $key
+     * @param mixed  $default
+     *
      * @return mixed
      */
     public function getServerParam($key, $default = null)
@@ -480,14 +503,14 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null
+     * @return null|string
      */
     public function getAuthorizationToken($headerName = 'Bearer'): ?string
     {
         $header = $this->getRequest()->getHeaderLine('Authorization');
 
-        if (mb_strpos($header, "$headerName ") !== false) {
-            return mb_substr($header, 7);
+        if (\mb_strpos($header, "$headerName ") !== false) {
+            return \mb_substr($header, 7);
         }
 
         return null;
@@ -520,7 +543,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function isXmlHttpRequest(): bool
     {
-        return strtolower($this->getHeaderLine('X-Requested-With')) == 'xmlhttprequest';
+        return \strtolower($this->getHeaderLine('X-Requested-With')) == 'xmlhttprequest';
     }
 
     /**
@@ -529,7 +552,7 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return string|null
+     * @return null|string
      */
     public function getRemoteAddress(): ?string
     {
@@ -559,7 +582,11 @@ class ServerRequest implements ServerRequestInterface
      */
     public function isMethodIdempotent(): bool
     {
-        return in_array($this->getRequest()->getMethod(), ['HEAD', 'GET', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'PURGE'], true);
+        return \in_array(
+            $this->getRequest()->getMethod(),
+            ['HEAD', 'GET', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'PURGE'],
+            true
+        );
     }
 
     /**
@@ -573,7 +600,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function isMethodCacheable(): bool
     {
-        return in_array($this->getRequest()->getMethod(), ['GET', 'HEAD'], true);
+        return \in_array($this->getRequest()->getMethod(), ['GET', 'HEAD'], true);
     }
 
     /**
@@ -581,12 +608,13 @@ class ServerRequest implements ServerRequestInterface
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @param  string $method Uppercase request method (GET, POST etc)
+     * @param string $method Uppercase request method (GET, POST etc)
+     *
      * @return bool
      */
     public function isMethod($method): bool
     {
-        return $this->getRequest()->getMethod() === strtoupper($method);
+        return $this->getRequest()->getMethod() === \strtoupper($method);
     }
 
     /**
@@ -703,13 +731,13 @@ class ServerRequest implements ServerRequestInterface
         $query  = $uri->getQuery();
 
         if ('' !== $query) {
-            $query = '?'.$query;
+            $query = '?' . $query;
         }
 
-        if (null !== $uri->getPort() && !in_array($uri->getPort(), [80, 443], true)) {
+        if (null !== $uri->getPort() && !\in_array($uri->getPort(), [80, 443], true)) {
             $port = ':' . $uri->getPort();
         }
 
-        return sprintf('%s://%s%s', $uri->getScheme(), $uri->getAuthority(), $port . $path . $query);
+        return \sprintf('%s://%s%s', $uri->getScheme(), $uri->getAuthority(), $port . $path . $query);
     }
 }

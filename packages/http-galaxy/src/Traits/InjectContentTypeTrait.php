@@ -3,25 +3,19 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Traits;
-
-use function array_keys;
-use function array_reduce;
-use function strtolower;
 
 trait InjectContentTypeTrait
 {
@@ -30,13 +24,13 @@ trait InjectContentTypeTrait
      *
      * @return array Headers with injected Content-Type
      */
-    private function injectContentType(string $contentType, array $headers) : array
+    private function injectContentType(string $contentType, array $headers): array
     {
-        $hasContentType = array_reduce(array_keys($headers), function ($carry, $item) {
-            return $carry ?: (strtolower($item) === 'content-type');
+        $hasContentType = \array_reduce(\array_keys($headers), function ($carry, $item) {
+            return $carry ?: (\strtolower($item) === 'content-type');
         }, false);
 
-        if (! $hasContentType) {
+        if (!$hasContentType) {
             $headers['content-type'] = [$contentType];
         }
 

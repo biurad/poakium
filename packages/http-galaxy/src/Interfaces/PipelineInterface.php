@@ -3,28 +3,29 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Interfaces;
+
+use Closure;
+use SplDoublyLinkedList;
 
 interface PipelineInterface
 {
     /**
      * Set the traveler object being sent on the pipeline.
      *
-     * @param  mixed  $traveler
+     * @param mixed $traveler
      *
      * @return $this
      */
@@ -33,7 +34,7 @@ interface PipelineInterface
     /**
      * Set the stops of the pipeline.
      *
-     * @param  dynamic|array|\SplDoublyLinkedList  $stops
+     * @param array|dynamic|SplDoublyLinkedList $stops
      *
      * @return $this
      */
@@ -42,7 +43,7 @@ interface PipelineInterface
     /**
      * Set the method to call on the stops.
      *
-     * @param  string  $method
+     * @param string $method
      *
      * @return $this
      */
@@ -51,11 +52,11 @@ interface PipelineInterface
     /**
      * Run the pipeline with a final destination callback.
      *
-     * @param  \Closure  $destination
+     * @param Closure $destination
      *
-     * @return mixed|$this
+     * @return $this|mixed
      */
-    public function then(\Closure $destination);
+    public function then(Closure $destination);
 
     /**
      * Run the pipeline and return the result.

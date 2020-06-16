@@ -3,24 +3,31 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Interfaces;
 
 interface CookieInterface
 {
+    /**
+     * Convert cookie instance to string.
+     *
+     * @see http://www.w3.org/Protocols/rfc2109/rfc2109
+     *
+     * @return string
+     */
+    public function __toString(): string;
+
     /**
      * Creates a new cookie without any attribute validation.
      *
@@ -53,7 +60,7 @@ interface CookieInterface
      *                         languages, such as JavaScript. This setting can effectively help to
      *                         reduce identity theft through XSS attacks (although it is not
      *                         supported by all browsers).
-     * @param string $sameSite Allows running cookies on samesite settings.
+     * @param string $sameSite allows running cookies on samesite settings
      * @param int    $maxAge   Cookie maxAge. This value specified in seconds and declares period
      *                         of time in which cookie will last for.
      *                         value. Expires attribute is HTTP 1.0 only and should be avoided.
@@ -133,7 +140,7 @@ interface CookieInterface
      *
      * Will return null if lifetime is not specified.
      *
-     * @return int|null
+     * @return null|int
      */
     public function getExpires(): ?int;
 
@@ -148,7 +155,7 @@ interface CookieInterface
     /**
      * Gets the SameSite attribute, fully supported in php 7.3 above.
      *
-     * @return string|null
+     * @return null|string
      */
     public function getSameSite(): ?string;
 
@@ -169,13 +176,4 @@ interface CookieInterface
      * @param string $domain
      */
     public function matchDomain($domain): bool;
-
-    /**
-     * Convert cookie instance to string.
-     *
-     * @see http://www.w3.org/Protocols/rfc2109/rfc2109
-     *
-     * @return string
-     */
-    public function __toString(): string;
 }

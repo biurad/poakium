@@ -3,26 +3,24 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Response;
 
 use BiuradPHP\Http\Response;
+use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 use GuzzleHttp\Exception;
 use Psr\Http\Message\StreamInterface;
-use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 
 use function GuzzleHttp\Psr7\stream_for;
 
@@ -46,7 +44,7 @@ class JsonResponse extends Response
      *
      * @const int
      */
-    const DEFAULT_JSON_FLAGS = 79;
+    public const DEFAULT_JSON_FLAGS = 79;
 
     /**
      * @var mixed
@@ -70,11 +68,12 @@ class JsonResponse extends Response
      * - JSON_HEX_QUOT
      * - JSON_UNESCAPED_SLASHES
      *
-     * @param mixed $data Data to convert to JSON.
-     * @param int $status Integer status code for the response; 200 by default.
-     * @param array $headers Array of headers to use at initialization.
-     * @param int $encodingOptions JSON encoding options to use.
-     * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON.
+     * @param mixed $data            data to convert to JSON
+     * @param int   $status          integer status code for the response; 200 by default
+     * @param array $headers         array of headers to use at initialization
+     * @param int   $encodingOptions JSON encoding options to use
+     *
+     * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */
     public function __construct(
         $data,
@@ -101,7 +100,7 @@ class JsonResponse extends Response
     /**
      * @param mixed $data
      */
-    public function withPayload($data) : JsonResponse
+    public function withPayload($data): JsonResponse
     {
         $new = clone $this;
         $new->setPayload($data);
@@ -109,20 +108,20 @@ class JsonResponse extends Response
         return $this->updateBodyFor($new);
     }
 
-    public function getEncodingOptions() : int
+    public function getEncodingOptions(): int
     {
         return $this->encodingOptions;
     }
 
-    public function withEncodingOptions(int $encodingOptions) : JsonResponse
+    public function withEncodingOptions(int $encodingOptions): JsonResponse
     {
-        $new = clone $this;
+        $new                  = clone $this;
         $new->encodingOptions = $encodingOptions;
 
         return $this->updateBodyFor($new);
     }
 
-    private function createBodyFromJson(string $json) : StreamInterface
+    private function createBodyFromJson(string $json): StreamInterface
     {
         $body = stream_for('php://temp', ['mode' => 'wb+']);
         $body->write($json);
@@ -135,24 +134,25 @@ class JsonResponse extends Response
      * Encode the provided data to JSON.
      *
      * @param mixed $data
-     * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON.
+     *
+     * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */
-    private function jsonEncode($data, int $encodingOptions) : string
+    private function jsonEncode($data, int $encodingOptions): string
     {
-        if (is_resource($data)) {
+        if (\is_resource($data)) {
             throw new Exception\InvalidArgumentException('Cannot JSON encode resources');
         }
 
         // Clear json_last_error()
-        json_encode(null);
+        \json_encode(null);
 
-        $json = json_encode($data, $encodingOptions);
+        $json = \json_encode($data, $encodingOptions);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
-            throw new Exception\InvalidArgumentException(sprintf(
+        if (\JSON_ERROR_NONE !== \json_last_error()) {
+            throw new Exception\InvalidArgumentException(\sprintf(
                 'Unable to encode data to JSON in %s: %s',
                 __CLASS__,
-                json_last_error_msg()
+                \json_last_error_msg()
             ));
         }
 
@@ -162,9 +162,9 @@ class JsonResponse extends Response
     /**
      * @param mixed $data
      */
-    private function setPayload($data) : void
+    private function setPayload($data): void
     {
-        if (is_object($data)) {
+        if (\is_object($data)) {
             $data = clone $data;
         }
 
@@ -174,10 +174,11 @@ class JsonResponse extends Response
     /**
      * Update the response body for the given instance.
      *
-     * @param self $toUpdate Instance to update.
-     * @return JsonResponse Returns a new instance with an updated body.
+     * @param self $toUpdate instance to update
+     *
+     * @return JsonResponse returns a new instance with an updated body
      */
-    private function updateBodyFor(JsonResponse $toUpdate) : JsonResponse
+    private function updateBodyFor(JsonResponse $toUpdate): JsonResponse
     {
         $json = $this->jsonEncode($toUpdate->payload, $toUpdate->encodingOptions);
         $body = $this->createBodyFromJson($json);

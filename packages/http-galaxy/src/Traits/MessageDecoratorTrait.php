@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Traits;
@@ -56,7 +54,7 @@ trait MessageDecoratorTrait
      */
     public function withProtocolVersion($version): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->message->withProtocolVersion($version);
 
         return $new;
@@ -107,7 +105,7 @@ trait MessageDecoratorTrait
      */
     public function withHeader($header, $value): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->message->withHeader($header, $value);
 
         return $new;
@@ -118,7 +116,7 @@ trait MessageDecoratorTrait
      */
     public function withAddedHeader($header, $value): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->message->withAddedHeader($header, $value);
 
         return $new;
@@ -129,7 +127,7 @@ trait MessageDecoratorTrait
      */
     public function withoutHeader($header): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->message->withoutHeader($header);
 
         return $new;
@@ -140,7 +138,7 @@ trait MessageDecoratorTrait
      */
     public function withBody(StreamInterface $body): self
     {
-        $new = clone $this;
+        $new          = clone $this;
         $new->message = $this->message->withBody($body);
 
         return $new;

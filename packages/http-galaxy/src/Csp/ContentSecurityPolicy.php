@@ -3,24 +3,22 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Csp;
 
-use Psr\Http\Message\ResponseInterface;
 use BiuradPHP\Http\Interfaces\CspInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -43,6 +41,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class ContentSecurityPolicy implements CspInterface
 {
     private $nonceGenerator;
+
     private $cspDisabled = false;
 
     public function __construct(NonceGenerator $nonceGenerator)
@@ -54,7 +53,8 @@ class ContentSecurityPolicy implements CspInterface
      * Returns an array of nonces and Content-Security-Policy headers.
      *
      * Nonce can be provided by;
-     *  - The request - In case HTML content is fetched via AJAX and inserted in DOM, it must use the same nonce as origin
+     *  - The request - In case HTML content is fetched via AJAX and inserted in DOM,
+     *      it must use the same nonce as origin
      *  - The response -  A call to getNonces() has already been done previously. Same nonce are returned
      *  - They are otherwise randomly generated
      *
@@ -65,20 +65,20 @@ class ContentSecurityPolicy implements CspInterface
         if ($request->hasHeader('X-Script-Nonce') && $request->hasHeader('X-Style-Nonce')) {
             return [
                 'csp_script_nonce' => $request->getHeaderLine('X-Script-Nonce'),
-                'csp_style_nonce' => $request->getHeaderLine('X-Style-Nonce'),
+                'csp_style_nonce'  => $request->getHeaderLine('X-Style-Nonce'),
             ];
         }
 
         if ($response->hasHeader('X-Script-Nonce') && $response->hasHeader('X-Style-Nonce')) {
             return [
                 'csp_script_nonce' => $response->getHeaderLine('X-Script-Nonce'),
-                'csp_style_nonce' => $response->getHeaderLine('X-Style-Nonce'),
+                'csp_style_nonce'  => $response->getHeaderLine('X-Style-Nonce'),
             ];
         }
 
         $nonces = [
             'csp_script_nonce' => $this->generateNonce(),
-            'csp_style_nonce' => $this->generateNonce(),
+            'csp_style_nonce'  => $this->generateNonce(),
         ];
 
         $response = $response->withAddedHeader('X-Script-Nonce', $nonces['csp_script_nonce'])
@@ -141,19 +141,26 @@ class ContentSecurityPolicy implements CspInterface
      */
     private function updateCspHeaders(ResponseInterface &$response, array $nonces = []): array
     {
-        $nonces = array_replace([
+        $nonces = \array_replace([
             'csp_script_nonce' => $this->generateNonce(),
-            'csp_style_nonce' => $this->generateNonce(),
+            'csp_style_nonce'  => $this->generateNonce(),
         ], $nonces);
 
         $ruleIsSet = false;
-        $headers = $this->getCspHeaders($response);
+        $headers   = $this->getCspHeaders($response);
+        $cpHeaders =  [
+            'script-src'      => 'csp_script_nonce',
+            'script-src-elem' => 'csp_script_nonce',
+            'style-src'       => 'csp_style_nonce',
+            'style-src-elem'  => 'csp_style_nonce',
+        ];
 
         foreach ($headers as $header => $directives) {
-            foreach (['script-src' => 'csp_script_nonce', 'script-src-elem' => 'csp_script_nonce', 'style-src' => 'csp_style_nonce', 'style-src-elem' => 'csp_style_nonce'] as $type => $tokenName) {
+            foreach ($cpHeaders as $type => $tokenName) {
                 if ($this->authorizesInline($directives, $type)) {
                     continue;
                 }
+
                 if (!isset($headers[$header][$type])) {
                     if (null === $fallback = $this->getDirectiveFallback($directives, $type)) {
                         continue;
@@ -162,10 +169,11 @@ class ContentSecurityPolicy implements CspInterface
                     $headers[$header][$type] = $fallback;
                 }
                 $ruleIsSet = true;
+
                 if (!\in_array('\'unsafe-inline\'', $headers[$header][$type], true)) {
                     $headers[$header][$type][] = '\'unsafe-inline\'';
                 }
-                $headers[$header][$type][] = sprintf('\'nonce-%s\'', $nonces[$tokenName]);
+                $headers[$header][$type][] = \sprintf('\'nonce-%s\'', $nonces[$tokenName]);
             }
         }
 
@@ -199,8 +207,8 @@ class ContentSecurityPolicy implements CspInterface
      */
     private function generateCspHeader(array $directives): string
     {
-        return array_reduce(array_keys($directives), function ($res, $name) use ($directives) {
-            return ('' !== $res ? $res.'; ' : '').sprintf('%s %s', $name, implode(' ', $directives[$name]));
+        return \array_reduce(\array_keys($directives), function ($res, $name) use ($directives) {
+            return ('' !== $res ? $res . '; ' : '') . \sprintf('%s %s', $name, \implode(' ', $directives[$name]));
         }, '');
     }
 
@@ -215,12 +223,13 @@ class ContentSecurityPolicy implements CspInterface
     {
         $directives = [];
 
-        foreach (explode(';', $header) as $directive) {
-            $parts = explode(' ', trim($directive));
+        foreach (\explode(';', $header) as $directive) {
+            $parts = \explode(' ', \trim($directive));
+
             if (\count($parts) < 1) {
                 continue;
             }
-            $name = array_shift($parts);
+            $name              = \array_shift($parts);
             $directives[$name] = $parts;
         }
 
@@ -249,13 +258,15 @@ class ContentSecurityPolicy implements CspInterface
     private function hasHashOrNonce(array $directives): bool
     {
         foreach ($directives as $directive) {
-            if ('\'' !== substr($directive, -1)) {
+            if ('\'' !== \substr($directive, -1)) {
                 continue;
             }
-            if ('\'nonce-' === substr($directive, 0, 7)) {
+
+            if ('\'nonce-' === \substr($directive, 0, 7)) {
                 return true;
             }
-            if (\in_array(substr($directive, 0, 8), ['\'sha256-', '\'sha384-', '\'sha512-'], true)) {
+
+            if (\in_array(\substr($directive, 0, 8), ['\'sha256-', '\'sha384-', '\'sha512-'], true)) {
                 return true;
             }
         }
@@ -284,15 +295,21 @@ class ContentSecurityPolicy implements CspInterface
         $headers = [];
 
         if ($response->hasHeader('Content-Security-Policy')) {
-            $headers['Content-Security-Policy'] = $this->parseDirectives($response->getHeaderLine('Content-Security-Policy'));
+            $headers['Content-Security-Policy'] = $this->parseDirectives(
+                $response->getHeaderLine('Content-Security-Policy')
+            );
         }
 
         if ($response->hasHeader('Content-Security-Policy-Report-Only')) {
-            $headers['Content-Security-Policy-Report-Only'] = $this->parseDirectives($response->getHeaderLine('Content-Security-Policy-Report-Only'));
+            $headers['Content-Security-Policy-Report-Only'] = $this->parseDirectives(
+                $response->getHeaderLine('Content-Security-Policy-Report-Only')
+            );
         }
 
         if ($response->hasHeader('X-Content-Security-Policy')) {
-            $headers['X-Content-Security-Policy'] = $this->parseDirectives($response->getHeaderLine('X-Content-Security-Policy'));
+            $headers['X-Content-Security-Policy'] = $this->parseDirectives(
+                $response->getHeaderLine('X-Content-Security-Policy')
+            );
         }
 
         return $headers;

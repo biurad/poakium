@@ -3,26 +3,24 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Response;
 
 use BiuradPHP\Http\Response;
+use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 use GuzzleHttp\Exception;
 use Psr\Http\Message\StreamInterface;
-use BiuradPHP\Http\Traits\InjectContentTypeTrait;
 
 /**
  * Plain text response.
@@ -41,10 +39,11 @@ class TextResponse extends Response
      * Produces a text response with a Content-Type of text/plain and a default
      * status of 200.
      *
-     * @param string|StreamInterface $text String or stream for the message body.
-     * @param int $status Integer status code for the response; 200 by default.
-     * @param array $headers Array of headers to use at initialization.
-     * @throws Exception\InvalidArgumentException if $text is neither a string or stream.
+     * @param StreamInterface|string $text    string or stream for the message body
+     * @param int                    $status  integer status code for the response; 200 by default
+     * @param array                  $headers array of headers to use at initialization
+     *
+     * @throws Exception\InvalidArgumentException if $text is neither a string or stream
      */
     public function __construct($text, int $status = 200, array $headers = [])
     {

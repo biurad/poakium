@@ -3,23 +3,21 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Cors;
 
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -47,73 +45,8 @@ class AccessControl
     }
 
     /**
-     * Normalize the options for usage
-     * @param array $options
-     *
-     * @return array
-     */
-    private function normalizeOptions(array $options = []): array
-    {
-        $options = array_merge([
-            'allowedOrigins' => [],
-            'allowedPaths' => [],
-            'allowedOriginsPatterns' => [],
-            'allowCredentials' => false,
-            'allowedHeaders' => [],
-            'exposedHeaders' => [],
-            'allowedMethods' => [],
-            'maxAge' => 0,
-        ], $options);
-
-        // Transform wildcard pattern
-        foreach ($options['allowedOrigins'] as $origin) {
-            if (strpos($origin, '*') !== false) {
-                $options['allowedOriginsPatterns'][] = $this->convertWildcardToPattern($origin);
-            }
-        }
-
-        // normalize array('*') to true
-        if (in_array('*', $options['allowedOrigins'], true)) {
-            $options['allowedOrigins'] = true;
-        }
-        if (in_array('*', $options['allowedHeaders'], true)) {
-            $options['allowedHeaders'] = true;
-        } else {
-            $options['allowedHeaders'] = array_map('strtolower', $options['allowedHeaders']);
-        }
-
-        if (in_array('*', $options['allowedMethods'], true)) {
-            $options['allowedMethods'] = true;
-        } else {
-            $options['allowedMethods'] = array_map('strtoupper', $options['allowedMethods']);
-        }
-
-        return $options;
-    }
-
-    /**
-     * Create a pattern for a wildcard, based on Str::is() from Laravel
-     *
-     * @param string $pattern
-     *
-     * @return string
-     *
-     * @see https://github.com/laravel/framework/blob/5.5/src/Illuminate/Support/Str.php
-     */
-    private function convertWildcardToPattern($pattern): string
-    {
-        $pattern = preg_quote($pattern, '#');
-
-        // Asterisks are translated into zero-or-more regular expression wildcards
-        // to make it convenient to check if the strings starts with the given
-        // pattern such as "library/*", making any string check convenient.
-        $pattern = str_replace('\*', '.*', $pattern);
-
-        return '#^' . $pattern . '\z#u';
-    }
-
-    /**
      * @param ServerRequestInterface $request
+     *
      * @return bool
      */
     public function isActualRequestAllowed(ServerRequestInterface $request): bool
@@ -131,6 +64,7 @@ class AccessControl
 
     /**
      * @param ServerRequestInterface $request
+     *
      * @return bool
      */
     public function isCorsRequest(ServerRequestInterface $request): bool
@@ -140,6 +74,7 @@ class AccessControl
 
     /**
      * @param ServerRequestInterface $request
+     *
      * @return bool
      */
     public function isPreflightRequest(ServerRequestInterface $request): bool
@@ -150,12 +85,12 @@ class AccessControl
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param ResponseInterface      $response
      * @param ServerRequestInterface $request
      *
-     * @return ResponseInterface
+     * @return Response
      */
-    public function addActualRequestHeaders(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+    public function addActualRequestHeaders(Response $response, ServerRequestInterface $request): Response
     {
         if (!$this->checkOrigin($request)) {
             return $response;
@@ -174,7 +109,10 @@ class AccessControl
         }
 
         if ($this->options['exposedHeaders']) {
-            $response = $response->withHeader('Access-Control-Expose-Headers', implode(', ', $this->options['exposedHeaders']));
+            $response = $response->withHeader(
+                'Access-Control-Expose-Headers',
+                \implode(', ', $this->options['exposedHeaders'])
+            );
         }
 
         return $response;
@@ -182,11 +120,11 @@ class AccessControl
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
+     * @param Response               $response
      *
-     * @return ResponseInterface
+     * @return Response
      */
-    public function handlePreflightRequest(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function handlePreflightRequest(ServerRequestInterface $request, Response $response): Response
     {
         if (true !== $check = $this->checkPreflightRequestConditions($response, $request)) {
             return $check;
@@ -196,14 +134,82 @@ class AccessControl
     }
 
     /**
+     * Normalize the options for usage
+     *
+     * @param array $options
+     *
+     * @return array
+     */
+    private function normalizeOptions(array $options = []): array
+    {
+        $options = \array_merge([
+            'allowedOrigins'         => [],
+            'allowedPaths'           => [],
+            'allowedOriginsPatterns' => [],
+            'allowCredentials'       => false,
+            'allowedHeaders'         => [],
+            'exposedHeaders'         => [],
+            'allowedMethods'         => [],
+            'maxAge'                 => 0,
+        ], $options);
+
+        // Transform wildcard pattern
+        foreach ($options['allowedOrigins'] as $origin) {
+            if (\strpos($origin, '*') !== false) {
+                $options['allowedOriginsPatterns'][] = $this->convertWildcardToPattern($origin);
+            }
+        }
+
+        // normalize array('*') to true
+        if (\in_array('*', $options['allowedOrigins'], true)) {
+            $options['allowedOrigins'] = true;
+        }
+
+        if (\in_array('*', $options['allowedHeaders'], true)) {
+            $options['allowedHeaders'] = true;
+        } else {
+            $options['allowedHeaders'] = \array_map('strtolower', $options['allowedHeaders']);
+        }
+
+        if (\in_array('*', $options['allowedMethods'], true)) {
+            $options['allowedMethods'] = true;
+        } else {
+            $options['allowedMethods'] = \array_map('strtoupper', $options['allowedMethods']);
+        }
+
+        return $options;
+    }
+
+    /**
+     * Create a pattern for a wildcard, based on Str::is() from Laravel
+     *
+     * @param string $pattern
+     *
+     * @return string
+     *
+     * @see https://github.com/laravel/framework/blob/5.5/src/Illuminate/Support/Str.php
+     */
+    private function convertWildcardToPattern($pattern): string
+    {
+        $pattern = \preg_quote($pattern, '#');
+
+        // Asterisks are translated into zero-or-more regular expression wildcards
+        // to make it convenient to check if the strings starts with the given
+        // pattern such as "library/*", making any string check convenient.
+        $pattern = \str_replace('\*', '.*', $pattern);
+
+        return '#^' . $pattern . '\z#u';
+    }
+
+    /**
      * Build the Cors Headers
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
+     * @param Response               $response
      *
-     * @return ResponseInterface
+     * @return Response
      */
-    private function buildPreflightCheckResponse(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    private function buildPreflightCheckResponse(ServerRequestInterface $request, Response $response): Response
     {
         if ($this->options['allowCredentials']) {
             $response = $response->withHeader('Access-Control-Allow-Credentials', 'true');
@@ -216,25 +222,25 @@ class AccessControl
         }
 
         $allowMethods = $this->options['allowedMethods'] === true
-            ? strtoupper($request->getHeaderLine('Access-Control-Request-Method'))
-            : implode(', ', $this->options['allowedMethods']);
+            ? \strtoupper($request->getHeaderLine('Access-Control-Request-Method'))
+            : \implode(', ', $this->options['allowedMethods']);
         $response = $response->withHeader('Access-Control-Allow-Methods', $allowMethods);
 
         $allowHeaders = $this->options['allowedHeaders'] === true
-            ? strtoupper($request->getHeaderLine('Access-Control-Request-Headers'))
-            : implode(', ', $this->options['allowedHeaders']);
+            ? \strtoupper($request->getHeaderLine('Access-Control-Request-Headers'))
+            : \implode(', ', $this->options['allowedHeaders']);
         $response = $response->withHeader('Access-Control-Allow-Headers', $allowHeaders);
 
         return $response->withStatus(204);
     }
 
     /**
-     * @param ResponseInterface $response
+     * @param Response               $response
      * @param ServerRequestInterface $request
      *
-     * @return ResponseInterface|bool
+     * @return bool|Response
      */
-    private function checkPreflightRequestConditions(ResponseInterface $response, ServerRequestInterface $request)
+    private function checkPreflightRequestConditions(Response $response, ServerRequestInterface $request)
     {
         if (!$this->checkOrigin($request)) {
             return $response->withStatus(403, 'Origin not allowed');
@@ -247,11 +253,11 @@ class AccessControl
         $requestHeaders = [];
         // if allowedHeaders has been set to true ('*' allow all flag) just skip this check
         if ($this->options['allowedHeaders'] !== true && $request->hasHeader('Access-Control-Request-Headers')) {
-            $headers        = strtolower($request->getHeaderLine('Access-Control-Request-Headers'));
-            $requestHeaders = array_filter(explode(',', $headers));
+            $headers        = \strtolower($request->getHeaderLine('Access-Control-Request-Headers'));
+            $requestHeaders = \array_filter(\explode(',', $headers));
 
             foreach ($requestHeaders as $header) {
-                if (!in_array(trim($header), $this->options['allowedHeaders'])) {
+                if (!\in_array(\trim($header), $this->options['allowedHeaders'])) {
                     return $response->withStatus(403, 'Header not allowed');
                 }
             }
@@ -269,7 +275,8 @@ class AccessControl
      */
     private function isSameHost(ServerRequestInterface $request): bool
     {
-        return $request->getHeaderLine('Origin') === $request->getUri()->getScheme().'://'.$request->getUri()->getHost();
+        return $request->getHeaderLine('Origin') === $request->getUri()->getScheme()
+            . '://' . $request->getUri()->getHost();
     }
 
     /**
@@ -287,12 +294,12 @@ class AccessControl
         }
         $origin = $request->getHeaderLine('Origin');
 
-        if (in_array($origin, $this->options['allowedOrigins'], true)) {
+        if (\in_array($origin, $this->options['allowedOrigins'], true)) {
             return true;
         }
 
         foreach ($this->options['allowedOriginsPatterns'] as $pattern) {
-            if (preg_match($pattern, $origin)) {
+            if (\preg_match($pattern, $origin)) {
                 return true;
             }
         }
@@ -314,8 +321,8 @@ class AccessControl
             return true;
         }
 
-        $requestMethod = strtoupper($request->getHeaderLine('Access-Control-Request-Method'));
+        $requestMethod = \strtoupper($request->getHeaderLine('Access-Control-Request-Method'));
 
-        return in_array($requestMethod, $this->options['allowedMethods']);
+        return \in_array($requestMethod, $this->options['allowedMethods']);
     }
 }

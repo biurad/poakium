@@ -3,25 +3,23 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Exceptions;
 
 use Psr\Http\Message\ResponseInterface;
-use Throwable;
 use RuntimeException;
+use Throwable;
 
 /**
  * Generic client driven http exception.
@@ -45,7 +43,7 @@ class ClientException extends HttpException
      *
      * @param int            $code     A valid http error code
      * @param array          $context
-     * @param Throwable|null $previous
+     * @param null|Throwable $previous
      */
     public function __construct(int $code = 500, Throwable $previous = null)
     {
@@ -60,8 +58,7 @@ class ClientException extends HttpException
     /**
      * Create a new HTTP response exception instance.
      *
-     * @param  \Psr\Http\Message\ResponseInterface  $response
-     * @return void
+     * @param \Psr\Http\Message\ResponseInterface $response
      */
     public static function withResponse(ResponseInterface $response): void
     {

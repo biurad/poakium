@@ -3,24 +3,26 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  HttpManager
+ * PHP version 7.2 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/httpmanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Http\Cookie;
 
 use BiuradPHP\Http\Interfaces\CookieInterface;
 use BiuradPHP\Http\Interfaces\QueueingCookieInterface;
+use Countable;
+use IteratorAggregate;
+use SplObjectStorage;
+use UnexpectedValueException;
 
 /**
  * This class is designed to hold a set of Cookies,
@@ -37,7 +39,7 @@ use BiuradPHP\Http\Interfaces\QueueingCookieInterface;
  *
  * @see http://wp.netscape.com/newsref/std/cookie_spec.html for some specs.
  */
-class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterface
+class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
 {
     /**
      * The default path (if specified).
@@ -63,13 +65,13 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
     /**
      * All of the cookies queued for sending.
      *
-     * @var \SplObjectStorage
+     * @var SplObjectStorage
      */
     protected $cookies;
 
     public function __construct()
     {
-        $this->cookies = new \SplObjectStorage();
+        $this->cookies = new SplObjectStorage();
     }
 
     /**
@@ -85,18 +87,23 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
      */
     public function addCookie(...$parameters): void
     {
-        $cookie = reset($parameters) instanceof CookieInterface
-            ? reset($parameters) : call_user_func_array([$this, 'setCookie'], $parameters);
+        $cookie = \reset($parameters) instanceof CookieInterface
+            ? \reset($parameters) : \call_user_func_array([$this, 'setCookie'], $parameters);
 
-        if (!assert($cookie instanceof CookieInterface)) {
-            throw new \UnexpectedValueException(sprintf('Expected cookie to be instance of %s', CookieInterface::class));
+        if (!\assert($cookie instanceof CookieInterface)) {
+            throw new UnexpectedValueException(
+                \sprintf('Expected cookie to be instance of %s', CookieInterface::class)
+            );
         }
 
         if (!$this->hasCookie($cookie)) {
             $cookies = $this->getMatchingCookies($cookie);
 
             foreach ($cookies as $matchingCookie) {
-                if ($cookie->getValue() !== $matchingCookie->getValue() || $cookie->getMaxAge() > $matchingCookie->getMaxAge()) {
+                if (
+                    $cookie->getValue() !== $matchingCookie->getValue() ||
+                    $cookie->getMaxAge() > $matchingCookie->getMaxAge()
+                ) {
                     $this->removeCookie($matchingCookie);
 
                     continue;
@@ -123,11 +130,12 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
     public function getCookieByName($name): ?CookieInterface
     {
         // don't allow a non string name
-        if ($name === null || !is_scalar($name)) {
+        if ($name === null || !\is_scalar($name)) {
             return null;
         }
+
         foreach ($this->cookies as $cookie) {
-            if ($cookie->getName() !== null && strcasecmp($cookie->getName(), $name) === 0) {
+            if ($cookie->getName() !== null && \strcasecmp($cookie->getName(), $name) === 0) {
                 return $cookie;
             }
         }
@@ -178,9 +186,9 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
     /**
      * Set the default path and domain for the jar.
      *
-     * @param string      $path
-     * @param string      $domain
-     * @param bool        $secure
+     * @param string $path
+     * @param string $domain
+     * @param bool   $secure
      *
      * @return $this
      */
@@ -208,7 +216,7 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
      */
     public function clear(): void
     {
-        $this->cookies = new \SplObjectStorage();
+        $this->cookies = new SplObjectStorage();
     }
 
     /**
@@ -230,15 +238,15 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
     /**
      * Get the path and domain, or the default values.
      *
-     * @param string      $path
-     * @param string      $domain
-     * @param bool|null   $secure
+     * @param string    $path
+     * @param string    $domain
+     * @param null|bool $secure
      *
      * @return array
      */
     protected function getPathAndDomain($path, $domain, $secure = null)
     {
-        return [$path ?: $this->path, $domain ?: $this->domain, is_bool($secure) ? $secure : $this->secure];
+        return [$path ?: $this->path, $domain ?: $this->domain, \is_bool($secure) ? $secure : $this->secure];
     }
 
     /**
@@ -246,9 +254,9 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
      *
      * @param string      $name
      * @param string      $value
-     * @param string|null $path
-     * @param string|null $domain
-     * @param bool|null   $secure
+     * @param null|string $path
+     * @param null|string $domain
+     * @param null|bool   $secure
      * @param bool        $httpOnly
      * @param string      $sameSite
      * @param int         $minutes
@@ -256,8 +264,17 @@ class CookieJar implements \Countable, \IteratorAggregate, QueueingCookieInterfa
      *
      * @return CookieFactory
      */
-    protected function setCookie($name, $value, $path = null, $domain = null, $secure = null, $httpOnly = true, $sameSite = 'lax', $maxAge = null, $minutes = 0)
-    {
+    protected function setCookie(
+        $name,
+        $value,
+        $path = null,
+        $domain = null,
+        $secure = null,
+        $httpOnly = true,
+        $sameSite = 'lax',
+        $maxAge = null,
+        $minutes = 0
+    ) {
         [$path, $domain, $secure] = $this->getPathAndDomain($path, $domain, $secure);
 
         return new CookieFactory($name, $value, $path, $domain, $secure, $httpOnly, $sameSite, $maxAge, $minutes);
