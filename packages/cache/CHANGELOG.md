@@ -2,6 +2,16 @@
 
 All notable changes to `biurad/biurad-caching` will be documented in this file.
 
+# 0.2.5 - 2020-06-16
+- Added support for php 7.4 preloading feature.
+- Added support for adding caching drivers on Nette and BiuradPHP frameworks.
+- Added psr-6 caching support and adapter system
+- Added phpunit tests
+- Improved code complexity and performance.
+- Lifted php minimum version to 7.1 due to support for psr-6
+- Fixed minor issues regarding caching.
+- Updated php files header doc
+
 # 0.2.1 - 2020-05-04
 - Improved code quality to prevent breaks and better performance
 - Added support for *var_export* caching using the new *MemoryCache* class

@@ -1,35 +1,33 @@
 <?php
-/** @noinspection PhpComposerExtensionStubsInspection */
 
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  CacheManager
+ * PHP version 7.1 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/cachemanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Cache\Bridges;
 
-use Redis, Memcache, Memcached, SQLite3;
+use Memcache;
+use Memcached;
+use Redis;
+use SQLite3;
 
 class Connection
 {
     /**
-     * Create a Sqlite Connection
+     * Create a Sqlite Connection.
      *
      * @param string $filename
-     *
-     * @return SQLite3
      */
     public static function createSqlite($filename): SQLite3
     {
@@ -37,12 +35,10 @@ class Connection
     }
 
     /**
-     * Create a Redis Connection
+     * Create a Redis Connection.
      *
      * @param string $host
-     * @param int $port
-     *
-     * @return Redis
+     * @param int    $port
      */
     public static function createRedis($host, $port): Redis
     {
@@ -53,12 +49,10 @@ class Connection
     }
 
     /**
-     * Create Memcache Connection
+     * Create Memcache Connection.
      *
      * @param string $host
-     * @param int $port
-     *
-     * @return Memcache
+     * @param int    $port
      */
     public static function createMemcache($host, $port): Memcache
     {
@@ -70,20 +64,18 @@ class Connection
     }
 
     /**
-     * Create Memcache Connection
+     * Create Memcache Connection.
      *
-     * @param string $host
-     * @param int $port
-     * @param array|null $options
-     *
-     * @return Memcached
+     * @param string     $host
+     * @param int        $port
+     * @param null|array $options
      */
     public static function createMemcached($host, $port, $options): Memcached
     {
         $client = new Memcached();
         $client->addServer($host, (int) $port);
 
-        if (null !== $options && is_array($options) && !empty($options)) {
+        if (null !== $options && \is_array($options) && !empty($options)) {
             $client->setOptions($options);
         }
 

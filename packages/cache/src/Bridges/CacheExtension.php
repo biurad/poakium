@@ -1,27 +1,25 @@
 <?php
-/** @noinspection PhpUndefinedMethodInspection */
 
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  CacheManager
+ * PHP version 7.1 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/cachemanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Cache\Bridges;
 
+use BiuradPHP;
 use Doctrine\Common\Cache\Cache;
-use Nette, BiuradPHP;
+use Nette;
 use Nette\Schema\Expect;
 
 class CacheExtension extends Nette\DI\CompilerExtension
@@ -29,45 +27,52 @@ class CacheExtension extends Nette\DI\CompilerExtension
     /**
      * {@inheritDoc}
      */
-	public function getConfigSchema(): Nette\Schema\Schema
-	{
+    public function getConfigSchema(): Nette\Schema\Schema
+    {
         return Nette\Schema\Expect::structure([
-            'driver'    => Nette\Schema\Expect::anyOf(
-                'filesystem', 'memory', 'redis',
-                'memcached', 'memcache', 'zenddata',
-                'apcu', 'xcache', 'wincache', 'sqlite'
+            'driver' => Nette\Schema\Expect::anyOf(
+                'filesystem',
+                'memory',
+                'redis',
+                'memcached',
+                'memcache',
+                'zenddata',
+                'apcu',
+                'xcache',
+                'wincache',
+                'sqlite'
             ),
-            'pools'     => Nette\Schema\Expect::structure([
-                'filesystem'    => Expect::structure([
-                    'connection'    => Expect::null(),
-                    'extension'     => Expect::string()
+            'pools' => Nette\Schema\Expect::structure([
+                'filesystem' => Expect::structure([
+                    'connection' => Expect::null(),
+                    'extension'  => Expect::string(),
                 ])->castTo('array'),
-                'memory'    => Expect::structure([
-                    'connection'    => Expect::null(),
-                    'extension'     => Expect::string()
+                'memory' => Expect::structure([
+                    'connection' => Expect::null(),
+                    'extension'  => Expect::string(),
                 ])->castTo('array'),
-                'redis'    => Expect::structure([
-                    'connection'    => Expect::string()
+                'redis' => Expect::structure([
+                    'connection' => Expect::string(),
                 ])->castTo('array'),
-                'memcached'    => Expect::structure([
-                    'connection'    => Expect::string()
+                'memcached' => Expect::structure([
+                    'connection' => Expect::string(),
                 ])->castTo('array'),
-                'memcache'    => Expect::structure([
-                    'connection'    => Expect::string()
+                'memcache' => Expect::structure([
+                    'connection' => Expect::string(),
                 ])->castTo('array'),
-                'sqlite'    => Expect::structure([
-                    'connection'    => Expect::string(),
-                    'table'     => Expect::string()
+                'sqlite' => Expect::structure([
+                    'connection' => Expect::string(),
+                    'table'      => Expect::string(),
                 ])->castTo('array'),
             ])->castTo('array'),
-		]);
-	}
+        ]);
+    }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function loadConfiguration(): void
-	{
+    {
         $builder = $this->getContainerBuilder();
 
         DoctrineCachePass::of($this)

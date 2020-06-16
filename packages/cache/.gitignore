@@ -1,4 +1,4 @@
 composer.lock
-phpunit.xml.dist
+.php_cs.dist
 guide/
 vendor/

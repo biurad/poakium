@@ -3,18 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  CacheManager
+ * PHP version 7.1 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/cachemanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Cache\Interfaces;
@@ -29,8 +27,9 @@ interface MemoryInterface
      * Read data from long memory cache. Must return exacts same value as saved or null. Current
      * convention allows to store serializable (var_export-able) data.
      *
-     * @param string $section Non case sensitive.
-     * @return string|array|null
+     * @param string $section non case sensitive
+     *
+     * @return null|array|string
      */
     public function loadData(string $section);
 
@@ -38,8 +37,8 @@ interface MemoryInterface
      * Put data to long memory cache. No inner references or closures are allowed. Current
      * convention allows to store serializable (var_export-able) data.
      *
-     * @param string       $section Non case sensitive.
-     * @param string|array $data
+     * @param string       $section non case sensitive
+     * @param array|string $data
      */
     public function saveData(string $section, $data);
 }

@@ -1,27 +1,26 @@
-<?php /** @noinspection PhpInconsistentReturnPointsInspection */
+<?php
 
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  CacheManager
+ * PHP version 7.1 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/cachemanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Cache;
 
-use Traversable;
+use Doctrine\Common\Cache\Cache as DoctrineCache;
+use Doctrine\Common\Cache\MultiOperationCache;
 use Psr\SimpleCache\CacheInterface;
-use Doctrine\Common\Cache\{FlushableCache, MultiOperationCache, Cache as DoctrineCache};
+use Traversable;
 
 class SimpleCache implements CacheInterface
 {
@@ -29,11 +28,6 @@ class SimpleCache implements CacheInterface
      * @var DoctrineCache
      */
     protected $instance;
-
-    /**
-     * @var string
-     */
-    protected $driver;
 
     /**
      * Cache Constructor.
@@ -68,7 +62,7 @@ class SimpleCache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function set($key, $value, $ttl = 0): bool
+    public function set($key, $value, $ttl = null): bool
     {
         return $this->instance->save($key, $value, $ttl);
     }
@@ -86,11 +80,9 @@ class SimpleCache implements CacheInterface
      */
     public function clear(): bool
     {
-        if ($this->instance instanceof FlushableCache) {
-            return $this->instance->flushAll();
-        }
+        $namespace = $this->instance->getNamespace();
 
-        return false;
+        return isset($namespace[0]) ? $this->instance->deleteAll() : $this->instance->flushAll();
     }
 
     /**
@@ -98,16 +90,34 @@ class SimpleCache implements CacheInterface
      */
     public function getMultiple($keys, $default = null)
     {
-        if (is_iterable($keys) || $keys instanceof  Traversable) {
-            $keys = iterator_to_array($keys);
+        if ($keys instanceof Traversable) {
+            $keys = \iterator_to_array($keys);
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            return $this->instance->fetchMultiple($keys);
+            $unserializeCallbackHandler = ini_set('unserialize_callback_func', self::class.'::handleUnserializeCallback');
+            try {
+                return $this->instance->fetchMultiple($keys);
+            } catch (\Error $e) {
+                $trace = $e->getTrace();
+
+                if (isset($trace[0]['function']) && !isset($trace[0]['class'])) {
+                    switch ($trace[0]['function']) {
+                        case 'unserialize':
+                        case 'apcu_fetch':
+                        case 'apc_fetch':
+                            throw new \ErrorException($e->getMessage(), $e->getCode(), E_ERROR, $e->getFile(), $e->getLine());
+                    }
+                }
+
+                throw $e;
+            } finally {
+                ini_set('unserialize_callback_func', $unserializeCallbackHandler);
+            }
         }
 
         foreach ($keys as $key) {
-            yield $this->get($key);
+            yield $this->get($key, $default);
         }
     }
 
@@ -116,8 +126,8 @@ class SimpleCache implements CacheInterface
      */
     public function setMultiple($values, $ttl = null): bool
     {
-        if (is_iterable($values) || $values instanceof  Traversable) {
-            $values = iterator_to_array($values);
+        if ($values instanceof Traversable) {
+            $values = \iterator_to_array($values);
         }
 
         if ($this->instance instanceof MultiOperationCache) {
@@ -136,8 +146,8 @@ class SimpleCache implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        if (is_iterable($keys) || $keys instanceof  Traversable) {
-            $keys = iterator_to_array($keys);
+        if (\is_iterable($keys) || $keys instanceof Traversable) {
+            $keys = \iterator_to_array($keys);
         }
 
         if ($this->instance instanceof MultiOperationCache) {
@@ -153,16 +163,21 @@ class SimpleCache implements CacheInterface
         return true;
     }
 
-    /**
-     * Set the driver instance
-     *
-     * @param $instance
-     * @return  self
-     */
-    public function setInstance($instance): self
+    public function __sleep()
     {
-        $this->driver = $instance;
+        throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
+    }
 
-        return $this;
+    public function __wakeup()
+    {
+        throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
+    }
+
+    /**
+     * @internal
+     */
+    public static function handleUnserializeCallback($class)
+    {
+        throw new \DomainException('Class not found: '.$class);
     }
 }

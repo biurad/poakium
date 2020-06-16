@@ -1,32 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of BiuradPHP opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  CacheManager
+ * PHP version 7.1 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/cachemanager
- * @since     Version 0.1.3
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace BiuradPHP\Cache\Tests;
 
 use ArrayIterator;
-use PHPUnit\Framework\TestCase;
 use BiuradPHP\Cache\SimpleCache;
-use Psr\SimpleCache\CacheInterface;
 use Doctrine\Common\Cache\ArrayCache;
+use PHPUnit\Framework\TestCase;
+use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * @requires PHP 7.1.30
  * @requires PHPUnit 7.5
+ *
+ * @internal
  */
 class DoctrineCacheTest extends TestCase
 {
@@ -37,7 +39,7 @@ class DoctrineCacheTest extends TestCase
     {
         parent::setUp();
 
-        $pool = new ArrayCache();
+        $pool        = new ArrayCache();
         $this->cache = new SimpleCache($pool);
     }
 
@@ -74,7 +76,7 @@ class DoctrineCacheTest extends TestCase
     public function testMultiples(): void
     {
         $data = [
-            'foo' => 'baz',
+            'foo'      => 'baz',
             '{}()/\@:' => 'bar',
         ];
         $cache = $this->cache;
