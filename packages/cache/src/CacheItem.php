@@ -17,11 +17,11 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
+use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use DateInterval;
 use DateTime;
 use DateTimeInterface;
 use Psr\Cache\CacheItemInterface;
-use Psr\Cache\InvalidArgumentException;
 
 final class CacheItem implements CacheItemInterface
 {
@@ -39,6 +39,7 @@ final class CacheItem implements CacheItemInterface
     /** @var bool */
     protected $isHit = false;
 
+    /** @var int|float */
     protected $expiry;
 
     /** @var int */
@@ -116,11 +117,6 @@ final class CacheItem implements CacheItemInterface
         }
 
         return $this;
-    }
-
-    public function getExpires(): ?int
-    {
-        return $this->expiry;
     }
 
     /**

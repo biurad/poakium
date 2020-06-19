@@ -17,8 +17,13 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
+use BadMethodCallException;
+use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 use Doctrine\Common\Cache\MultiOperationCache;
+use DomainException;
+use Error;
+use ErrorException;
 use Psr\SimpleCache\CacheInterface;
 use Traversable;
 
@@ -37,6 +42,16 @@ class SimpleCache implements CacheInterface
     public function __construct(DoctrineCache $instance)
     {
         $this->instance = $instance;
+    }
+
+    public function __sleep(): void
+    {
+        throw new BadMethodCallException('Cannot serialize ' . __CLASS__);
+    }
+
+    public function __wakeup(): void
+    {
+        throw new BadMethodCallException('Cannot unserialize ' . __CLASS__);
     }
 
     /**
@@ -91,14 +106,20 @@ class SimpleCache implements CacheInterface
     public function getMultiple($keys, $default = null)
     {
         if ($keys instanceof Traversable) {
-            $keys = \iterator_to_array($keys);
+            $keys = \iterator_to_array($keys, false);
+        } elseif (!\is_array($keys)) {
+            throw new InvalidArgumentException('Cache keys must be array or Traversable.');
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            $unserializeCallbackHandler = ini_set('unserialize_callback_func', self::class.'::handleUnserializeCallback');
+            $unserializeCallbackHandler = \ini_set(
+                'unserialize_callback_func',
+                self::class . '::handleUnserializeCallback'
+            );
+
             try {
-                return $this->instance->fetchMultiple($keys);
-            } catch (\Error $e) {
+                return $this->instance->fetchMultiple((array) $keys);
+            } catch (Error $e) {
                 $trace = $e->getTrace();
 
                 if (isset($trace[0]['function']) && !isset($trace[0]['class'])) {
@@ -106,13 +127,19 @@ class SimpleCache implements CacheInterface
                         case 'unserialize':
                         case 'apcu_fetch':
                         case 'apc_fetch':
-                            throw new \ErrorException($e->getMessage(), $e->getCode(), E_ERROR, $e->getFile(), $e->getLine());
+                            throw new ErrorException(
+                                $e->getMessage(),
+                                $e->getCode(),
+                                \E_ERROR,
+                                $e->getFile(),
+                                $e->getLine()
+                            );
                     }
                 }
 
                 throw $e;
             } finally {
-                ini_set('unserialize_callback_func', $unserializeCallbackHandler);
+                \ini_set('unserialize_callback_func', $unserializeCallbackHandler);
             }
         }
 
@@ -131,7 +158,7 @@ class SimpleCache implements CacheInterface
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            return $this->instance->saveMultiple($values, $ttl);
+            return $this->instance->saveMultiple((array) $values, $ttl);
         }
 
         foreach ($values as $key => $value) {
@@ -146,12 +173,12 @@ class SimpleCache implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        if (\is_iterable($keys) || $keys instanceof Traversable) {
-            $keys = \iterator_to_array($keys);
+        if ($keys instanceof Traversable) {
+            $keys = \iterator_to_array($keys, false);
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            return $this->instance->deleteMultiple($keys);
+            return $this->instance->deleteMultiple((array) $keys);
         }
 
         foreach ($keys as $key) {
@@ -163,21 +190,11 @@ class SimpleCache implements CacheInterface
         return true;
     }
 
-    public function __sleep()
-    {
-        throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
-    }
-
-    public function __wakeup()
-    {
-        throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
-    }
-
     /**
      * @internal
      */
-    public static function handleUnserializeCallback($class)
+    public static function handleUnserializeCallback($class): void
     {
-        throw new \DomainException('Class not found: '.$class);
+        throw new DomainException('Class not found: ' . $class);
     }
 }

@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Cache;
 
-use Throwable;
-use Psr\SimpleCache\InvalidArgumentException;
+use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * Output caching helper.
@@ -41,17 +41,27 @@ class OutputHelper
     /**
      * Stops and saves the cache.
      *
-     * @param array $dependencies
+     * @param callable   $callback
+     * @param null|float $beta
      *
      * @throws InvalidArgumentException
-     * @throws Throwable
      */
-    public function end(array $dependencies = []): void
+    public function end(callable $callback = null, ?float $beta = null): void
     {
         if (null === $this->cache) {
             throw new InvalidArgumentException('Output cache has already been saved.');
         }
-        $this->cache->save($this->key, \ob_get_flush(), $dependencies);
+        $this->cache->save(
+            $this->key,
+            function (CacheItemInterface $item, bool $save) use ($callback) {
+                if (null !== $callback) {
+                    $callback(...[&$item, &$save]);
+                }
+
+                return \ob_get_flush();
+            },
+            $beta
+        );
 
         $this->cache = null;
     }

@@ -20,6 +20,7 @@ namespace BiuradPHP\Cache;
 use BadMethodCallException;
 use Closure;
 use Exception;
+use Generator;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -354,7 +355,13 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     protected function doFetch(array $ids)
     {
-        foreach ($this->pool->getMultiple($ids, $this->miss) as $key => $value) {
+        $fetched = $this->pool->getMultiple($ids, $this->miss);
+
+        if ($fetched instanceof Generator) {
+            $fetched = $fetched->getReturn();
+        }
+
+        foreach ($fetched as $key => $value) {
             if ($this->miss !== $value) {
                 yield $key => $value;
             }

@@ -79,13 +79,14 @@ class CacheExtension extends Nette\DI\CompilerExtension
             ->setConfig($this->config)
             ->withDefault($this->config->driver)
             ->getDefinition($this->prefix('doctrine'))
-            ->setType(Cache::class)
-        ;
+            ->setType(Cache::class);
 
-        $builder->addDefinition($this->prefix('psr'))
-            ->setFactory(BiuradPHP\Cache\SimpleCache::class)
-        ;
+        $builder->addDefinition($this->prefix('psr16'))
+            ->setFactory(BiuradPHP\Cache\SimpleCache::class);
 
-        $builder->addAlias('cache', $this->prefix('psr'));
+        $builder->addDefinition($this->prefix('psr6'))
+            ->setFactory(BiuradPHP\Cache\CacheItemPool::class);
+
+        $builder->addAlias('cache', $this->prefix('psr16'));
     }
 }
