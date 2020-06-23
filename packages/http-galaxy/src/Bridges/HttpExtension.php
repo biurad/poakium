@@ -39,7 +39,8 @@ class HttpExtension extends Nette\DI\CompilerExtension
      */
     public function getConfigSchema(): Nette\Schema\Schema
     {
-        $debugMode =  $this->parameters['debugMode'] ?? $this->parameters['env']['DEBUG'];
+        $debugMode =  $this->getContainerBuilder()->parameters['debugMode']
+            ?? $this->getContainerBuilder()->parameters['env']['DEBUG'];
 
         return Nette\Schema\Expect::structure([
             'caching' => Nette\Schema\Expect::structure([
@@ -103,9 +104,6 @@ class HttpExtension extends Nette\DI\CompilerExtension
         $builder->addDefinition($this->prefix('factory'))
             ->setType(BiuradPHP\Http\Interfaces\Psr17Interface::class)
             ->setFactory(BiuradPHP\Http\Factories\GuzzleHttpPsr7Factory::class);
-
-        $builder->addDefinition($this->prefix('pipeline'))
-            ->setFactory(BiuradPHP\Http\Pipeline::class);
 
         $builder->addDefinition($this->prefix('request'))
             ->setType(\Psr\Http\Message\ServerRequestInterface::class)
