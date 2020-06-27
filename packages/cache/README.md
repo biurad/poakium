@@ -12,7 +12,7 @@ The recommended way to install Cache Manager is via Composer:
 composer require biurad/biurad-caching
 ```
 
-It requires PHP version 7.1 and supports PHP up to 7.4. The dev-master version requires PHP 7.1.
+It requires PHP version 7.1 and supports PHP up to 7.4. The dev-master version requires PHP 7.2.
 
 ## How To Use
 
@@ -30,23 +30,24 @@ What does that mean? When we use cache we can be sure we are not reading a file 
 
 The package has 5 important strategies for caching, thus:
 
-Strategy | Description
----      | ---
-BiuradPHP\Cache\SimpleCache | For PSR-16 caching abilities using doctrine cache adapter 
-BiuradPHP\Cache\CacheItemPool | For PSR-6 caching abilities
-BiuradPHP\Cache\FastCache | For advance and optimized PSR-16/PSR-6 caching strategy
-BiuradPHP\Cache\MemoryCache | For caching using `var_export`
-BiuradPHP\Cache\Preloader | For php7.4 opache.preload abilities
+| Strategy                      | Description                                               |
+| ----------------------------- | --------------------------------------------------------- |
+| BiuradPHP\Cache\SimpleCache   | For PSR-16 caching abilities using doctrine cache adapter |
+| BiuradPHP\Cache\CacheItemPool | For PSR-6 caching abilities                               |
+| BiuradPHP\Cache\FastCache     | For advance and optimized PSR-16/PSR-6 caching strategy   |
+| BiuradPHP\Cache\MemoryCache   | For caching using `var_export`                            |
+| BiuradPHP\Cache\Preloader     | For php7.4 opache.preload abilities                       |
 
-Now you can create, retrieve, update and delete items using the above caching classes except  `Preloader` class: 
+Now you can create, retrieve, update and delete items using the above caching classes except `Preloader` class:
 
 > For manipulation with cache using psr-16, we use the `BiuradPHP\Cache\SimpleCache`:
+
 ---
 
 ```php
 use BiuradPHP\Cache\SimpleCache;
 
-$cache = new SimpleCache($storage); // psr-16 caching 
+$cache = new SimpleCache($storage); // psr-16 caching
 ```
 
 ```php
@@ -70,6 +71,7 @@ $cache->delete('stats.products_count');
 If you want a quick caching strategy for your application, use PSR-16 caching strategy. Its so simple and straight forward.
 
 > For manipulation with cache using psr-16, we use the `BiuradPHP\Cache\CacheItemPool`:
+
 ---
 
 ```php
@@ -103,6 +105,7 @@ $cache->deleteItem('stats.products_count');
 If you want a bit advanced caching stratagy above PSR-16, PSR-6 is what you need, has a cool way of invalidating a missed cache.
 
 > For manipulation with cache using `var_export`, we use the `BiuradPHP\Cache\MemoryCache`:
+
 ---
 
 ```php
@@ -127,6 +130,7 @@ $total = $cache->loadData('stats.products');
 ```
 
 > For manipulation with cache using advanced PSR-6, we use the `BiuradPHP\Cache\FastCache`:
+
 ---
 
 For each method in `BiuradPHP\Cache\FastCache` class that has a second parameter `callable`, which is called when there is no such item in the cache. This callback receives 2 arguments at the end by reference. The `Psr\Cache\CacheItemInterface` and a boolean, which you can use for setting expiration rules and saving data into cache.
@@ -142,7 +146,6 @@ $storage = new Doctrine\Common\Cache\ArrayCache();
 $psr6 = new CacheItemPool($psr16 = new SimpleCache($storage)); // psr-16 cache in psr-6 cache.
 
 $cache = new FastCache($psr16);
-
 //or
 $cache = new FastCache($psr6);
 ```
@@ -202,7 +205,7 @@ if ($block = $cache->start($key)) {
 
 In case that the output is already present in the cache, the `start()` method prints it and returns `null`. Otherwise, it starts to buffer the output and returns the `$block` object using which we finally save the data to the cache.
 
-The expiration and invalidation caching feature. 
+The expiration and invalidation caching feature.
 
 This feature works with only PSR-6 cache, By default the beta is 1.0 and higher values mean earlier recompute. Set it to 0 to disable early recompute and set it to INF to force an immediate recompute:
 
@@ -220,6 +223,7 @@ $value = $cache->save('my_cache_key', function (CacheItemInterface $item) {
 If you want more control over caching any php type except closures, this package is just for you. This package implements [Stampede prevention](https://en.wikipedia.org/wiki/Cache_stampede), concurrent caching and works perfectly with either PSR-6 or PSR-16 cache.
 
 > For manipulation of php 7.4 opcache preload feature, we use the `BiuradPHP\Cache\Preloader`:
+
 ---
 
 ```php
@@ -278,7 +282,7 @@ You're free to use this package, but if it makes it to your production environme
 
 Post Here: [Project Patreons - https://patreons.biurad.com](https://patreons.biurad.com)
 
-We publish all received request's on our website;
+We publish all received request's on our website.
 
 ## Credits
 
