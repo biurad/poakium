@@ -15,9 +15,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-$paths = [
-    \dirname(__DIR__, 3) . '/autoload.php',
-    \dirname(__DIR__) . '/vendor/autoload.php',
-];
+namespace BiuradPHP\Cache\Tests\Fixtures;
 
-return require \current(\array_filter($paths, 'file_exists'));
+use Exception;
+
+class NotUnserializableTest
+{
+    public function __wakeup(): void
+    {
+        throw new Exception(__CLASS__);
+    }
+}
