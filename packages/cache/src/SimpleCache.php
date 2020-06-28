@@ -21,9 +21,6 @@ use BadMethodCallException;
 use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 use Doctrine\Common\Cache\MultiOperationCache;
-use DomainException;
-use Error;
-use ErrorException;
 use Psr\SimpleCache\CacheInterface;
 use Traversable;
 
@@ -112,39 +109,11 @@ class SimpleCache implements CacheInterface
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            $unserializeCallbackHandler = \ini_set(
-                'unserialize_callback_func',
-                self::class . '::handleUnserializeCallback'
-            );
-
-            try {
-                return $this->instance->fetchMultiple((array) $keys);
-            } catch (Error $e) {
-                $trace = $e->getTrace();
-
-                if (isset($trace[0]['function']) && !isset($trace[0]['class'])) {
-                    switch ($trace[0]['function']) {
-                        case 'unserialize':
-                        case 'apcu_fetch':
-                        case 'apc_fetch':
-                            throw new ErrorException(
-                                $e->getMessage(),
-                                $e->getCode(),
-                                \E_ERROR,
-                                $e->getFile(),
-                                $e->getLine()
-                            );
-                    }
-                }
-
-                throw $e;
-            } finally {
-                \ini_set('unserialize_callback_func', $unserializeCallbackHandler);
-            }
+            return $this->instance->fetchMultiple((array) $keys);
         }
 
         foreach ($keys as $key) {
-            yield $this->get($key, $default);
+            yield from [$key => $this->get($key, $default)];
         }
     }
 
@@ -182,19 +151,13 @@ class SimpleCache implements CacheInterface
         }
 
         foreach ($keys as $key) {
-            if (true !== $this->delete($key)) {
-                return false;
+            if ($this->delete($key)) {
+                continue;
             }
+
+            return false;
         }
 
         return true;
-    }
-
-    /**
-     * @internal
-     */
-    public static function handleUnserializeCallback($class): void
-    {
-        throw new DomainException('Class not found: ' . $class);
     }
 }

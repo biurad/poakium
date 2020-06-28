@@ -39,7 +39,7 @@ final class CacheItem implements CacheItemInterface
     /** @var bool */
     protected $isHit = false;
 
-    /** @var int|float */
+    /** @var float|int */
     protected $expiry;
 
     /** @var int */
@@ -109,7 +109,7 @@ final class CacheItem implements CacheItemInterface
         if (null === $time) {
             $this->expiry = $this->defaultLifetime > 0 ? \microtime(true) + $this->defaultLifetime : null;
         } elseif ($time instanceof DateInterval) {
-            $this->expiry = \microtime(true) + DateTime::createFromFormat('U', 0)->add($time)->format('U.u');
+            $this->expiry = \microtime(true) + DateTime::createFromFormat('U', '0')->add($time)->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);
         } else {

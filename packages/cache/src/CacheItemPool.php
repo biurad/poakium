@@ -78,7 +78,7 @@ class CacheItemPool implements CacheItemPoolInterface
                 if (
                     \is_array($v) &&
                     1 === \count($v) &&
-                    10 === \strlen($k = \key($v)) &&
+                    10 === \strlen($k = (string) \key($v)) &&
                     "\x9D" === $k[0] &&
                     "\0" === $k[5] &&
                     "\x5F" === $k[9]
@@ -178,12 +178,8 @@ class CacheItemPool implements CacheItemPoolInterface
             $ids[] = $this->getId($key);
         }
 
-        try {
-            $items = $this->doFetch($ids);
-        } catch (Exception $e) {
-            $items = [];
-        }
-        $ids = \array_combine($ids, $keys);
+        $items = $this->doFetch($ids);
+        $ids   = \array_combine($ids, $keys);
 
         return $this->generateItems($items, $ids);
     }
@@ -199,11 +195,7 @@ class CacheItemPool implements CacheItemPoolInterface
             $this->commit();
         }
 
-        try {
-            return $this->doHave($id);
-        } catch (Exception $e) {
-            return false;
-        }
+        return $this->doHave($id);
     }
 
     /**
@@ -213,11 +205,7 @@ class CacheItemPool implements CacheItemPoolInterface
     {
         $this->deferred = [];
 
-        try {
-            return $this->doClear('');
-        } catch (Exception $e) {
-            return false;
-        }
+        return $this->doClear();
     }
 
     /**
@@ -240,29 +228,7 @@ class CacheItemPool implements CacheItemPoolInterface
             unset($this->deferred[$key]);
         }
 
-        try {
-            if ($this->doDelete($ids)) {
-                return true;
-            }
-        } catch (Exception $e) {
-        }
-
-        $ok = true;
-
-        // When bulk-delete failed, retry each item individually
-        foreach ($ids as $key => $id) {
-            try {
-                $e = null;
-
-                if ($this->doDelete([$id])) {
-                    continue;
-                }
-            } catch (Exception $e) {
-            }
-            $ok = false;
-        }
-
-        return $ok;
+        return $this->doDelete($ids);
     }
 
     /**
@@ -270,10 +236,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item)
     {
-        if (!$item instanceof CacheItem) {
-            return false;
-        }
-        $this->deferred[$item->getKey()] = $item;
+        $this->saveDeferred($item);
 
         return $this->commit();
     }
@@ -283,9 +246,6 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item)
     {
-        if (!$item instanceof CacheItem) {
-            return false;
-        }
         $this->deferred[$item->getKey()] = $item;
 
         return true;
@@ -296,51 +256,21 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function commit()
     {
-        $ok         = true;
-        $byLifetime = $this->mergeByLifetime;
-        $byLifetime = $byLifetime($this->deferred, $expiredIds);
-        $retry      = $this->deferred      = [];
+        $ok             = true;
+        $byLifetime     = $this->mergeByLifetime;
+        $byLifetime     = $byLifetime($this->deferred, $expiredIds);
+        $this->deferred = [];
 
         if ($expiredIds) {
             $this->doDelete($expiredIds);
         }
 
         foreach ($byLifetime as $lifetime => $values) {
-            try {
-                $e = $this->doSave($values, $lifetime);
-            } catch (Exception $e) {
-            }
-
-            if (true === $e || [] === $e) {
+            if ($this->doSave($values, $lifetime)) {
                 continue;
             }
 
-            if (\is_array($e) || 1 === \count($values)) {
-                foreach (\is_array($e) ? $e : \array_keys($values) as $id) {
-                    $ok = false;
-                    $v  = $values[$id];
-                }
-            } else {
-                foreach ($values as $id => $v) {
-                    $retry[$lifetime][] = $id;
-                }
-            }
-        }
-
-        // When bulk-save failed, retry each item individually
-        foreach ($retry as $lifetime => $ids) {
-            foreach ($ids as $id) {
-                try {
-                    $v = $byLifetime[$lifetime][$id];
-                    $e = $this->doSave([$id => $v], $lifetime);
-                } catch (Exception $e) {
-                }
-
-                if (true === $e || [] === $e) {
-                    continue;
-                }
-                $ok = false;
-            }
+            $ok = false;
         }
 
         return $ok;
@@ -383,11 +313,9 @@ class CacheItemPool implements CacheItemPoolInterface
     /**
      * Deletes all items in the pool.
      *
-     * @param string $namespace The prefix used for all identifiers managed by this pool
-     *
      * @return bool True if the pool was successfully cleared, false otherwise
      */
-    protected function doClear(string $namespace)
+    protected function doClear()
     {
         return $this->pool->clear();
     }
@@ -410,7 +338,7 @@ class CacheItemPool implements CacheItemPoolInterface
      * @param array $values   The values to cache, indexed by their cache identifier
      * @param int   $lifetime The lifetime of the cached values, 0 for persisting until manual cleaning
      *
-     * @return array|bool The identifiers that failed to be cached or a boolean stating if caching succeeded or not
+     * @return bool a boolean stating if caching succeeded or not
      */
     protected function doSave(array $values, int $lifetime)
     {
@@ -421,17 +349,14 @@ class CacheItemPool implements CacheItemPoolInterface
     {
         $f = $this->createCacheItem;
 
-        try {
-            foreach ($items as $id => $value) {
-                if (!isset($keys[$id])) {
-                    $id = \key($keys);
-                }
-                $key = $keys[$id];
-                unset($keys[$id]);
-
-                yield $key => $f($key, $value, true);
+        foreach ($items as $id => $value) {
+            if (!isset($keys[$id])) {
+                $id = \key($keys);
             }
-        } catch (Exception $e) {
+            $key = $keys[$id];
+            unset($keys[$id]);
+
+            yield $key => $f($key, $value, true);
         }
 
         foreach ($keys as $key) {

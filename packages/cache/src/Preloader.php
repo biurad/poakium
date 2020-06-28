@@ -113,17 +113,6 @@ class Preloader
         }
     }
 
-    private static function globRecursive(string $pattern, int $flags = 0)
-    {
-        $files = \glob($pattern, $flags);
-
-        foreach (\glob(\dirname($pattern) . '/*', \GLOB_ONLYDIR | \GLOB_NOSORT) as $dir) {
-            $files = \array_merge($files, self::globRecursive($dir . '/' . \basename($pattern), $flags));
-        }
-
-        return $files;
-    }
-
     private static function doPreload(string $class, array &$preloaded): void
     {
         if (isset($preloaded[$class]) || \in_array($class, ['self', 'static', 'parent'], true)) {
