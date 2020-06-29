@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Scaffold\Bridges;
 
-use BiuradPHP\DependencyInjection\Concerns\Compiler;
-use BiuradPHP\DependencyInjection\Concerns\PassConfig;
+use BiuradPHP\DependencyInjection\Compilers\Compiler;
+use BiuradPHP\DependencyInjection\Config\PassConfig;
 use BiuradPHP\MVC\Application as MVCApplication;
 use BiuradPHP\Scaffold\Commands\MakerCommand;
 use BiuradPHP\Scaffold\Config\MakerConfig;

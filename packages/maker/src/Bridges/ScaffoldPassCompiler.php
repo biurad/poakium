@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Scaffold\Bridges;
 
-use BiuradPHP\DependencyInjection\Concerns\ContainerBuilder;
+use BiuradPHP\DependencyInjection\Compilers\ContainerBuilder;
 use BiuradPHP\DependencyInjection\Interfaces\CompilerPassInterface;
 use BiuradPHP\Scaffold\Commands\MakerCommand;
 use BiuradPHP\Scaffold\Interfaces\MakerDeclareInterface;
