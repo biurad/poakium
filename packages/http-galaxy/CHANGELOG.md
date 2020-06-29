@@ -6,6 +6,7 @@ All notable changes to `biurad/biurad-http` will be documented in this file.
 - Improved code complexity and performace using cs fixtures
 - Removed `Pipeline` and `EmitResponse` classes
 - Updated php files header doc
+- Updated README.md file
 - Added phpunit tests
 
 ## 0.1.3 - 2020-06-03
