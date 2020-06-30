@@ -35,10 +35,10 @@
     },
     "sugguest": {
         "ext-memcached": "For caching into memcached storage",
-        "ext-memcache": "For caching into memcache storage",
         "ext-apcu": "For caching into apcu storage",
         "ext-redis": "For caching into redis storage",
-        "ext-sqlite": "For caching into pdo sqlite storage"
+        "ext-sqlite": "For caching into pdo sqlite storage",
+        "cache/doctrine-adapter": "For PSR-6 cache implementation using Doctrine. This implementation supports tags"
     },
     "autoload": {
         "psr-4": {
@@ -53,5 +53,6 @@
             "BiuradPHP\\Cache\\Tests\\": "Tests/"
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
