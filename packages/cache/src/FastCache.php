@@ -19,17 +19,21 @@ namespace BiuradPHP\Cache;
 
 use BiuradPHP\Cache\Exceptions\CacheException;
 use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use BiuradPHP\Cache\Interfaces\FastCacheInterface;
+use Cache\Adapter\Common\PhpCacheItem;
+use Cache\Adapter\Common\PhpCachePool;
 use Closure;
 use Generator;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
+use Throwable;
 
 /**
  * Implements the cache for a application.
  */
-class FastCache
+class FastCache implements FastCacheInterface
 {
     /** @internal */
     public const NAMESPACE_SEPARATOR = "\x00";
@@ -62,11 +66,9 @@ class FastCache
     }
 
     /**
-     * Returns cache storage.
-     *
-     * @return CacheInterface|CacheItemPoolInterfac
+     * {@inheritdoc}
      */
-    final public function getStorage()
+    public function getStorage()
     {
         return $this->storage;
     }
@@ -74,34 +76,23 @@ class FastCache
     /**
      * Returns cache namespace.
      */
-    final public function getNamespace(): string
+    public function getNamespace(): string
     {
         return (string) \substr(\sprintf($this->namespace, null), 0, -1);
     }
 
     /**
-     * Returns new nested cache object.
-     *
-     * @param string $namespace
-     *
-     * @return static
+     * {@inheritdoc}
      */
-    public function derive(string $namespace)
+    public function derive(string $namespace): FastCache
     {
         return new static($this->storage, $this->namespace . $namespace);
     }
 
     /**
-     * Reads the specified item from the cache or generate it.
-     *
-     * @param mixed         $key
-     * @param null|callable $fallback
-     *
-     * @throws CacheException
-     *
-     * @return mixed
+     * {@inheritdoc}
      */
-    public function load($key, callable $fallback = null)
+    public function load($key, callable $fallback = null, ?float $beta = null)
     {
         $data = $this->doFetch($this->generateKey($key));
 
@@ -110,9 +101,7 @@ class FastCache
         }
 
         if (null === $data && $fallback) {
-            return $this->save($key, function (CacheItemInterface $dependencies, bool $save) use ($fallback) {
-                return $fallback(...[&$dependencies, &$save]);
-            });
+            return $this->save($key, $fallback, $beta);
         }
 
         return $data;
@@ -123,12 +112,13 @@ class FastCache
      *
      * @param array         $keys
      * @param null|callable $fallback
+     * @param null|float    $beta
      *
      * @throws CacheException
      *
      * @return array
      */
-    public function bulkLoad(array $keys, callable $fallback = null): array
+    public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array
     {
         if (0 === \count($keys)) {
             return [];
@@ -158,7 +148,8 @@ class FastCache
                     $key,
                     function (CacheItemInterface $item, bool $save) use ($key, $fallback) {
                         return $fallback(...[$key, &$item, &$save]);
-                    }
+                    },
+                    $beta
                 );
             } else {
                 $result[$key] = null;
@@ -178,13 +169,7 @@ class FastCache
     }
 
     /**
-     * Writes item into the cache.
-     *
-     * @param [type]        $key
-     * @param null|callable $callback
-     * @param null|float    $beta
-     *
-     * @return mixed value itself
+     * {@inheritdoc}
      */
     public function save($key, ?callable $callback = null, ?float $beta = null)
     {
@@ -220,6 +205,12 @@ class FastCache
             CacheItem::class
         );
 
+        if ($this->storage instanceof PhpCachePool) {
+            $setExpired = static function (PhpCacheItem $item) {
+                return $item->getExpirationTimestamp();
+            };
+        }
+
         $callback = function (CacheItemInterface $item, bool &$save) use ($key, $callback) {
             // don't wrap nor save recursive calls
             if (isset($this->computing[$key])) {
@@ -233,7 +224,7 @@ class FastCache
 
             try {
                 return $value = $callback(...[&$item, &$save]);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->doDelete($key);
 
                 throw $e;
@@ -263,7 +254,8 @@ class FastCache
         }
 
         $save   = true;
-        $result = $callback(...[$item = new CacheItem(), $save]);
+        $item   = $this->storage instanceof PhpCachePool ? new PhpCacheItem() : new CacheItem();
+        $result = $callback(...[$item, $save]);
 
         if ($result instanceof CacheItemInterface) {
             $result = $result->get();
@@ -275,12 +267,7 @@ class FastCache
     }
 
     /**
-     * Removes item from the cache.
-     *
-     * @param mixed $key
-     *
-     * @throws Throwable
-     * @throws InvalidArgumentException
+     * {@inheritdoc}
      */
     public function delete($key): void
     {
@@ -288,13 +275,7 @@ class FastCache
     }
 
     /**
-     * Caches results of function/method calls.
-     *
-     * @param callable $callback
-     *
-     * @throws Throwable
-     *
-     * @return mixed
+     * {@inheritdoc}
      */
     public function call(callable $callback)
     {
@@ -312,14 +293,9 @@ class FastCache
     }
 
     /**
-     * Caches results of function/method calls.
-     *
-     * @param callable   $callback
-     * @param null|float $beta
-     *
-     * @return Closure
+     * {@inheritdoc}
      */
-    public function wrap(callable $callback, ?float $beta = null): Closure
+    public function wrap(callable $callback, ?float $beta = null): callable
     {
         return function () use ($callback, $beta) {
             $key = [$callback, \func_get_args()];
@@ -345,13 +321,7 @@ class FastCache
     }
 
     /**
-     * Starts the output cache.
-     *
-     * @param mixed $key
-     *
-     * @throws CacheException
-     *
-     * @return null|OutputHelper
+     * {@inheritdoc}
      */
     public function start($key): ?OutputHelper
     {
@@ -374,7 +344,11 @@ class FastCache
      */
     protected function generateKey($key): string
     {
-        $key = \md5((\is_scalar($key) || $key instanceof Closure) ? (string) $key : \serialize($key));
+        if (\is_array($key) && \current($key) instanceof Closure) {
+            $key = \spl_object_id($key[0]);
+        }
+
+        $key = \md5(\is_scalar($key) ? (string) $key : \serialize($key));
 
         return \strpos($this->namespace, '%s') ? \sprintf($this->namespace, $key) : $this->namespace . $key;
     }
