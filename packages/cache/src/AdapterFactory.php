@@ -89,7 +89,7 @@ class AdapterFactory
                 $adapter = new DoctrineCache\RedisCache();
 
                 [$host, $port] = \explode(':', \substr($connection, 8));
-                ($redis = new Redis())->connect($host, $port);
+                ($redis = new Redis())->connect($host, (int) $port);
                 $adapter->setRedis($redis);
 
                 return $adapter;
@@ -98,7 +98,7 @@ class AdapterFactory
                 $adapter = new DoctrineCache\MemcacheCache();
 
                 [$host, $port] = \explode(':', \substr($connection, 11));
-                $adapter->setMemcache(\memcache_pconnect($host, $port));
+                $adapter->setMemcache(\memcache_pconnect($host, (int) $port));
 
                 return $adapter;
 
@@ -106,7 +106,7 @@ class AdapterFactory
                 $adapter = new DoctrineCache\MemcacheCached();
 
                 [$host, $port] = \explode(':', \substr($connection, 12));
-                ($memcached = new Memcached())->addServer($host, $port);
+                ($memcached = new Memcached())->addServer($host, (int) $port);
                 $adapter->setMemcached($memcached);
 
                 return $adapter;
