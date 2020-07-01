@@ -15,12 +15,23 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Exceptions;
+namespace BiuradPHP\Cache\Interfaces;
 
-use Psr\Cache\CacheException as Psr6Exception;
-use Psr\SimpleCache\CacheException as Psr16Exception;
-use RuntimeException;
+use Doctrine\Common\Cache\Cache as DoctrineCache;
 
-class CacheException extends RuntimeException implements Psr6Exception, Psr16Exception
+/**
+ * Interface for cache adapters that shound be used in
+ * Nette Di container.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+interface CacheAdapterInterface extends DoctrineCache
 {
+    /**
+     * Set the name for the cache adapter to be used in
+     * DI container.
+     *
+     * @return string
+     */
+    public static function getName(): string;
 }

@@ -21,7 +21,7 @@ use Doctrine\Common\Cache\Cache;
 
 class NullAdapterTest implements Cache
 {
-    /** @var array[] each element being a tuple of [$data, $expiration], where the expiration is int|bool */
+    /** @var array<mixed,int>*/
     private $data = [];
 
     /** @var int */
