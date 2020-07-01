@@ -20,6 +20,7 @@ namespace BiuradPHP\Cache\Bridges;
 use BiuradPHP;
 use BiuradPHP\Cache\AdapterFactory;
 use BiuradPHP\Cache\Interfaces\CacheAdapterInterface;
+use Nette;
 use Nette\DI\Definitions\Statement;
 use Nette\Schema\Expect;
 
@@ -44,7 +45,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
 
         $cacheDefinition = $builder->addDefinition($this->prefix('psr16'))
             ->setFactory(BiuradPHP\Cache\SimpleCache::class)
-            ->setArugments([new Statement([AdapterFactory::class, 'createHandler'], ['array'])]);
+            ->setArguments([new Statement([AdapterFactory::class, 'createHandler'], ['array'])]);
 
         if (\extension_loaded('apcu')) {
             $cacheDefinition->setArgument(0, new Statement([AdapterFactory::class, 'createHandler'], ['apcu']));
