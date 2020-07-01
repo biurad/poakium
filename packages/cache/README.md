@@ -21,7 +21,7 @@ to store data physically. We can use a database, Memcached server, or the most a
 
 ```php
 // you can use any of doctrine cache adapter
-$storage = new Doctrine\Common\Cache\ArrayCache();
+$storage = new BiuradPHP\Cache\AdapterFactory::createHandler('array');
 ```
 
 The `Doctrine\Common\Cache\Cache` storage is very well optimized for performance and in the first place, it provides full atomicity of operations.
