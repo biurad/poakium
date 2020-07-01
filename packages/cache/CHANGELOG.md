@@ -9,7 +9,9 @@ All notable changes to `biurad/biurad-caching` will be documented in this file.
 - Added `CacheAdapterInterface` for BiuradPHPand Nette support
 - Added `FastCacheInterface` for `FastCache` class
 - Added supports for tags using cache/doctrine-adapter
+- Added `AdapterFactory` class in replacement of `DoctrineCachePass`
 - Added phpunit tests
+- Removed `Connection` class, as it purpose served in `AdapterFactory`
 - Improved code complexity and performance.
 - Lifted php minimum version to 7.1 due to support for psr-6
 - Fixed minor issues regarding caching.
