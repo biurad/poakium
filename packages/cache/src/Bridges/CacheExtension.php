@@ -18,8 +18,9 @@ declare(strict_types=1);
 namespace BiuradPHP\Cache\Bridges;
 
 use BiuradPHP;
-use Doctrine\Common\Cache\Cache;
-use Nette;
+use BiuradPHP\Cache\AdapterFactory;
+use BiuradPHP\Cache\Interfaces\CacheAdapterInterface;
+use Nette\DI\Definitions\Statement;
 use Nette\Schema\Expect;
 
 class CacheExtension extends Nette\DI\CompilerExtension
@@ -30,41 +31,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
     public function getConfigSchema(): Nette\Schema\Schema
     {
         return Nette\Schema\Expect::structure([
-            'driver' => Nette\Schema\Expect::anyOf(
-                'filesystem',
-                'memory',
-                'redis',
-                'memcached',
-                'memcache',
-                'zenddata',
-                'apcu',
-                'xcache',
-                'wincache',
-                'sqlite'
-            ),
-            'pools' => Nette\Schema\Expect::structure([
-                'filesystem' => Expect::structure([
-                    'connection' => Expect::null(),
-                    'extension'  => Expect::string(),
-                ])->castTo('array'),
-                'memory' => Expect::structure([
-                    'connection' => Expect::null(),
-                    'extension'  => Expect::string(),
-                ])->castTo('array'),
-                'redis' => Expect::structure([
-                    'connection' => Expect::string(),
-                ])->castTo('array'),
-                'memcached' => Expect::structure([
-                    'connection' => Expect::string(),
-                ])->castTo('array'),
-                'memcache' => Expect::structure([
-                    'connection' => Expect::string(),
-                ])->castTo('array'),
-                'sqlite' => Expect::structure([
-                    'connection' => Expect::string(),
-                    'table'      => Expect::string(),
-                ])->castTo('array'),
-            ])->castTo('array'),
+            'driver' => Nette\Schema\Expect::anyOf(Expect::string(), Expect::object(), null),
         ]);
     }
 
@@ -75,18 +42,42 @@ class CacheExtension extends Nette\DI\CompilerExtension
     {
         $builder = $this->getContainerBuilder();
 
-        DoctrineCachePass::of($this)
-            ->setConfig($this->config)
-            ->withDefault($this->config->driver)
-            ->getDefinition($this->prefix('doctrine'))
-            ->setType(Cache::class);
+        $cacheDefinition = $builder->addDefinition($this->prefix('psr16'))
+            ->setFactory(BiuradPHP\Cache\SimpleCache::class)
+            ->setArugments([new Statement([AdapterFactory::class, 'createHandler'], ['array'])]);
 
-        $builder->addDefinition($this->prefix('psr16'))
-            ->setFactory(BiuradPHP\Cache\SimpleCache::class);
+        if (\extension_loaded('apcu')) {
+            $cacheDefinition->setArgument(0, new Statement([AdapterFactory::class, 'createHandler'], ['apcu']));
+        }
 
         $builder->addDefinition($this->prefix('psr6'))
             ->setFactory(BiuradPHP\Cache\CacheItemPool::class);
 
         $builder->addAlias('cache', $this->prefix('psr16'));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeCompile(): void
+    {
+        $builder = $this->getContainerBuilder();
+        $adapter = $this->config->driver;
+
+        foreach ($builder->findByType(CacheAdapterInterface::class) as $name => $definition) {
+            if ($adapter && $adapter !== $definition->getEntity()::getName()) {
+                $builder->removeDefinition($name);
+
+                continue;
+            }
+
+            $adapter = $definition->getFactory();
+            $builder->removeDefinition($name);
+        }
+
+        if (null !== $adapter) {
+            $builder->getDefinition($this->prefix('psr16'))
+                ->setArgument(0, new Statement([AdapterFactory::class, 'createHandler'], [$adapter]));
+        }
     }
 }
