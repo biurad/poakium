@@ -2,7 +2,7 @@
 
 The Cache manager is a [Doctrine Cache](https://github.com/doctrine/cache) based system, providing features covering simple to advanced caching needs. Natively implements PSR-6 and PSR-16 for greatest interoperability. It is designed for performance and resiliency. It enables concurrent caching, cache stampede protection via locking early expiration and more advanced caching stragegies.
 
-**`Please note that this documentation is currently work-in-progress. Feel free to contribute.`**
+**`Please note that you can get the documentation for this dependency on [Doctrine website](https://www.doctrine-project.org/projects), doctrine-cache`**
 
 ## Installation
 
