@@ -5,8 +5,6 @@
 [![Build Status](https://img.shields.io/travis/biurad/biurad-caching/1.5.svg?style=flat-square)](https://travis-ci.org/biurad/biurad-caching)
 [![Coverage Status](https://codecov.io/gh/biurad/biurad-caching/graph/badge.svg?style=flat-square)](https://codecov.io/gh/biurad/biurad-caching)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/biurad-caching.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/biurad-caching)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/126/badge)](https://bestpractices.coreinfrastructure.org/projects/126)
-
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
 **biurad/biurad-caching** is a php cache library based on [Doctrine Cache][] created by [Divine Niiquaye][@divineniiquaye] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
