@@ -318,16 +318,6 @@ You're free to use this package, but if it makes it to your production environme
 
 Check out the other cool things people are doing with `biurad/biurad-caching`: <https://packagist.org/packages/biurad/biurad-caching/dependents>
 
-<div align="center">
-	<b>
-		<a href="https://commits.biurad.com/pkg?utm_source=packagist-biurad-caching&utm_medium=referral&utm_campaign=readme">Get professional support for biurad/biurad-caching at Biurad Commits website</a>
-	</b>
-	<br>
-	<sub>
-		Biurad Commits is an aggregation of Biurad repositories, helping make our projects sustainable for maintainers.
-	</sub>
-</div>
-
 [Composer]: https://getcomposer.org
 [PSR-6]: http://www.php-fig.org/psr/psr-6/
 [PSR-16]: http://www.php-fig.org/psr/psr-16/
