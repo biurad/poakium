@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/biurad/biurad-caching.svg?style=flat-square)](https://packagist.org/packages/biurad/biurad-caching)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Build Status](https://img.shields.io/travis/com/biurad/biurad-caching)](https://travis-ci.org/biurad/biurad-caching)
+[![Build Status](https://img.shields.io/travis/com/biurad/biurad-caching?style=flat-square)](https://travis-ci.org/biurad/biurad-caching)
 [![Coverage Status](https://codecov.io/gh/biurad/biurad-caching/graph/badge.svg?style=flat-square)](https://codecov.io/gh/biurad/biurad-caching)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/biurad-caching.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/biurad-caching)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
