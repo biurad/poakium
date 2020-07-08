@@ -1,51 +1,53 @@
-# Cache manager using Doctrine Cache, offers a very intuitive PSR-16 and PSR-6 API for cache manipulation.
+# The BiuradPHP Caching
 
-The Cache manager is a [Doctrine Cache](https://github.com/doctrine/cache) based system, providing features covering simple to advanced caching needs. Natively implements PSR-6 and PSR-16 for greatest interoperability. It is designed for performance and resiliency. It enables concurrent caching, cache stampede protection via locking early expiration and more advanced caching stragegies.
+[![Latest Version](https://img.shields.io/packagist/v/biurad/biurad-caching.svg?style=flat-square)](https://packagist.org/packages/biurad/biurad-caching)
+[![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
+[![Build Status](https://img.shields.io/travis/biurad/biurad-caching/1.5.svg?style=flat-square)](https://travis-ci.org/biurad/biurad-caching)
+[![Coverage Status](https://codecov.io/gh/biurad/biurad-caching/graph/badge.svg?style=flat-square)](https://codecov.io/gh/biurad/biurad-caching)
+[![Quality Score](https://img.shields.io/scrutinizer/g/biurad/biurad-caching.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/biurad-caching)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/126/badge)](https://bestpractices.coreinfrastructure.org/projects/126)
 
-**`Please note that you can get the documentation for this dependency on [Doctrine website](https://www.doctrine-project.org/projects), doctrine-cache`**
+[![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-## Installation
+**biurad/biurad-caching** is a php cache library based on [Doctrine Cache][] created by [Divine Niiquaye][@divineniiquaye] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
 
-The recommended way to install Cache Manager is via Composer:
+## 📦 Installation & Basic Usage
+
+This project requires PHP 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
-composer require biurad/biurad-caching
+$ composer require biurad/biurad-caching
 ```
 
-It requires PHP version 7.1 and supports PHP up to 7.4. The dev-master version requires PHP 7.2.
-
-## How To Use
-
-Cache manager offers a very intuitive API for cache manipulation. Before we show you the first example, we need to think about place where
-to store data physically. We can use a database, Memcached server, or the most available storage - hard drive. So we thought of using [Doctrine Cache](https://github.com/doctrine/cache) implementation:
+This library is designed in an interoperable manner. Using [PSR-16] caching implementation, requires a [Doctrine Cache][] adapter, while [PSR-6] requires [PSR-16].
 
 ```php
 // you can use any of doctrine cache adapter
-$storage = new BiuradPHP\Cache\AdapterFactory::createHandler('array');
+$storage = new Biurad\Cache\AdapterFactory::createHandler('array');
+// or
+$storage = new Doctrine\Common\Cache\ArrayCache();
 ```
 
-The `Doctrine\Common\Cache\Cache` storage is very well optimized for performance and in the first place, it provides full atomicity of operations.
+The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in the first place, it provides full atomicity of operations.
 
-What does that mean? When we use cache we can be sure we are not reading a file that is not fully written yet (by another thread) or that the file gets deleted "under our hands". Using the cache is therefore completely safe.
-
-The package has 5 important strategies for caching, thus:
-
-| Strategy                      | Description                                               |
-| ----------------------------- | --------------------------------------------------------- |
-| BiuradPHP\Cache\SimpleCache   | For PSR-16 caching abilities using doctrine cache adapter |
-| BiuradPHP\Cache\CacheItemPool | For PSR-6 caching abilities                               |
-| BiuradPHP\Cache\FastCache     | For advance and optimized PSR-16/PSR-6 caching strategy   |
-| BiuradPHP\Cache\MemoryCache   | For caching using `var_export`                            |
-| BiuradPHP\Cache\Preloader     | For php7.4 opache.preload abilities                       |
+| Strategy                      | Description                                                 |
+| ----------------------------- | ----------------------------------------------------------- |
+| BiuradPHP\Cache\SimpleCache   | For [PSR-16] caching abilities using doctrine cache adapter |
+| BiuradPHP\Cache\CacheItemPool | For [PSR-6] caching abilities using [PSR-16]                |
+| BiuradPHP\Cache\FastCache     | For advance and optimized [PSR-16]/[PSR-6] caching strategy |
+| BiuradPHP\Cache\MemoryCache   | For caching using `var_export`                              |
+| BiuradPHP\Cache\Preloader     | For PHP 7.4 opache.preload abilities                        |
 
 Now you can create, retrieve, update and delete items using the above caching classes except `Preloader` class:
 
-> For manipulation with cache using psr-16, we use the `BiuradPHP\Cache\SimpleCache`:
+### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\SimpleCache`:
 
 ---
 
+If you want a quick caching strategy for your application, use [PSR-16] caching strategy. Its so simple and straight forward.
+
 ```php
-use BiuradPHP\Cache\SimpleCache;
+use Biurad\Cache\SimpleCache;
 
 $cache = new SimpleCache($storage); // psr-16 caching
 ```
@@ -68,11 +70,11 @@ $total = $productsCount;
 $cache->delete('stats.products_count');
 ```
 
-If you want a quick caching strategy for your application, use PSR-16 caching strategy. Its so simple and straight forward.
-
-> For manipulation with cache using psr-16, we use the `BiuradPHP\Cache\CacheItemPool`:
+### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\CacheItemPool`:
 
 ---
+
+If you want a bit advanced caching stratagy above [PSR-16], [PSR-6] is what you need, has a cool way of invalidating a missed cache.
 
 ```php
 use BiuradPHP\Cache\CacheItemPool;
@@ -102,9 +104,7 @@ $total = $productsCount->get();
 $cache->deleteItem('stats.products_count');
 ```
 
-If you want a bit advanced caching stratagy above PSR-16, PSR-6 is what you need, has a cool way of invalidating a missed cache.
-
-> For manipulation with cache using `var_export`, we use the `BiuradPHP\Cache\MemoryCache`:
+### For manipulation with cache using `var_export`, we use the `BiuradPHP\Cache\MemoryCache`:
 
 ---
 
@@ -129,11 +129,11 @@ $total = $cache->loadData('stats.products');
 // Remove cache item, by deleting the cache file.
 ```
 
-> For manipulation with cache using advanced PSR-6, we use the `BiuradPHP\Cache\FastCache`:
+### For manipulation with cache using an advanced caching system, we use the `BiuradPHP\Cache\FastCache`:
 
 ---
 
-For each method in `BiuradPHP\Cache\FastCache` class that has a second parameter `callable`, which is called when there is no such item in the cache. This callback receives 2 arguments at the end by reference. The `Psr\Cache\CacheItemInterface` and a boolean, which you can use for setting expiration rules and saving data into cache.
+For each method in `BiuradPHP\Cache\FastCache` class that has a second parameter as `callable`, which is called when there is no such item in the cache. This callback receives 2 arguments at the end by reference. The `Psr\Cache\CacheItemInterface` and a boolean, which you can use for setting expiration rules and saving data into cache.
 
 ```php
 use BiuradPHP\Cache\CacheItemPool;
@@ -150,7 +150,7 @@ $cache = new FastCache($psr16);
 $cache = new FastCache($psr6);
 ```
 
-The first argument of the load() method is a key, an arbitrary string that you associate to the cached value so you can retrieve it later. The second argument is a PHP callable which is executed when the key is not found in the cache to generate and return the value:
+The first argument of the `load()` method is a key, an arbitrary string that you associate to the cached value so you can retrieve it later. The second argument is a PHP callable which is executed when the key is not found in the cache to generate and return the value:
 
 ```php
 use Psr\Cache\CacheItemIterface;
@@ -220,11 +220,11 @@ $value = $cache->save('my_cache_key', function (CacheItemInterface $item) {
 }, $beta);
 ```
 
-If you want more control over caching any php type except closures, this package is just for you. This package implements [Stampede prevention](https://en.wikipedia.org/wiki/Cache_stampede), concurrent caching and works perfectly with either PSR-6 or PSR-16 cache.
-
-> For manipulation of php 7.4 opcache preload feature, we use the `BiuradPHP\Cache\Preloader`:
+### For manipulation of PHP 7.4 opcache preload feature, we use the `BiuradPHP\Cache\Preloader`:
 
 ---
+
+Starting from PHP 7.4, OPcache can compile and load classes at start-up and make them available to all requests until the server is restarted, improving performance significantly.
 
 ```php
 use BiuradPHP\Cache\Preloader;
@@ -251,54 +251,98 @@ opcache.memory_consumption=256
 opcache.max_accelerated_files=20000
 ```
 
-Starting from PHP 7.4, OPcache can compile and load classes at start-up and make them available to all requests until the server is restarted, improving performance significantly.
+## 📓 Documentation
 
-## Changelog
+For in-depth documentation before using this library.. Full documentation on advanced usage, configuration, and customization can be found at [docs.biurad.com][docs].
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+## ⏫ Upgrading
 
-## Contributing
+Information on how to upgrade to newer versions of this library can be found in the [UPGRADE].
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+## 🏷️ Changelog
 
-## Testing
+[SemVer](http://semver.org/) is followed closely. Minor and patch releases should not introduce breaking changes to the codebase; See [CHANGELOG] for more information on what has changed recently.
 
-To run the tests you'll have to start the included node based server if any first in a separate terminal window.
+Any classes or methods marked `@internal` are not intended for use outside of this library and are subject to breaking changes at any time, so please avoid using them.
 
-With the server running, you can start testing.
+## 🛠️ Maintenance & Support
+
+When a new **major** version is released (`1.0`, `2.0`, etc), the previous one (`0.19.x`) will receive bug fixes for _at least_ 3 months and security updates for 6 months after that new release comes out.
+
+(This policy may change in the future and exceptions may be made on a case-by-case basis.)
+
+**Professional support, including notification of new releases and security updates, is available at [Biurad Commits][commit].**
+
+## 👷‍♀️ Contributing
+
+To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
+
+Contributions to this library are **welcome**, especially ones that:
+
+- Improve usability or flexibility without compromising our ability to adhere to [PSR-6] and [PSR-16]
+- Mirror fixes made to the [Doctrine Cache][]
+- Optimize performance
+- Fix issues with adhering to [PSR-6], [PSR-16] and [Doctrine Cache][]
+
+Please see [CONTRIBUTING] for additional details.
+
+## 🧪 Testing
 
 ```bash
-vendor/bin/phpunit
+$ composer test
 ```
 
-## Security
+This will tests biurad/biurad-caching will run against PHP 7.2 version or higher.
 
-If you discover any security related issues, please report using the issue tracker.
-use our example [Issue Report](.github/ISSUE_TEMPLATE/Bug_report.md) template.
+## 👥 Credits & Acknowledgements
 
-## Want to be listed on our projects website
+- [Divine Niiquaye Ibok][@divineniiquaye]
+- [Doctrine Team][]
+- [All Contributors][]
 
-You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us a message on our website, mentioning which of our package(s) you are using.
+This code is based on the [Doctrine Cache][] which is written, maintained and copyrighted by [Doctrine Team][]. This project simply wouldn't exist without their work.
 
-Post Here: [Project Patreons - https://patreons.biurad.com](https://patreons.biurad.com)
+## 🙌 Sponsors
 
-We publish all received request's on our website.
+Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
 
-## Credits
+## 📄 License
 
-- [Divine Niiquaye](https://github.com/divineniiquaye)
-- [All Contributors](https://biurad.com/projects/biurad-caching/contributers)
+**biurad/biurad-caching** is licensed under the BSD-3 license. See the [`LICENSE`](LICENSE) file for more details.
 
-## Support us
+## 🏛️ Governance
 
-`Biurad Lap` is a technology agency in Accra, Ghana. You'll find an overview of all our open source projects [on our website](https://biurad.com/opensource).
+This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Members of the [Biurad Lap][] Leadership Team may occasionally assist with some of these duties.
 
-Does your business depend on our contributions? Reach out and support us on to build more project's. We want to build over one hundred project's in two years. [Support Us](https://biurad.com/donate) achieve our goal.
+## 🗺️ Who Uses It?
 
-Reach out and support us on [Patreon](https://www.patreon.com/biurad). All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
+You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us an [email] or [message] mentioning this library. We publish all received request's at <https://patreons.biurad.com>.
 
-[Thanks to all who made Donations and Pledges to Us.](.github/ISSUE_TEMPLATE/Support_us.md)
+Check out the other cool things people are doing with `biurad/biurad-caching`: <https://packagist.org/packages/biurad/biurad-caching/dependents>
 
-## License
+<div align="center">
+	<b>
+		<a href="https://commits.biurad.com/pkg?utm_source=packagist-biurad-caching&utm_medium=referral&utm_campaign=readme">Get professional support for biurad/biurad-caching at Biurad Commits website</a>
+	</b>
+	<br>
+	<sub>
+		Biurad Commits is an aggregation of Biurad repositories, helping make our projects sustainable for maintainers.
+	</sub>
+</div>
 
-The BSD-3-Clause . Please see [License File](LICENSE.md) for more information.
+[Composer]: https://getcomposer.org
+[PSR-6]: http://www.php-fig.org/psr/psr-6/
+[PSR-16]: http://www.php-fig.org/psr/psr-16/
+[@divineniiquaye]: https://github.com/divineniiquaye
+[docs]: https://docs.biurad.com/biurad-caching
+[commit]: https://commits.biurad.com/biurad-caching.git
+[UPGRADE]: UPGRADE-1.x.md
+[CHANGELOG]: CHANGELOG-0.x.md
+[CONTRIBUTING]: ./.github/CONTRIBUTING.md
+[All Contributors]: https://github.com/biurad/biurad-caching/contributors
+[Biurad Lap]: https://team.biurad.com
+[email]: support@biurad.com
+[message]: https://projects.biurad.com/message
+[Doctrine Cache]: https://github.com/doctrine/cache
+[Doctrine Team]: https://www.doctrine-project.org
+[Doctrine Documentation]: https://www.doctrine-project.org/projects/doctrine-cache/en/current/index.html
