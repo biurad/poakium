@@ -29,7 +29,7 @@ interface MemoryInterface
      *
      * @param string $section non case sensitive
      *
-     * @return null|array|string
+     * @return mixed
      */
     public function loadData(string $section);
 
@@ -37,8 +37,8 @@ interface MemoryInterface
      * Put data to long memory cache. No inner references or closures are allowed. Current
      * convention allows to store serializable (var_export-able) data.
      *
-     * @param string       $section non case sensitive
-     * @param array|string $data
+     * @param string $section non case sensitive
+     * @param mixed  $data
      */
-    public function saveData(string $section, $data);
+    public function saveData(string $section, $data): void;
 }

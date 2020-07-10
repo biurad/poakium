@@ -42,7 +42,7 @@ interface FastCacheInterface
      *
      * @param string $namespace
      *
-     * @return static
+     * @return FastCache
      */
     public function derive(string $namespace): FastCache;
 
@@ -60,11 +60,11 @@ interface FastCacheInterface
     /**
      * Reads multiple items from the cache.
      *
-     * @param array         $keys
-     * @param null|callable $fallback
-     * @param null|float    $beta
+     * @param array<string,mixed> $keys
+     * @param null|callable       $fallback
+     * @param null|float          $beta
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array;
 

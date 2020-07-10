@@ -108,15 +108,7 @@ class FastCache implements FastCacheInterface
     }
 
     /**
-     * Reads multiple items from the cache.
-     *
-     * @param array         $keys
-     * @param null|callable $fallback
-     * @param null|float    $beta
-     *
-     * @throws CacheException
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array
     {
@@ -130,7 +122,6 @@ class FastCache implements FastCacheInterface
             }
         }
         $storageKeys = \array_map([$this, 'generateKey'], $keys);
-
         $cacheData = $this->doFetch($storageKeys, true);
         $result    = [];
 

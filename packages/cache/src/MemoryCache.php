@@ -38,8 +38,6 @@ final class MemoryCache implements MemoryInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @param string $filename cache filename
      */
     public function loadData(string $section, string &$filename = null)
     {
@@ -64,7 +62,6 @@ final class MemoryCache implements MemoryInterface
         \file_put_contents(
             $this->getFilename($section),
             '<?php return ' . \var_export($data, true) . ';',
-            0666,
             \FILE_APPEND | \LOCK_EX
         );
     }
