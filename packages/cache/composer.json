@@ -2,16 +2,7 @@
     "name": "biurad/biurad-caching",
     "type": "library",
     "description": "Cache manager using Doctrine Cache offers a very intuitive PSR-16 and PSR-6 API for cache manipulation",
-    "keywords": [
-        "caching",
-        "cache",
-        "psr6",
-        "psr16",
-        "nette",
-        "doctrine",
-        "biuradphp",
-        "php7"
-    ],
+    "keywords": ["caching","cache","psr6","psr16","nette","doctrine","biuradphp","php7"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -24,6 +15,12 @@
             "homepage": "https://biurad.com/projects/contributors"
         }
     ],
+    "support": {
+        "docs": "https://docs.biurad.com/biurad-caching/",
+        "issues": "https://github.com/biurad/biurad-caching/issues",
+        "rss": "https://github.com/biurad/biurad-caching/releases.atom",
+        "source": "https://github.com/biurad/biurad-caching"
+    },
     "require": {
         "php": "^7.1 || ^8.0",
         "doctrine/cache": "^1.9",
@@ -31,7 +28,9 @@
         "psr/simple-cache": "^1.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.5 || ^9.0"
+        "phpstan/phpstan": "^0.12",
+        "phpunit/phpunit": "^8.5 || ^9.0",
+        "vimeo/psalm": "^3.11"
     },
     "sugguest": {
         "ext-memcached": "For caching into memcached storage",
@@ -52,6 +51,16 @@
         "psr-4": {
             "BiuradPHP\\Cache\\Tests\\": "Tests/"
         }
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse",
+        "phpunit": "phpunit --no-coverage",
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@psalm",
+            "@phpunit"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true
