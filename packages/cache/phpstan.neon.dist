@@ -1,0 +1,11 @@
+parameters:
+    level: max
+    paths: [src]
+
+    excludes_analyse:
+        - src/Bridges/CacheExtension.php
+        - src/TagAwareCache.php
+
+    ignoreErrors:
+        - path: src/Preloader.php
+          message: '#Parameter \#1 $argument of class ReflectionClass constructor expects class-string<T of object>|T of object, string given.#'
