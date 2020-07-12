@@ -21,7 +21,7 @@ jobs:
 
             - run: composer update --no-progress
 
-            - run: vendor/bin/phpcs --standard=psr12 --colors src tests
+            - run: vendor/bin/phpcs
 
     phpunit:
         name: PHPUnit on ${{ matrix.php }}
