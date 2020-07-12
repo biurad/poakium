@@ -2,7 +2,8 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/biurad/php-library-starter.svg?style=flat-square)](https://packagist.org/packages/biurad/php-library-starter)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Build Status](https://img.shields.io/travis/com/biurad/php-library-starter?style=flat-square)](https://travis-ci.org/biurad/php-library-starter)
+[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-library-starter/Tests?style=flat-square)](https://github.com/biurad/php-library-starter/actions?query=workflow%3ATests)
+[![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-library-starter?style=flat-square)](https://codeclimate.com/github/biurad/php-library-starter)
 [![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-library-starter?style=flat-square)](https://codecov.io/gh/biurad/php-library-starter)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-library-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-library-starter)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
