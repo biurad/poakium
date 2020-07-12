@@ -1,11 +1,16 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    
 parameters:
     level: max
     paths: [src]
+    treatPhpDocTypesAsCertain: false
 
     excludes_analyse:
         - src/Bridges/CacheExtension.php
         - src/TagAwareCache.php
 
     ignoreErrors:
-        - path: src/Preloader.php
-          message: '#Parameter \#1 $argument of class ReflectionClass constructor expects class-string<T of object>|T of object, string given.#'
+        - '#Function memcache_pconnect invoked with 2 parameters, 0 required.#'
+        - '#Cannot call method add() on DateTime|false.#'
+        - '#Parameter \#1 $argument of class ReflectionClass constructor expects class-string<T of object>|T of object, string given.#'
