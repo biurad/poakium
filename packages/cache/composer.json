@@ -28,11 +28,13 @@
         "psr/simple-cache": "^1.0"
     },
     "require-dev": {
+        "cache/doctrine-adapter": "^1.0",
+        "composer/package-versions-deprecated": "^1.8",
         "phpstan/phpstan": "^0.12",
         "phpunit/phpunit": "^8.5 || ^9.0",
         "vimeo/psalm": "^3.11"
     },
-    "sugguest": {
+    "suggest": {
         "ext-memcached": "For caching into memcached storage",
         "ext-apcu": "For caching into apcu storage",
         "ext-redis": "For caching into redis storage",
@@ -42,10 +44,7 @@
     "autoload": {
         "psr-4": {
             "BiuradPHP\\Cache\\": "src/"
-        },
-        "exclude-from-classmap": [
-            "/Tests/"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -53,6 +52,7 @@
         }
     },
     "scripts": {
+        "phpcs": "phpcs -q",
         "phpstan": "phpstan analyse",
         "phpunit": "phpunit --no-coverage",
         "test": [
