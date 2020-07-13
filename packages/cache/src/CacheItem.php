@@ -39,7 +39,7 @@ final class CacheItem implements CacheItemInterface
     /** @var bool */
     protected $isHit = false;
 
-    /** @var float|int */
+    /** @var float|int|null */
     protected $expiry;
 
     /** @var int */

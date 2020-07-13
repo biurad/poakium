@@ -25,7 +25,6 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
-use Traversable;
 
 class CacheItemPool implements CacheItemPoolInterface
 {
@@ -49,10 +48,13 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     private $mergeByLifetime;
 
+    /** @var array<string,CacheItemInterface> */
     private $deferred = [];
 
+    /** @var array<string,string> */
     private $ids = [];
 
+    /** @var stdclass */
     private $miss;
 
     /**
@@ -159,29 +161,30 @@ class CacheItemPool implements CacheItemPoolInterface
 
             return $f($key, $value, $isHit);
         } catch (Exception $e) {
+            return $f($key, null, false);
         }
-
-        return $f($key, null, false);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return iterable<string,CacheItemInterface>
      */
     public function getItems(array $keys = [])
     {
         if ($this->deferred) {
             $this->commit();
         }
-        $ids = [];
+        $kIds = [];
 
         foreach ($keys as $key) {
-            $ids[] = $this->getId($key);
+            $kIds[] = $this->getId($key);
         }
 
-        $items = $this->doFetch($ids);
-        $ids   = \array_combine($ids, $keys);
+        $items = $this->doFetch($kIds);
+        $kIds   = \array_combine($kIds, $keys);
 
-        return $this->generateItems($items, $ids);
+        return $this->generateItems($items, $kIds);
     }
 
     /**
@@ -221,14 +224,14 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function deleteItems(array $keys)
     {
-        $ids = [];
+        $kIds = [];
 
         foreach ($keys as $key) {
-            $ids[$key] = $this->getId($key);
+            $kIds[$key] = $this->getId($key);
             unset($this->deferred[$key]);
         }
 
-        return $this->doDelete($ids);
+        return $this->doDelete($kIds);
     }
 
     /**
@@ -258,10 +261,10 @@ class CacheItemPool implements CacheItemPoolInterface
     {
         $ok             = true;
         $byLifetime     = $this->mergeByLifetime;
+        $this->deferred = $expiredIds = [];
         $byLifetime     = $byLifetime($this->deferred, $expiredIds);
-        $this->deferred = [];
 
-        if ($expiredIds) {
+        if (!empty($expiredIds)) {
             $this->doDelete($expiredIds);
         }
 
@@ -279,9 +282,9 @@ class CacheItemPool implements CacheItemPoolInterface
     /**
      * Fetches several cache items.
      *
-     * @param array $ids The cache identifiers to fetch
+     * @param array<mixed,string> $ids The cache identifiers to fetch
      *
-     * @return array|Traversable The corresponding values found in the cache
+     * @return iterable<string,CacheItemInterface> The corresponding values found in the cache
      */
     protected function doFetch(array $ids)
     {
@@ -323,7 +326,7 @@ class CacheItemPool implements CacheItemPoolInterface
     /**
      * Removes multiple items from the pool.
      *
-     * @param array $ids An array of identifiers that should be removed from the pool
+     * @param array<string,string> $ids An array of identifiers that should be removed from the pool
      *
      * @return bool True if the items were successfully removed, false otherwise
      */
@@ -335,8 +338,8 @@ class CacheItemPool implements CacheItemPoolInterface
     /**
      * Persists several cache items immediately.
      *
-     * @param array $values   The values to cache, indexed by their cache identifier
-     * @param int   $lifetime The lifetime of the cached values, 0 for persisting until manual cleaning
+     * @param array<string,mixed> $values   The values to cache, indexed by their cache identifier
+     * @param int                 $lifetime The lifetime of the cached values, 0 for persisting until manual cleaning
      *
      * @return bool a boolean stating if caching succeeded or not
      */
@@ -345,6 +348,12 @@ class CacheItemPool implements CacheItemPoolInterface
         return $this->pool->setMultiple($values, 0 === $lifetime ? null : $lifetime);
     }
 
+    /**
+     * @param iterable<string,mixed> $items
+     * @param array<string,string>   $keys
+     *
+     * @return iterable<string,CacheItemInterface>
+     */
     private function generateItems(iterable $items, array &$keys): iterable
     {
         $f = $this->createCacheItem;
@@ -364,6 +373,11 @@ class CacheItemPool implements CacheItemPoolInterface
         }
     }
 
+    /**
+     * @param mixed $key
+     *
+     * @return string
+     */
     private function getId($key)
     {
         if (\is_string($key) && isset($this->ids[$key])) {

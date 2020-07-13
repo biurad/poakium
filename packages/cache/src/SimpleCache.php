@@ -19,22 +19,24 @@ namespace BiuradPHP\Cache;
 
 use BadMethodCallException;
 use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use DateInterval;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
+use Doctrine\Common\Cache\ClearableCache;
+use Doctrine\Common\Cache\FlushableCache;
 use Doctrine\Common\Cache\MultiOperationCache;
 use Psr\SimpleCache\CacheInterface;
+use Throwable;
 use Traversable;
 
 class SimpleCache implements CacheInterface
 {
-    /**
-     * @var DoctrineCache
-     */
+    /** @var DoctrineCache */
     protected $instance;
 
     /**
-     * Cache Constructor.
+     * PSR-16 Cache Constructor.
      *
-     * @param DoctrineCache|string $instance
+     * @param DoctrineCache $instance
      */
     public function __construct(DoctrineCache $instance)
     {
@@ -76,7 +78,11 @@ class SimpleCache implements CacheInterface
      */
     public function set($key, $value, $ttl = null): bool
     {
-        return $this->instance->save($key, $value, $ttl);
+        if ($ttl instanceof DateInterval) {
+            throw new InvalidArgumentException('Using \'DataInterval\' will be implemented in v1.0');
+        }
+
+        return $this->instance->save($key, $value, $ttl ?: 0);
     }
 
     /**
@@ -92,9 +98,17 @@ class SimpleCache implements CacheInterface
      */
     public function clear(): bool
     {
-        $namespace = $this->instance->getNamespace();
+        $driver = $this->instance;
 
-        return isset($namespace[0]) ? $this->instance->deleteAll() : $this->instance->flushAll();
+        if (!($driver instanceof FlushableCache || $driver instanceof ClearableCache)) {
+            return false;
+        }
+
+        try {
+            return $driver->deleteAll();
+        } catch (Throwable $e) {
+            return $driver->flushAll();
+        }
     }
 
     /**

@@ -31,6 +31,10 @@ class OutputHelper
     /** @var string */
     private $key;
 
+    /**
+     * @param FastCache $cache
+     * @param mixed $key
+     */
     public function __construct(FastCache $cache, $key)
     {
         $this->cache = $cache;

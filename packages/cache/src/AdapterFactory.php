@@ -33,11 +33,11 @@ class AdapterFactory
     /**
      * @param object|string $connection Connection or DSN
      *
-     * @return Doctrine\Common\Cache\Cache
+     * @return DoctrineCache\Cache
      */
     public static function createHandler($connection): DoctrineCache\Cache
     {
-        if (!\is_string($connection) && !\is_object($connection)) {
+        if (!(\is_string($connection) || \is_object($connection))) {
             throw new TypeError(
                 \sprintf(
                     'Argument 1 passed to %s() must be a string or a connection object, %s given.',
@@ -68,73 +68,75 @@ class AdapterFactory
                 return $adapter;
 
             case $connection instanceof Memcached:
-                $adapter = new DoctrineCache\MemcacheCached();
+                $adapter = new DoctrineCache\MemcachedCache();
                 $adapter->setMemcached($connection);
 
                 return $adapter;
 
-            case 0 === \strpos($connection, 'array'):
+            case 0 === \strpos((string) $connection, 'array'):
                 return new DoctrineCache\ArrayCache();
 
-            case 0 === \strpos($connection, 'apcu'):
+            case 0 === \strpos((string) $connection, 'apcu'):
                 return new DoctrineCache\ApcuCache();
 
-            case 0 === \strpos($connection, 'wincache'):
+            case 0 === \strpos((string) $connection, 'wincache'):
                 return new DoctrineCache\WinCacheCache();
 
-            case 0 === \strpos($connection, 'zenddata'):
+            case 0 === \strpos((string) $connection, 'zenddata'):
                 return new DoctrineCache\ZendDataCache();
 
-            case 0 === \strpos($connection, 'redis://'):
+            case 0 === \strpos((string) $connection, 'redis://'):
                 $adapter = new DoctrineCache\RedisCache();
 
-                [$host, $port] = \explode(':', \substr($connection, 8));
+                [$host, $port] = \explode(':', \substr((string) $connection, 8));
                 ($redis = new Redis())->connect($host, (int) $port);
                 $adapter->setRedis($redis);
 
                 return $adapter;
 
-            case 0 === \strpos($connection, 'memcache://'):
+            case 0 === \strpos((string) $connection, 'memcache://'):
                 $adapter = new DoctrineCache\MemcacheCache();
 
-                [$host, $port] = \explode(':', \substr($connection, 11));
+                [$host, $port] = \explode(':', \substr((string) $connection, 11));
                 $adapter->setMemcache(\memcache_pconnect($host, (int) $port));
 
                 return $adapter;
 
-            case 0 === \strpos($connection, 'memcached://'):
-                $adapter = new DoctrineCache\MemcacheCached();
+            case 0 === \strpos((string) $connection, 'memcached://'):
+                $adapter = new DoctrineCache\MemcachedCache();
 
-                [$host, $port] = \explode(':', \substr($connection, 12));
+                [$host, $port] = \explode(':', \substr((string) $connection, 12));
                 ($memcached = new Memcached())->addServer($host, (int) $port);
                 $adapter->setMemcached($memcached);
 
                 return $adapter;
 
-            case 0 === \strpos($connection, 'file://'):
+            case 0 === \strpos((string) $connection, 'file://'):
                 $extension = '.cache.data';
 
-                if (\strpos(':', $tempDir = \substr($connection, 7))) {
+                if (\strpos(':', $tempDir = \substr((string) $connection, 7))) {
                     [$tempDir, $extension] = \explode(':', $tempDir);
                 }
 
                 return new DoctrineCache\FilesystemCache($tempDir, $extension);
 
-            case 0 === \strpos($connection, 'memory://'):
+            case 0 === \strpos((string) $connection, 'memory://'):
                 $extension = '.cache.php';
 
-                if (\strpos(':', $tempDir = \substr($connection, 7))) {
+                if (\strpos(':', $tempDir = \substr((string) $connection, 7))) {
                     [$tempDir, $extension] = \explode(':', $tempDir);
                 }
 
                 return new DoctrineCache\PhpFileCache($tempDir, $extension);
 
-            case 0 === \strpos($connection, 'sqlite://'):
-                [$table, $filename] = \explode(':', \substr($connection, 9));
+            case 0 === \strpos((string) $connection, 'sqlite://'):
+                [$table, $filename] = \explode(':', \substr((string) $connection, 9));
 
                 return new DoctrineCache\SQLite3Cache(new SQLite3($filename), $table);
         }
 
-        throw new InvalidArgumentException(\sprintf('Unsupported Cache Adapter: %s.', $connection));
+        throw new InvalidArgumentException(
+            \sprintf('Unsupported Cache Adapter: %s.', \is_object($connection) ? \get_class($connection) : $connection)
+        );
     }
 }

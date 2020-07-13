@@ -20,7 +20,7 @@ namespace BiuradPHP\Cache;
 use BiuradPHP\Cache\Exceptions\CacheException;
 use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use BiuradPHP\Cache\Interfaces\FastCacheInterface;
-use Cache\Adapter\Common\PhpCacheItem;
+use Cache\Adapter\Common\CacheItem as PhpCacheItem;
 use Cache\Adapter\Common\PhpCachePool;
 use Closure;
 use Generator;
@@ -46,14 +46,14 @@ class FastCache implements FastCacheInterface
     /** @var string */
     private $namespace;
 
-    /** @var array */
+    /** @var array<string,mixed> */
     private $computing = [];
 
     /**
      * @param CacheInterface|CacheItemPoolInterface $storage
      * @param string                                $namespace
      */
-    public function __construct($storage, string $namespace = self::NAMESPACE)
+    final public function __construct($storage, string $namespace = self::NAMESPACE)
     {
         if (
             !($storage instanceof CacheInterface || $storage instanceof CacheItemPoolInterface)
@@ -122,8 +122,8 @@ class FastCache implements FastCacheInterface
             }
         }
         $storageKeys = \array_map([$this, 'generateKey'], $keys);
-        $cacheData = $this->doFetch($storageKeys, true);
-        $result    = [];
+        $cacheData   = $this->doFetch($storageKeys, true);
+        $result      = [];
 
         if ($cacheData instanceof Generator) {
             $cacheData = \iterator_to_array($cacheData);
@@ -169,7 +169,7 @@ class FastCache implements FastCacheInterface
         if (null === $callback) {
             $this->doDelete($key);
 
-            return;
+            return false;
         }
 
         if (0 > $beta = $beta ?? 1.0) {
@@ -202,7 +202,7 @@ class FastCache implements FastCacheInterface
             };
         }
 
-        $callback = function (CacheItemInterface $item, bool &$save) use ($key, $callback) {
+        $callback = function (CacheItemInterface $item, bool $save) use ($key, $callback) {
             // don't wrap nor save recursive calls
             if (isset($this->computing[$key])) {
                 $value = $callback(...[&$item, &$save]);
@@ -224,37 +224,7 @@ class FastCache implements FastCacheInterface
             }
         };
 
-        if ($this->storage instanceof CacheItemPoolInterface) {
-            $item = $this->storage->getItem($key);
-
-            if (!$item->isHit() || \INF === $beta) {
-                $save   = true;
-                $result = $callback(...[$item, $save]);
-
-                if ($save) {
-                    if (!$result instanceof CacheItemInterface) {
-                        $item->set($result);
-                        $this->storage->save($item);
-                    } else {
-                        $this->storage->save($result);
-                    }
-                }
-            }
-
-            return $item->get();
-        }
-
-        $save   = true;
-        $item   = $this->storage instanceof PhpCachePool ? new PhpCacheItem() : new CacheItem();
-        $result = $callback(...[$item, $save]);
-
-        if ($result instanceof CacheItemInterface) {
-            $result = $result->get();
-        }
-
-        $this->storage->set($key, $result, $setExpired($item));
-
-        return $result;
+        return $this->doSave($this->storage, $key, $callback, $setExpired, $beta);
     }
 
     /**
@@ -292,7 +262,7 @@ class FastCache implements FastCacheInterface
             $key = [$callback, \func_get_args()];
 
             if (\is_array($callback) && \is_object($callback[0])) {
-                $key[0][0] = \get_class($callback[0]);
+                $key[0][0] = \get_class(\current($callback));
             }
 
             if (null === $data = $this->load($key)) {
@@ -342,6 +312,52 @@ class FastCache implements FastCacheInterface
         $key = \md5(\is_scalar($key) ? (string) $key : \serialize($key));
 
         return \strpos($this->namespace, '%s') ? \sprintf($this->namespace, $key) : $this->namespace . $key;
+    }
+
+    /**
+     * Save cache item.
+     *
+     * @param CacheInterface|CacheItemPoolInterface $storage
+     * @param string                                $key
+     * @param Closure                               $callback
+     * @param Closure                               $setExpired
+     * @param null|float                            $beta
+     *
+     * @return mixed The corresponding values found in the cache
+     */
+    protected function doSave($storage, string $key, Closure $callback, Closure $setExpired, ?float $beta)
+    {
+        if ($storage instanceof CacheItemPoolInterface) {
+            $item = $this->storage->getItem($key);
+
+            if (!$item->isHit() || \INF === $beta) {
+                $save   = true;
+                $result = $callback(...[$item, $save]);
+
+                if (true === $save) {
+                    if (!$result instanceof CacheItemInterface) {
+                        $item->set($result);
+                        $this->storage->save($item);
+                    } else {
+                        $this->storage->save($result);
+                    }
+                }
+            }
+
+            return $item->get();
+        }
+
+        $save   = true;
+        $item   = $storage instanceof PhpCachePool ? new PhpCacheItem($key) : new CacheItem();
+        $result = $callback(...[$item, $save]);
+
+        if ($result instanceof CacheItemInterface) {
+            $result = $result->get();
+        }
+
+        $storage->set($key, $result, $setExpired($item));
+
+        return $result;
     }
 
     /**

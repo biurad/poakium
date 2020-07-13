@@ -64,7 +64,7 @@ interface FastCacheInterface
      * @param null|callable       $fallback
      * @param null|float          $beta
      *
-     * @return array<string,mixed>
+     * @return array<int|string,mixed>
      */
     public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array;
 
