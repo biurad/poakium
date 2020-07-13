@@ -31,7 +31,9 @@
         "cache/doctrine-adapter": "^1.0",
         "composer/package-versions-deprecated": "^1.8",
         "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-strict-rules": "^0.12",
         "phpunit/phpunit": "^8.5 || ^9.0",
+        "squizlabs/php_codesniffer": "^3.5",
         "vimeo/psalm": "^3.11"
     },
     "suggest": {

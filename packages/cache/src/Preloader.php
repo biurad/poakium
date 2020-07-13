@@ -141,7 +141,7 @@ class Preloader
 
             if (\PHP_VERSION_ID >= 70400) {
                 foreach ($r->getProperties(ReflectionProperty::IS_PUBLIC) as $p) {
-                    if (($t = $p->getType()) && !$t->isBuiltin()) {
+                    if (null !== ($t = $p->getType()) && !$t->isBuiltin()) {
                         \assert($t instanceof ReflectionNamedType);
                         self::doPreload($t->getName(), $preloaded);
                     }
@@ -158,13 +158,13 @@ class Preloader
                         }
                     }
 
-                    if (($t = $p->getType()) && !$t->isBuiltin()) {
+                    if (null !== ($t = $p->getType()) && !$t->isBuiltin()) {
                         \assert($t instanceof ReflectionNamedType);
                         self::doPreload($t->getName(), $preloaded);
                     }
                 }
 
-                if (($t = $m->getReturnType()) && !$t->isBuiltin()) {
+                if (null !== ($t = $m->getReturnType()) && !$t->isBuiltin()) {
                     \assert($t instanceof ReflectionNamedType);
                     self::doPreload($t->getName(), $preloaded);
                 }

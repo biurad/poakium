@@ -21,8 +21,7 @@ use BadMethodCallException;
 use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use DateInterval;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
-use Doctrine\Common\Cache\ClearableCache;
-use Doctrine\Common\Cache\FlushableCache;
+use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Common\Cache\MultiOperationCache;
 use Psr\SimpleCache\CacheInterface;
 use Throwable;
@@ -82,7 +81,7 @@ class SimpleCache implements CacheInterface
             throw new InvalidArgumentException('Using \'DataInterval\' will be implemented in v1.0');
         }
 
-        return $this->instance->save($key, $value, $ttl ?: 0);
+        return $this->instance->save($key, $value, $ttl ?? 0);
     }
 
     /**
@@ -100,14 +99,14 @@ class SimpleCache implements CacheInterface
     {
         $driver = $this->instance;
 
-        if (!($driver instanceof FlushableCache || $driver instanceof ClearableCache)) {
+        if (!$driver instanceof CacheProvider) {
             return false;
         }
 
         try {
-            return $driver->deleteAll();
-        } catch (Throwable $e) {
             return $driver->flushAll();
+        } catch (Throwable $e) {
+            return $driver->deleteAll();
         }
     }
 
@@ -123,7 +122,7 @@ class SimpleCache implements CacheInterface
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            return $this->instance->fetchMultiple((array) $keys);
+            return $this->instance->fetchMultiple($keys);
         }
 
         foreach ($keys as $key) {
@@ -136,12 +135,16 @@ class SimpleCache implements CacheInterface
      */
     public function setMultiple($values, $ttl = null): bool
     {
+        if ($ttl instanceof DateInterval) {
+            throw new InvalidArgumentException('Using \'DataInterval\' will be implemented in v1.0');
+        }
+
         if ($values instanceof Traversable) {
             $values = \iterator_to_array($values);
         }
 
         if ($this->instance instanceof MultiOperationCache) {
-            return $this->instance->saveMultiple((array) $values, $ttl);
+            return $this->instance->saveMultiple($values, $ttl ?? 0);
         }
 
         foreach ($values as $key => $value) {

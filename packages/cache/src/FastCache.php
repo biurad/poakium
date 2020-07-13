@@ -78,7 +78,7 @@ class FastCache implements FastCacheInterface
      */
     public function getNamespace(): string
     {
-        return (string) \substr(\sprintf($this->namespace, null), 0, -1);
+        return \substr(\sprintf($this->namespace, null), 0, -1);
     }
 
     /**
@@ -100,7 +100,7 @@ class FastCache implements FastCacheInterface
             $data = $data->isHit() ? $data->get() : null;
         }
 
-        if (null === $data && $fallback) {
+        if (null === $data && null !== $fallback) {
             return $this->save($key, $fallback, $beta);
         }
 
@@ -122,7 +122,7 @@ class FastCache implements FastCacheInterface
             }
         }
         $storageKeys = \array_map([$this, 'generateKey'], $keys);
-        $cacheData   = $this->doFetch($storageKeys, true);
+        $cacheData   = $this->doFetch($storageKeys);
         $result      = [];
 
         if ($cacheData instanceof Generator) {
@@ -134,7 +134,7 @@ class FastCache implements FastCacheInterface
 
             if (isset($cacheData[$storageKey])) {
                 $result[$key] = $cacheData[$storageKey];
-            } elseif ($fallback) {
+            } elseif (null !== $fallback) {
                 $result[$key] = $this->save(
                     $key,
                     function (CacheItemInterface $item, bool $save) use ($key, $fallback) {
@@ -238,7 +238,7 @@ class FastCache implements FastCacheInterface
     /**
      * {@inheritdoc}
      */
-    public function call(callable $callback)
+    public function call(callable $callback, ?float $beta = null)
     {
         $key = \func_get_args();
 
@@ -246,11 +246,15 @@ class FastCache implements FastCacheInterface
             $key[0][0] = \get_class($callback[0]);
         }
 
-        return $this->load($key, function (CacheItemInterface $item, bool $save) use ($callback, $key) {
-            $dependencies = \array_merge(\array_slice($key, 1), [&$item, &$save]);
+        return $this->load(
+            $key,
+            function (CacheItemInterface $item, bool $save) use ($callback, $key) {
+                $dependencies = \array_merge(\array_slice($key, 1), [&$item, &$save]);
 
-            return $callback(...$dependencies);
-        });
+                return $callback(...$dependencies);
+            },
+            $beta
+        );
     }
 
     /**
@@ -259,25 +263,7 @@ class FastCache implements FastCacheInterface
     public function wrap(callable $callback, ?float $beta = null): callable
     {
         return function () use ($callback, $beta) {
-            $key = [$callback, \func_get_args()];
-
-            if (\is_array($callback) && \is_object($callback[0])) {
-                $key[0][0] = \get_class(\current($callback));
-            }
-
-            if (null === $data = $this->load($key)) {
-                $data = $this->save(
-                    $key,
-                    function (CacheItemInterface $item, bool $save) use ($callback, $key) {
-                        $dependencies = \array_merge($key[1], [&$item, &$save]);
-
-                        return $callback(...$dependencies);
-                    },
-                    $beta
-                );
-            }
-
-            return $data;
+            return $this->call($callback, $beta);
         };
     }
 
@@ -328,18 +314,18 @@ class FastCache implements FastCacheInterface
     protected function doSave($storage, string $key, Closure $callback, Closure $setExpired, ?float $beta)
     {
         if ($storage instanceof CacheItemPoolInterface) {
-            $item = $this->storage->getItem($key);
+            $item = $storage->getItem($key);
 
             if (!$item->isHit() || \INF === $beta) {
                 $save   = true;
                 $result = $callback(...[$item, $save]);
 
-                if (true === $save) {
+                if (false !== $save) {
                     if (!$result instanceof CacheItemInterface) {
                         $item->set($result);
-                        $this->storage->save($item);
+                        $storage->save($item);
                     } else {
-                        $this->storage->save($result);
+                        $storage->save($result);
                     }
                 }
             }
@@ -363,17 +349,17 @@ class FastCache implements FastCacheInterface
     /**
      * Fetch cache item.
      *
-     * @param array|string $id The cache identifier to fetch
+     * @param string|string[] $ids The cache identifier to fetch
      *
      * @return mixed The corresponding values found in the cache
      */
-    protected function doFetch($ids, bool $multiple = false)
+    protected function doFetch($ids)
     {
         if ($this->storage instanceof CacheItemPoolInterface) {
-            return !$multiple ? $this->storage->getItem($ids) : $this->storage->getItems($ids);
+            return !\is_array($ids) ? $this->storage->getItem($ids) : $this->storage->getItems($ids);
         }
 
-        return !$multiple ? $this->storage->get($ids) : $this->storage->getMultiple($ids, new stdClass());
+        return !\is_array($ids) ? $this->storage->get($ids) : $this->storage->getMultiple($ids, new stdClass());
     }
 
     /**

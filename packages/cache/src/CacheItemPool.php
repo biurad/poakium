@@ -125,7 +125,7 @@ class CacheItemPool implements CacheItemPoolInterface
 
     public function __destruct()
     {
-        if ($this->deferred) {
+        if (\count($this->deferred) > 0) {
             $this->commit();
         }
     }
@@ -145,11 +145,11 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function getItem($key)
     {
-        if ($this->deferred) {
+        if (\count($this->deferred) > 0) {
             $this->commit();
         }
-        $id = $this->getId($key);
 
+        $id    = $this->getId($key);
         $f     = $this->createCacheItem;
         $isHit = false;
         $value = null;
@@ -172,7 +172,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function getItems(array $keys = [])
     {
-        if ($this->deferred) {
+        if (\count($this->deferred) > 0) {
             $this->commit();
         }
         $kIds = [];
@@ -181,7 +181,7 @@ class CacheItemPool implements CacheItemPoolInterface
             $kIds[] = $this->getId($key);
         }
 
-        $items = $this->doFetch($kIds);
+        $items  = $this->doFetch($kIds);
         $kIds   = \array_combine($kIds, $keys);
 
         return $this->generateItems($items, $kIds);
@@ -264,7 +264,7 @@ class CacheItemPool implements CacheItemPoolInterface
         $this->deferred = $expiredIds = [];
         $byLifetime     = $byLifetime($this->deferred, $expiredIds);
 
-        if (!empty($expiredIds)) {
+        if (count($expiredIds) > 0) {
             $this->doDelete($expiredIds);
         }
 

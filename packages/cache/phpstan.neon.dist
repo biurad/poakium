@@ -1,10 +1,11 @@
 includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
-    
+
 parameters:
     level: max
     paths: [src]
     treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: false
 
     excludes_analyse:
         - src/Bridges/CacheExtension.php
@@ -12,5 +13,10 @@ parameters:
 
     ignoreErrors:
         - '#Function memcache_pconnect invoked with 2 parameters, 0 required.#'
+        - '#Anonymous function should have native return typehint "\?int".#'
+        - '#Foreach overwrites \$value with its value variable.#'
         - '#Cannot call method add() on DateTime|false.#'
+        - '#Only booleans are allowed in an if condition, int given.#'
+        - '#Anonymous function should have native return typehint "BiuradPHP\\Cache\\CacheItem".#'
+        - '#Anonymous function should have native return typehint "array".#'
         - '#Parameter \#1 $argument of class ReflectionClass constructor expects class-string<T of object>|T of object, string given.#'

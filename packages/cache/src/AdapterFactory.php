@@ -73,19 +73,19 @@ class AdapterFactory
 
                 return $adapter;
 
-            case 0 === \strpos((string) $connection, 'array'):
+            case self::isPrefixedAdapter($connection, 'array'):
                 return new DoctrineCache\ArrayCache();
 
-            case 0 === \strpos((string) $connection, 'apcu'):
+            case self::isPrefixedAdapter($connection, 'apcu'):
                 return new DoctrineCache\ApcuCache();
 
-            case 0 === \strpos((string) $connection, 'wincache'):
+            case self::isPrefixedAdapter($connection, 'wincache'):
                 return new DoctrineCache\WinCacheCache();
 
-            case 0 === \strpos((string) $connection, 'zenddata'):
+            case self::isPrefixedAdapter($connection, 'zenddata'):
                 return new DoctrineCache\ZendDataCache();
 
-            case 0 === \strpos((string) $connection, 'redis://'):
+            case self::isPrefixedAdapter($connection, 'redis://'):
                 $adapter = new DoctrineCache\RedisCache();
 
                 [$host, $port] = \explode(':', \substr((string) $connection, 8));
@@ -94,43 +94,35 @@ class AdapterFactory
 
                 return $adapter;
 
-            case 0 === \strpos((string) $connection, 'memcache://'):
+            case self::isPrefixedAdapter($connection, 'memcache://'):
                 $adapter = new DoctrineCache\MemcacheCache();
 
-                [$host, $port] = \explode(':', \substr((string) $connection, 11));
+                [$host, $port] = self::getPrefixedAdapter($connection, 11);
                 $adapter->setMemcache(\memcache_pconnect($host, (int) $port));
 
                 return $adapter;
 
-            case 0 === \strpos((string) $connection, 'memcached://'):
+            case self::isPrefixedAdapter($connection, 'memcached://'):
                 $adapter = new DoctrineCache\MemcachedCache();
 
-                [$host, $port] = \explode(':', \substr((string) $connection, 12));
+                [$host, $port] = self::getPrefixedAdapter($connection, 12);
                 ($memcached = new Memcached())->addServer($host, (int) $port);
                 $adapter->setMemcached($memcached);
 
                 return $adapter;
 
-            case 0 === \strpos((string) $connection, 'file://'):
-                $extension = '.cache.data';
+            case self::isPrefixedAdapter($connection, 'file://'):
+                [$tempDir, $extension] = self::getPrefixedAdapter($connection, 7, false);
 
-                if (\strpos(':', $tempDir = \substr((string) $connection, 7))) {
-                    [$tempDir, $extension] = \explode(':', $tempDir);
-                }
+                return new DoctrineCache\FilesystemCache($tempDir, $extension . 'data');
 
-                return new DoctrineCache\FilesystemCache($tempDir, $extension);
+            case self::isPrefixedAdapter($connection, 'memory://'):
+                [$tempDir, $extension] = self::getPrefixedAdapter($connection, 9, false);
 
-            case 0 === \strpos((string) $connection, 'memory://'):
-                $extension = '.cache.php';
+                return new DoctrineCache\PhpFileCache($tempDir, $extension . 'php');
 
-                if (\strpos(':', $tempDir = \substr((string) $connection, 7))) {
-                    [$tempDir, $extension] = \explode(':', $tempDir);
-                }
-
-                return new DoctrineCache\PhpFileCache($tempDir, $extension);
-
-            case 0 === \strpos((string) $connection, 'sqlite://'):
-                [$table, $filename] = \explode(':', \substr((string) $connection, 9));
+            case self::isPrefixedAdapter($connection, 'sqlite://'):
+                [$table, $filename] = self::getPrefixedAdapter($connection, 9);
 
                 return new DoctrineCache\SQLite3Cache(new SQLite3($filename), $table);
         }
@@ -138,5 +130,35 @@ class AdapterFactory
         throw new InvalidArgumentException(
             \sprintf('Unsupported Cache Adapter: %s.', \is_object($connection) ? \get_class($connection) : $connection)
         );
+    }
+
+    /**
+     * @param mixed $connection
+     * @param bool  $host
+     *
+     * @return false|string[]
+     */
+    private static function getPrefixedAdapter($connection, int $limit, bool $host = true)
+    {
+        if (true === $host) {
+            return \explode(':', \substr((string) $connection, $limit));
+        }
+
+        if (\strpos(':', $tempDir = \substr((string) $connection, $limit))) {
+            return \explode(':', $tempDir);
+        }
+
+        return [$tempDir, '.cache.'];
+    }
+
+    /**
+     * @param mixed  $connection
+     * @param string $name
+     *
+     * @return bool
+     */
+    private static function isPrefixedAdapter($connection, string $name): bool
+    {
+        return \is_string($connection) && 0 === \strpos($connection, $name);
     }
 }
