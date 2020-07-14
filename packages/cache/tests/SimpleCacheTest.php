@@ -21,7 +21,6 @@ use __PHP_Incomplete_Class;
 use ArrayIterator;
 use BadMethodCallException;
 use BiuradPHP\Cache\CacheItem;
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
 use BiuradPHP\Cache\SimpleCache;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\FilesystemCache;
@@ -29,12 +28,13 @@ use Exception;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 use Traversable;
 
 /**
  * @internal
  */
-class Psr16CacheTest extends TestCase
+class SimpleCacheTest extends TestCase
 {
     /** @var SimpleCache */
     private $cache;
@@ -54,26 +54,29 @@ class Psr16CacheTest extends TestCase
     {
         $cache = $this->cache;
 
-        $this->assertInstanceOf(CacheInterface::class, $cache);
+        self::assertInstanceOf(CacheInterface::class, $cache);
 
         $key = CacheItem::RESERVED_CHARACTERS;
 
-        $this->assertTrue($cache->delete($key));
-        $this->assertFalse($cache->has($key));
+        self::assertTrue($cache->delete($key));
+        self::assertFalse($cache->has($key));
 
-        $this->assertTrue($cache->set($key, 'bar'));
-        $this->assertTrue($cache->has($key));
-        $this->assertSame('bar', $cache->get($key));
+        self::assertTrue($cache->set($key, 'bar'));
+        self::assertTrue($cache->has($key));
+        self::assertSame('bar', $cache->get($key));
 
-        $this->assertTrue($cache->delete($key));
-        $this->assertNull($cache->get($key));
-        $this->assertTrue($cache->set($key, 'bar'));
+        self::assertTrue($cache->delete($key));
+        self::assertNull($cache->get($key));
+        self::assertTrue($cache->set($key, 'bar'));
 
         $cache->clear();
-        $this->assertNull($cache->get($key));
-        $this->assertFalse($cache->has($key));
+        self::assertNull($cache->get($key));
+        self::assertFalse($cache->has($key));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function testNullProviderMultiples(): void
     {
         $data = [
@@ -82,19 +85,19 @@ class Psr16CacheTest extends TestCase
         ];
         $cache = new SimpleCache(new Fixtures\NullAdapterTest());
 
-        $this->assertTrue($cache->deleteMultiple(
+        self::assertTrue($cache->deleteMultiple(
             new ArrayIterator(['foo', 'empty', CacheItem::RESERVED_CHARACTERS])
         ));
-        $this->assertFalse($cache->has('foo'));
-        $this->assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
+        self::assertFalse($cache->has('foo'));
+        self::assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
 
-        $this->assertTrue($cache->setMultiple(new ArrayIterator($data)));
-        $this->assertTrue($cache->has('foo'));
-        $this->assertTrue($cache->has(CacheItem::RESERVED_CHARACTERS));
+        self::assertTrue($cache->setMultiple(new ArrayIterator($data)));
+        self::assertTrue($cache->has('foo'));
+        self::assertTrue($cache->has(CacheItem::RESERVED_CHARACTERS));
 
         $foundMultiple = $cache->getMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS]));
-        $this->assertInstanceOf(Traversable::class, $foundMultiple);
-        $this->assertSame($data, \iterator_to_array($foundMultiple));
+        self::assertInstanceOf(Traversable::class, $foundMultiple);
+        self::assertSame($data, \iterator_to_array($foundMultiple));
 
         $cache->clear();
     }
@@ -110,38 +113,41 @@ class Psr16CacheTest extends TestCase
         ];
         $cache = $this->cache;
 
-        $this->assertTrue($cache->deleteMultiple(
+        self::assertTrue($cache->deleteMultiple(
             new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS])
         ));
-        $this->assertFalse($cache->has('foo'));
-        $this->assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
+        self::assertFalse($cache->has('foo'));
+        self::assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
 
-        $this->assertTrue($cache->setMultiple(new ArrayIterator($data)));
-        $this->assertTrue($cache->has('foo'));
-        $this->assertTrue($cache->has(CacheItem::RESERVED_CHARACTERS));
-
-        $foundMultiple = $cache->getMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS]));
-        $this->assertInstanceOf(Generator::class, $foundMultiple);
-        $this->assertSame($data, $foundMultiple->getReturn());
-
-        $this->assertTrue($cache->deleteMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS])));
+        self::assertTrue($cache->setMultiple(new ArrayIterator($data)));
+        self::assertTrue($cache->has('foo'));
+        self::assertTrue($cache->has(CacheItem::RESERVED_CHARACTERS));
 
         $foundMultiple = $cache->getMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS]));
-        $this->assertEmpty($foundMultiple->getReturn());
+        self::assertInstanceOf(Generator::class, $foundMultiple);
+        self::assertSame($data, $foundMultiple->getReturn());
 
-        $this->assertTrue($cache->setMultiple(new ArrayIterator($data)));
+        self::assertTrue($cache->deleteMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS])));
+
+        $foundMultiple = $cache->getMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS]));
+        self::assertEmpty($foundMultiple->getReturn());
+
+        self::assertTrue($cache->setMultiple(new ArrayIterator($data)));
 
         $cache->clear();
         $foundMultiple = $cache->getMultiple(new ArrayIterator(['foo', CacheItem::RESERVED_CHARACTERS]));
-        $this->assertEmpty($foundMultiple->getReturn());
+        self::assertEmpty($foundMultiple->getReturn());
 
-        $this->assertFalse($cache->has('foo'));
-        $this->assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
+        self::assertFalse($cache->has('foo'));
+        self::assertFalse($cache->has(CacheItem::RESERVED_CHARACTERS));
 
         $this->expectException(InvalidArgumentException::class);
         $cache->getMultiple(null)->getReturn();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function testNotUnserializable(): void
     {
         $cache = new SimpleCache(new FilesystemCache(__DIR__ . '/caches'));
@@ -150,14 +156,14 @@ class Psr16CacheTest extends TestCase
         $cache->set('foo', new Fixtures\NotUnserializableTest());
 
         $this->expectException(Exception::class);
-        $this->assertNull($cache->get('foo'));
+        self::assertNull($cache->get('foo'));
     }
 
     public function testSerialization(): void
     {
         $this->expectException(BadMethodCallException::class);
         $cache = \serialize($this->cache);
-        $this->assertInstanceOf(__PHP_Incomplete_Class::class, $cache);
-        $this->assertInstanceOf(SimpleCache::class, $cache = \unserialize($cache));
+        self::assertInstanceOf(__PHP_Incomplete_Class::class, $cache);
+        self::assertInstanceOf(SimpleCache::class, $cache = \unserialize($cache));
     }
 }

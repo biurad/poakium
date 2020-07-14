@@ -42,11 +42,6 @@ class SimpleCache implements CacheInterface
         $this->instance = $instance;
     }
 
-    public function __sleep(): void
-    {
-        throw new BadMethodCallException('Cannot serialize ' . __CLASS__);
-    }
-
     public function __wakeup(): void
     {
         throw new BadMethodCallException('Cannot unserialize ' . __CLASS__);
@@ -117,7 +112,9 @@ class SimpleCache implements CacheInterface
     {
         if ($keys instanceof Traversable) {
             $keys = \iterator_to_array($keys, false);
-        } elseif (!\is_array($keys)) {
+        }
+
+        if (!\is_array($keys)) {
             throw new InvalidArgumentException('Cache keys must be array or Traversable.');
         }
 

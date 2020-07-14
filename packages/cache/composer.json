@@ -37,6 +37,7 @@
         "vimeo/psalm": "^3.11"
     },
     "suggest": {
+        "ext-memcache": "For caching into memcache storage",
         "ext-memcached": "For caching into memcached storage",
         "ext-apcu": "For caching into apcu storage",
         "ext-redis": "For caching into redis storage",
@@ -50,12 +51,13 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "BiuradPHP\\Cache\\Tests\\": "Tests/"
+            "BiuradPHP\\Cache\\Tests\\": "tests/"
         }
     },
     "scripts": {
         "phpcs": "phpcs -q",
         "phpstan": "phpstan analyse",
+        "psalm": "psalm --show-info=true",
         "phpunit": "phpunit --no-coverage",
         "test": [
             "@phpcs",

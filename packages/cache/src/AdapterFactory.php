@@ -134,6 +134,7 @@ class AdapterFactory
 
     /**
      * @param mixed $connection
+     * @param int   $limit
      * @param bool  $host
      *
      * @return false|string[]
