@@ -9,5 +9,5 @@ assignees: ''
 
 ## Question
 
-- Have you tried checking the documentation first? https://docs.biurad.com/biurad-caching
+- Have you tried checking the documentation first? https://docs.biurad.com/php-cache
 - Replace this with your question
