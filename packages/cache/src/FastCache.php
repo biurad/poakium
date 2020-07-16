@@ -311,6 +311,8 @@ class FastCache implements FastCacheInterface
      * @param Closure                               $setExpired
      * @param null|float                            $beta
      *
+     * @psalm-suppress RedundantCondition
+     *
      * @return mixed The corresponding values found in the cache
      */
     protected function doSave($storage, string $key, Closure $callback, Closure $setExpired, ?float $beta)

@@ -126,6 +126,7 @@ class Preloader
      * @param array<string,bool> $preloaded
      *
      * @psalm-suppress ArgumentTypeCoercion
+     * @psalm-suppress UndefinedMethod
      */
     private static function doPreload(string $class, array &$preloaded): void
     {
