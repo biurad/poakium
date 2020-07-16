@@ -1,8 +1,8 @@
 {
-    "name": "biurad/biurad-caching",
+    "name": "biurad/cache",
     "type": "library",
-    "description": "Cache manager using Doctrine Cache offers a very intuitive PSR-16 and PSR-6 API for cache manipulation",
-    "keywords": ["caching","cache","psr6","psr16","nette","doctrine","biuradphp","php7"],
+    "description": "A library that provides additional functionality doctrine/cache",
+    "keywords": ["caching","cache","psr6","psr16","doctrine","biuradphp","php7", "php"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -16,10 +16,10 @@
         }
     ],
     "support": {
-        "docs": "https://docs.biurad.com/biurad-caching/",
-        "issues": "https://github.com/biurad/biurad-caching/issues",
-        "rss": "https://github.com/biurad/biurad-caching/releases.atom",
-        "source": "https://github.com/biurad/biurad-caching"
+        "docs": "https://docs.biurad.com/php-cache/",
+        "issues": "https://github.com/biurad/php-cache/issues",
+        "rss": "https://github.com/biurad/php-cache/releases.atom",
+        "source": "https://github.com/biurad/php-cache"
     },
     "require": {
         "php": "^7.1 || ^8.0",
@@ -46,12 +46,20 @@
     },
     "autoload": {
         "psr-4": {
-            "BiuradPHP\\Cache\\": "src/"
+            "Biurad\\Cache\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "BiuradPHP\\Cache\\Tests\\": "tests/"
+            "Biurad\\Cache\\Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
         }
     },
     "scripts": {
