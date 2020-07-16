@@ -53,10 +53,6 @@ class AdapterFactory
 
             case $connection instanceof Redis:
                 $adapter = new DoctrineCache\RedisCache();
-
-                if (!$connection->isConnected()) {
-                    throw new InvalidArgumentException('Did you forget to call the \'connect\' method');
-                }
                 $adapter->setRedis($connection);
 
                 return $adapter;
