@@ -25,8 +25,8 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 ### Fixed
 - Fixed minor issues with parsing integers when used with **nette/di**
 - Fixed minor issues with undefined methods and class existence when used with **nette/di**
-- Fixed minor issues with faling tests
-- Renamed **Tests** folder to lowercased
+- Fixed minor issues with falling tests
+- Renamed **Tests** folder to lowercase
 - Fixed error of closure
 
 ### Removed

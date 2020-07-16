@@ -66,7 +66,7 @@ class Preloader
     }
 
     /**
-     * Gives some informations about opcache preloading.
+     * Gives some information's about opcache preloading.
      *
      * @param string $type of 'functions', 'scripts' or 'classes'
      *
@@ -80,7 +80,7 @@ class Preloader
     }
 
     /**
-     * Returrns the opcache preload statistics
+     * Returns the opcache preload statistics
      *
      * @return null|array<string,mixed>
      */

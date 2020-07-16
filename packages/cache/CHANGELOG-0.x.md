@@ -20,7 +20,7 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Made changes to most classes to support new caching feature
 
 ### Fixed
-- Fixed minor bugs and unnoticed erros in caching
+- Fixed minor bugs and unnoticed errors in caching
 - Reduced code complexity and adjusted performance
 
 ## [0.2.2] - 2020-06-03
@@ -39,13 +39,12 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Renamed `BiuradPHP\Cache\Bridges\CachePass` class to `BiuradPHP\Cache\Bridges\DoctrineCachePass`
 - Renamed `BiuradPHP\Cache\Memory` class to `BiuradPHP\Cache\MemoryCache`
 - Made changes to `BiuradPHP\Cache\Bridges\DoctrineCachePass` class
-- Made changes to `BiuradPHP\Cache\OutputHelper` class contructor
+- Made changes to `BiuradPHP\Cache\OutputHelper` class constructor
 - Updated README.md file
 
 ### Fixed
 - Fixed issues with `Doctrine\Common\Cache\MemcachedCache` connection in the `BiuradPHP\Cache\Bridges\DoctrineCachePass` class
 - Removed unused non-static protected method `BiuradPHP\Cache\Bridges\Connection::createDatabase`
-
 
 ### Removed
 - Deleted unused `BiuradPHP\Cache\Handles\DatabaseCache` class
@@ -126,7 +125,6 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
  - Added .travis test file
  - Added .scrutinizer test file
  - Added .gitignore file
- 
 
 [0.2.4]: https://github.com/biurad/biurad-caching/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/biurad/biurad-caching/compare/v0.2.2...v0.2.3

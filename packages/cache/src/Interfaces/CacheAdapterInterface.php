@@ -20,7 +20,7 @@ namespace BiuradPHP\Cache\Interfaces;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 
 /**
- * Interface for cache adapters that shound be used in
+ * Interface for cache adapters that should be used in
  * Nette Di container.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
