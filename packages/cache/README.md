@@ -1,6 +1,6 @@
 # The Biurad PHP-Cache
 
-[![Latest Version](https://img.shields.io/packagist/v/biurad/cache.svg?style=flat-square)](https://packagist.org/packages/biurad/cache)
+[![Latest Version](https://img.shields.io/packagist/v/biurad/php-cache.svg?style=flat-square)](https://packagist.org/packages/biurad/cache)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
 [![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-cache/Tests?style=flat-square)](https://github.com/biurad/php-cache/actions?query=workflow%3ATests)
 [![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-cache?style=flat-square)](https://codeclimate.com/github/biurad/php-cache)
