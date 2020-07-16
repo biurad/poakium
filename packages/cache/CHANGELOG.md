@@ -15,8 +15,11 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Added tests for **psalm**, **github actions**, **phpstan** and **phpcs** for PSR-12 coding standing
 
 ### Changed
-- Uodated `BiuradPHP\Cache\Bridges\CaceExtension` class to adhere to changes made.
-- Updated composer.json file
+- Replaced `BiuradPHP` namespace to `Biurad` on all classes.
+- Updated `BiuradPHP\Cache\Bridges\CacheExtension` class to adhere to changes made.
+- Added `branch-alias` to **composer.json** extra config field.
+- Abandoned **biurad/biurad-caching** use **biurad/cache** on composer `require` command instead
+- Updated **composer.json** file
 - Made changes to `README.md` file
 - Updated `CHANGELOG.md` file for [unreleased] version
 - Replaced `Support_us.md` with `FUNDING.yml` in **.github** folder
