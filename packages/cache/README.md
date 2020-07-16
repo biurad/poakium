@@ -1,21 +1,21 @@
-# The BiuradPHP Caching
+# The Biurad PHP-Cache
 
-[![Latest Version](https://img.shields.io/packagist/v/biurad/biurad-caching.svg?style=flat-square)](https://packagist.org/packages/biurad/biurad-caching)
+[![Latest Version](https://img.shields.io/packagist/v/biurad/cache.svg?style=flat-square)](https://packagist.org/packages/biurad/cache)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/biurad-caching/Tests?style=flat-square)](https://github.com/biurad/biurad-caching/actions?query=workflow%3ATests)
-[![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/biurad-caching?style=flat-square)](https://codeclimate.com/github/biurad/biurad-caching)
-[![Coverage Status](https://img.shields.io/codecov/c/github/biurad/biurad-caching?style=flat-square)](https://codecov.io/gh/biurad/biurad-caching)
-[![Quality Score](https://img.shields.io/scrutinizer/g/biurad/biurad-caching.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/biurad-caching)
+[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-cache/Tests?style=flat-square)](https://github.com/biurad/php-cache/actions?query=workflow%3ATests)
+[![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-cache?style=flat-square)](https://codeclimate.com/github/biurad/php-cache)
+[![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-cache?style=flat-square)](https://codecov.io/gh/biurad/php-cache)
+[![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-cache.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-cache)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/biurad-caching** is a php cache library based on [Doctrine Cache][] created by [Divine Niiquaye][@divineniiquaye] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
+**biurad/php-cache** is a php cache library based on [Doctrine Cache][] created by [Divine Niiquaye][@divineniiquaye] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
 
 ## 📦 Installation & Basic Usage
 
 This project requires PHP 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
-$ composer require biurad/biurad-caching
+$ composer require biurad/cache
 ```
 
 This library is designed in an interoperable manner. Using [PSR-16] caching implementation, requires a [Doctrine Cache][] adapter, while [PSR-6] requires [PSR-16].
@@ -73,7 +73,7 @@ $cache->delete('stats.products_count');
 
 ---
 
-If you want a bit advanced caching stratagy above [PSR-16], [PSR-6] is what you need, has a cool way of invalidating a missed cache.
+If you want a bit advanced caching strategy above [PSR-16], [PSR-6] is what you need, has a cool way of invalidating a missed cache.
 
 ```php
 use BiuradPHP\Cache\CacheItemPool;
@@ -152,7 +152,7 @@ $cache = new FastCache($psr6);
 The first argument of the `load()` method is a key, an arbitrary string that you associate to the cached value so you can retrieve it later. The second argument is a PHP callable which is executed when the key is not found in the cache to generate and return the value:
 
 ```php
-use Psr\Cache\CacheItemIterface;
+use Psr\Cache\CacheItemInterface;
 
 // The callable will only be executed on a cache miss.
 $value = $cache->load('my_cache_key', function (CacheItemInterface $item) {
@@ -209,7 +209,7 @@ The expiration and invalidation caching feature.
 This feature works with only PSR-6 cache, By default the beta is 1.0 and higher values mean earlier recompute. Set it to 0 to disable early recompute and set it to INF to force an immediate recompute:
 
 ```php
-use Psr\Cache\CacheItemIterface;
+use Psr\Cache\CacheItemInterface;
 
 $beta = 1.0;
 $value = $cache->save('my_cache_key', function (CacheItemInterface $item) {
@@ -291,7 +291,7 @@ Please see [CONTRIBUTING] for additional details.
 $ composer test
 ```
 
-This will tests biurad/biurad-caching will run against PHP 7.2 version or higher.
+This will tests biurad/php-cache will run against PHP 7.2 version or higher.
 
 ## 👥 Credits & Acknowledgements
 
@@ -307,7 +307,7 @@ Are you interested in sponsoring development of this project? Reach out and supp
 
 ## 📄 License
 
-**biurad/biurad-caching** is licensed under the BSD-3 license. See the [`LICENSE`](LICENSE) file for more details.
+**biurad/php-cache** is licensed under the BSD-3 license. See the [`LICENSE`](LICENSE) file for more details.
 
 ## 🏛️ Governance
 
@@ -317,18 +317,18 @@ This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye].
 
 You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us an [email] or [message] mentioning this library. We publish all received request's at <https://patreons.biurad.com>.
 
-Check out the other cool things people are doing with `biurad/biurad-caching`: <https://packagist.org/packages/biurad/biurad-caching/dependents>
+Check out the other cool things people are doing with `biurad/php-cache`: <https://packagist.org/packages/biurad/cache/dependents>
 
 [Composer]: https://getcomposer.org
 [PSR-6]: http://www.php-fig.org/psr/psr-6/
 [PSR-16]: http://www.php-fig.org/psr/psr-16/
 [@divineniiquaye]: https://github.com/divineniiquaye
-[docs]: https://docs.biurad.com/biurad-caching
-[commit]: https://commits.biurad.com/biurad-caching.git
+[docs]: https://docs.biurad.com/php-cache
+[commit]: https://commits.biurad.com/php-cache.git
 [UPGRADE]: UPGRADE-1.x.md
 [CHANGELOG]: CHANGELOG-0.x.md
 [CONTRIBUTING]: ./.github/CONTRIBUTING.md
-[All Contributors]: https://github.com/biurad/biurad-caching/contributors
+[All Contributors]: https://github.com/biurad/php-cache/contributors
 [Biurad Lap]: https://team.biurad.com
 [email]: support@biurad.com
 [message]: https://projects.biurad.com/message
