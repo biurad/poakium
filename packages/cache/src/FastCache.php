@@ -15,11 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
-use BiuradPHP\Cache\Exceptions\CacheException;
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
-use BiuradPHP\Cache\Interfaces\FastCacheInterface;
+use Biurad\Cache\Exceptions\CacheException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Interfaces\FastCacheInterface;
 use Cache\Adapter\Common\CacheItem as PhpCacheItem;
 use Cache\Adapter\Common\PhpCachePool;
 use Closure;
@@ -78,7 +78,7 @@ class FastCache implements FastCacheInterface
      */
     public function getNamespace(): string
     {
-        return \substr(\sprintf($this->namespace, null), 0, -1);
+        return \substr(\sprintf($this->namespace, ''), 0, -1);
     }
 
     /**
@@ -161,6 +161,8 @@ class FastCache implements FastCacheInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress InaccessibleProperty
      */
     public function save($key, ?callable $callback = null, ?float $beta = null)
     {

@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Interfaces;
+namespace Biurad\Cache\Interfaces;
 
-use BiuradPHP\Cache\FastCache;
-use BiuradPHP\Cache\OutputHelper;
+use Biurad\Cache\FastCache;
+use Biurad\Cache\OutputHelper;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 

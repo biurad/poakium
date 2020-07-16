@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Exceptions;
+namespace Biurad\Cache\Exceptions;
 
 use InvalidArgumentException as GlobalInvalidArgumentException;
 use Psr\Cache\InvalidArgumentException as Psr6Exception;

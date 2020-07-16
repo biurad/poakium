@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
 use ErrorException;
 use LogicException;
@@ -110,7 +110,11 @@ class Preloader
                         self::doPreload($c, $preloaded);
                     }
                 }
-                $classes = \array_merge(\get_declared_classes(), \get_declared_interfaces(), \get_declared_traits());
+                $classes = \array_merge(
+                    \get_declared_classes(),
+                    \get_declared_interfaces(),
+                    \get_declared_traits() ?? []
+                );
             }
         } finally {
             \restore_error_handler();
@@ -120,6 +124,8 @@ class Preloader
     /**
      * @param string             $class
      * @param array<string,bool> $preloaded
+     *
+     * @psalm-suppress ArgumentTypeCoercion
      */
     private static function doPreload(string $class, array &$preloaded): void
     {

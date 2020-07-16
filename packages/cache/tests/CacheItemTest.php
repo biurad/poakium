@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Tests;
+namespace Biurad\Cache\Tests;
 
-use BiuradPHP\Cache\CacheItem;
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\CacheItem;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use DateTime;
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -28,11 +28,13 @@ class CacheItemTest extends TestCase
 {
     public function testValidKey(): void
     {
-        $this->assertSame('foo', CacheItem::validateKey('foo'));
+
+        self::assertSame('foo', CacheItem::validateKey('foo'));
     }
 
     /**
      * @dataProvider provideInvalidKey
+     * @param mixed $key
      */
     public function testInvalidKey($key): void
     {
@@ -62,6 +64,9 @@ class CacheItemTest extends TestCase
         ];
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function testItem(): void
     {
         $item = new CacheItem();
@@ -75,18 +80,19 @@ class CacheItemTest extends TestCase
 
         $item->set('data');
 
-        $this->assertEquals('foo', $item->getKey());
-        $this->assertEquals('data', $item->get());
+        self::assertEquals('foo', $item->getKey());
+        self::assertEquals('data', $item->get());
 
-        $item->expiresAt(new DateTime());
+        $item->expiresAt(new DateTime('30 seconds'));
         $r = new ReflectionProperty(CacheItem::class, 'expiry');
         $r->setAccessible(true);
-        $this->assertIsFloat($r->getValue($item));
+        self::assertIsFloat($r->getValue($item));
+        self::assertEquals(30, (int) (0.1 + $r->getValue($item) - microtime(true)));
 
         $item->expiresAfter(null);
         $r = new ReflectionProperty($item, 'expiry');
         $r->setAccessible(true);
-        $this->assertIsFloat($r->getValue($item));
+        self::assertIsFloat($r->getValue($item));
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expiration date must implement DateTimeInterface or be null.');

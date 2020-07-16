@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
 use BadMethodCallException;
 use Closure;
@@ -25,6 +25,7 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 use stdClass;
+use Traversable;
 
 class CacheItemPool implements CacheItemPoolInterface
 {
@@ -32,11 +33,6 @@ class CacheItemPool implements CacheItemPoolInterface
      * @var CacheInterface
      */
     protected $pool;
-
-    /**
-     * @var null|int The maximum length to enforce for identifiers or null when no limit applies
-     */
-    protected $maxIdLength;
 
     /**
      * @var Closure needs to be set by class, signature is function(string <key>, mixed <value>, bool <isHit>)
@@ -59,6 +55,9 @@ class CacheItemPool implements CacheItemPoolInterface
 
     /**
      * Cache Constructor.
+     *
+     * @psalm-suppress InaccessibleProperty
+     * @psalm-suppress PossiblyUndefinedVariable
      *
      * @param CacheInterface $psr16
      */
@@ -168,7 +167,7 @@ class CacheItemPool implements CacheItemPoolInterface
     /**
      * {@inheritdoc}
      *
-     * @return iterable<string,CacheItemInterface>
+     * @return array<string,CacheItemInterface>|Traversable
      */
     public function getItems(array $keys = [])
     {
@@ -264,7 +263,7 @@ class CacheItemPool implements CacheItemPoolInterface
         $this->deferred = $expiredIds = [];
         $byLifetime     = $byLifetime($this->deferred, $expiredIds);
 
-        if (count($expiredIds) > 0) {
+        if (\count($expiredIds) > 0) {
             $this->doDelete($expiredIds);
         }
 
@@ -352,9 +351,9 @@ class CacheItemPool implements CacheItemPoolInterface
      * @param iterable<string,mixed> $items
      * @param array<string,string>   $keys
      *
-     * @return iterable<string,CacheItemInterface>
+     * @return array<string,CacheItemInterface>|Traversable
      */
-    private function generateItems(iterable $items, array &$keys): iterable
+    private function generateItems(iterable $items, array &$keys)
     {
         $f = $this->createCacheItem;
 

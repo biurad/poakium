@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Psr\Cache\CacheItemInterface;
 
 /**

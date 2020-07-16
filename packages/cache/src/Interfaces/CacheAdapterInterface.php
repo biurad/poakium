@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Interfaces;
+namespace Biurad\Cache\Interfaces;
 
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 

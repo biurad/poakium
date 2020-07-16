@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use DateInterval;
 use DateTime;
 use DateTimeInterface;
@@ -109,7 +109,7 @@ final class CacheItem implements CacheItemInterface
         if (null === $time) {
             $this->expiry = $this->defaultLifetime > 0 ? \microtime(true) + $this->defaultLifetime : null;
         } elseif ($time instanceof DateInterval) {
-            $this->expiry = \microtime(true) + DateTime::createFromFormat('U', '0')->add($time)->format('U.u');
+            $this->expiry = \microtime(true) + (int) DateTime::createFromFormat('U', '0')->add($time)->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);
         } else {
@@ -124,6 +124,7 @@ final class CacheItem implements CacheItemInterface
      *
      * @param string $key The key to validate
      *
+     * @return string
      * @throws InvalidArgumentException When $key is not valid
      */
     public static function validateKey($key): string

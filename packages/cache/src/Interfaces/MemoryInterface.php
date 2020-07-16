@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Interfaces;
+namespace Biurad\Cache\Interfaces;
 
 /**
  * Long memory cache. Use this storage to remember results of your calculations, do not store user

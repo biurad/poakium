@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Exceptions;
+namespace Biurad\Cache\Exceptions;
 
 use Psr\Cache\CacheException as Psr6Exception;
 use Psr\SimpleCache\CacheException as Psr16Exception;

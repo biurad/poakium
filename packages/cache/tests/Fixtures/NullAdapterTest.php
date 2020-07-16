@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Tests\Fixtures;
+namespace Biurad\Cache\Tests\Fixtures;
 
 use Doctrine\Common\Cache\Cache;
 

@@ -15,13 +15,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Tests;
+namespace Biurad\Cache\Tests;
 
 use __PHP_Incomplete_Class;
 use ArrayIterator;
 use BadMethodCallException;
-use BiuradPHP\Cache\CacheItem;
-use BiuradPHP\Cache\SimpleCache;
+use Biurad\Cache\CacheItem;
+use Biurad\Cache\SimpleCache;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Exception;

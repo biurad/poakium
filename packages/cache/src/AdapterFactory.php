@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Doctrine\Common\Cache as DoctrineCache;
 use Memcache;
 use Memcached;
@@ -88,7 +88,7 @@ class AdapterFactory
             case self::isPrefixedAdapter($connection, 'redis://'):
                 $adapter = new DoctrineCache\RedisCache();
 
-                [$host, $port] = \explode(':', \substr((string) $connection, 8));
+                [$host, $port] = self::getPrefixedAdapter($connection, 8);
                 ($redis = new Redis())->connect($host, (int) $port);
                 $adapter->setRedis($redis);
 
@@ -98,7 +98,8 @@ class AdapterFactory
                 $adapter = new DoctrineCache\MemcacheCache();
 
                 [$host, $port] = self::getPrefixedAdapter($connection, 11);
-                $adapter->setMemcache(\memcache_pconnect($host, (int) $port));
+                ($memcache = new Memcache())->addServer($host, (int) $port);
+                $adapter->setMemcache($memcache);
 
                 return $adapter;
 
@@ -137,7 +138,7 @@ class AdapterFactory
      * @param int   $limit
      * @param bool  $host
      *
-     * @return false|string[]
+     * @return string[]
      */
     private static function getPrefixedAdapter($connection, int $limit, bool $host = true)
     {

@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache;
+namespace Biurad\Cache;
 
 use BadMethodCallException;
-use BiuradPHP\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use DateInterval;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 use Doctrine\Common\Cache\CacheProvider;
@@ -40,6 +40,11 @@ class SimpleCache implements CacheInterface
     public function __construct(DoctrineCache $instance)
     {
         $this->instance = $instance;
+    }
+
+    public function __sleep(): void
+    {
+        throw new BadMethodCallException('Cannot serialize ' . __CLASS__);
     }
 
     public function __wakeup(): void

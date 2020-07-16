@@ -15,11 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Cache\Bridges;
+namespace Biurad\Cache\Bridges;
 
-use BiuradPHP;
-use BiuradPHP\Cache\AdapterFactory;
-use BiuradPHP\Cache\Interfaces\CacheAdapterInterface;
+use Biurad\Cache\AdapterFactory;
+use Biurad\Cache\Interfaces\CacheAdapterInterface;
 use Nette;
 use Nette\DI\Definitions\Statement;
 use Nette\Schema\Expect;
@@ -44,7 +43,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
         $builder = $this->getContainerBuilder();
 
         $cacheDefinition = $builder->addDefinition($this->prefix('psr16'))
-            ->setFactory(BiuradPHP\Cache\SimpleCache::class)
+            ->setFactory(Biurad\Cache\SimpleCache::class)
             ->setArguments([new Statement([AdapterFactory::class, 'createHandler'], ['array'])]);
 
         if (\extension_loaded('apcu')) {
@@ -52,7 +51,7 @@ class CacheExtension extends Nette\DI\CompilerExtension
         }
 
         $builder->addDefinition($this->prefix('psr6'))
-            ->setFactory(BiuradPHP\Cache\CacheItemPool::class);
+            ->setFactory(Biurad\Cache\CacheItemPool::class);
 
         $builder->addAlias('cache', $this->prefix('psr16'));
     }
