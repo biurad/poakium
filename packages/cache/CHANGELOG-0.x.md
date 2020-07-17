@@ -104,11 +104,11 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Added a few tests using phpunit
 
 ### Changed
- - Made changes to `README.md` file
- - Updated **composer.json** file
- - Updated `BiuradPHP\Cache\Bridges\CacheResolver` to adhere with recent changes
- - Renamed `BiuradPHP\Cache\Cache` class to `BiuradPHP\Cache\SimpleCache`
- - Renamed previous test class name to `BiuradPHP\Cache\Tests\DoctrineCacheTest`
+- Made changes to `README.md` file
+- Updated **composer.json** file
+- Updated `BiuradPHP\Cache\Bridges\CacheResolver` to adhere with recent changes
+- Renamed `BiuradPHP\Cache\Cache` class to `BiuradPHP\Cache\SimpleCache`
+- Renamed previous test class name to `BiuradPHP\Cache\Tests\DoctrineCacheTest`
 
 ### Fixed
 - Renamed **.scrutinizer** to **.scrutinizer.yml**
@@ -117,14 +117,14 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 
 ## [0.1.3] - 2019-11-17
 ### Changed
- - Updated **composer.json** file
+- Updated **composer.json** file
 
 ## [0.1.0 - 0.1.1] - 2019-11-17
 ### Added
- - Initial commit (support PSR-16 implementation)
- - Added .travis test file
- - Added .scrutinizer test file
- - Added .gitignore file
+- Initial commit (support PSR-16 implementation)
+- Added .travis test file
+- Added .scrutinizer test file
+- Added .gitignore file
 
 [0.2.4]: https://github.com/biurad/biurad-caching/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/biurad/biurad-caching/compare/v0.2.2...v0.2.3
