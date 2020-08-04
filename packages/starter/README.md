@@ -8,7 +8,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-library-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-library-starter)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-library-starter** is a template repository for biurad php library. To use this library, rename **php-library-starter** and **BSD-3** on every file that contain it to your prefered library name and license.
+**biurad/php-library-starter** is a template repository for biurad php library. To use this library, rename **php-library-starter** and **BSD-3** on every file that contain it to your preferred library name and license.
 
 ## 📦 Installation & Basic Usage
 
