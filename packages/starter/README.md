@@ -8,7 +8,9 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-library-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-library-starter)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-library-starter** is a php library template repository for biurad lap. To use this library, rename **php-library-starter** and **BSD-3** on every file that contain it to your preferred library name and license. As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
+**biurad/php-library-starter** is a php library template repository for biurad lap. To use this library, rename **php-library-starter** and **BSD-3** on every file that contain it to your preferred library name and license.
+
+As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
 
 ## 📦 Installation & Basic Usage
 
