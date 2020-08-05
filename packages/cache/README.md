@@ -8,7 +8,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-cache.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-cache)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-cache** is a php cache library based on [Doctrine Cache][] created by [Divine Niiquaye][@divineniiquaye] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
+**biurad/php-cache** is a php cache library based on [Doctrine Cache][] created by [Doctrine Team][] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
 
 ## 📦 Installation & Basic Usage
 
@@ -35,9 +35,8 @@ The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in 
 | BiuradPHP\Cache\CacheItemPool | For [PSR-6] caching abilities using [PSR-16]                |
 | BiuradPHP\Cache\FastCache     | For advance and optimized [PSR-16]/[PSR-6] caching strategy |
 | BiuradPHP\Cache\MemoryCache   | For caching using `var_export`                              |
-| BiuradPHP\Cache\Preloader     | For PHP 7.4 opache.preload abilities                        |
 
-Now you can create, retrieve, update and delete items using the above caching classes except `Preloader` class:
+Now you can create, retrieve, update and delete items using the above caching classes:
 
 ### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\SimpleCache`:
 
@@ -217,37 +216,6 @@ $value = $cache->save('my_cache_key', function (CacheItemInterface $item) {
 
     return '...';
 }, $beta);
-```
-
-### For manipulation of PHP 7.4 opcache preload feature, we use the `BiuradPHP\Cache\Preloader`:
-
----
-
-Starting from PHP 7.4, OPcache can compile and load classes at start-up and make them available to all requests until the server is restarted, improving performance significantly.
-
-```php
-use BiuradPHP\Cache\Preloader;
-
-$preloadClasses = [...]; // A list array of classes to be appended for preloading.
-$preloadFile = getcwd().'/opcache.preload.php'; // The file preloaded classes to fetch from.
-
-Preloader::append($preloadFile, $preloadClasses);
-
-// to check opcache preload statistics
-var_dump(Preloader::getStatistics());
-```
-
-After the `$preloadFile` is written into, set the following configuration in your php.ini file:
-
-```ini
-; php.ini
-opcache.preload=/path/to/opcache.preload.php
-
-; maximum memory that OPcache can use to store compiled PHP files
-opcache.memory_consumption=256
-
-; maximum number of files that can be stored in the cache
-opcache.max_accelerated_files=20000
 ```
 
 ## 📓 Documentation
