@@ -36,5 +36,7 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Deleted `BiuradPHP\Cache\Bridges\DoctrineCachePass` class
 - Deleted `.scrutinizer.yml` file
 - Delete `BiuradPHP\Cache\Bridges\Connection` class as it's unused
+- Deleted `Biurad\Cache\Preloader` class, use darkghosthunter/preloader library instead
+- Removed memory cache implementation for var_export
 
 [unreleased]: https://github.com/biurad/biurad-caching/compare/v0.2.4...master
