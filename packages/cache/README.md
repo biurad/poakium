@@ -12,7 +12,7 @@
 
 ## 📦 Installation & Basic Usage
 
-This project requires PHP 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
+This project requires [PHP] 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
 $ composer require biurad/cache
@@ -34,7 +34,6 @@ The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in 
 | BiuradPHP\Cache\SimpleCache   | For [PSR-16] caching abilities using doctrine cache adapter |
 | BiuradPHP\Cache\CacheItemPool | For [PSR-6] caching abilities using [PSR-16]                |
 | BiuradPHP\Cache\FastCache     | For advance and optimized [PSR-16]/[PSR-6] caching strategy |
-| BiuradPHP\Cache\MemoryCache   | For caching using `var_export`                              |
 
 Now you can create, retrieve, update and delete items using the above caching classes:
 
@@ -100,31 +99,6 @@ $total = $productsCount->get();
 
 // remove the cache item
 $cache->deleteItem('stats.products_count');
-```
-
-### For manipulation with cache using `var_export`, we use the `BiuradPHP\Cache\MemoryCache`:
-
----
-
-```php
-use BiuradPHP\Cache\MemoryCache;
-
-$cache = new MemoryCache(getcwd() . '/memory_cache');
-```
-
-```php
-// assign a value to the item and save it
-$products = [...]; // An array of products
-$cache->saveData('stats.products', $products);
-
-if (null === $productsCount) {
-    // ... item does not exist in the cache
-}
-
-// retrieve the value stored by the item
-$total = $cache->loadData('stats.products');
-
-// Remove cache item, by deleting the cache file.
 ```
 
 ### For manipulation with cache using an advanced caching system, we use the `BiuradPHP\Cache\FastCache`:
@@ -290,6 +264,7 @@ Check out the other cool things people are doing with `biurad/php-cache`: <https
 [Composer]: https://getcomposer.org
 [PSR-6]: http://www.php-fig.org/psr/psr-6/
 [PSR-16]: http://www.php-fig.org/psr/psr-16/
+[PHP]: https://php.net
 [@divineniiquaye]: https://github.com/divineniiquaye
 [docs]: https://docs.biurad.com/php-cache
 [commit]: https://commits.biurad.com/php-cache.git
