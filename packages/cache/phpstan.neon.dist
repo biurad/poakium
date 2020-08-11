@@ -15,7 +15,7 @@ parameters:
         - '#Anonymous function should have native return typehint "\?int".#'
         - '#Foreach overwrites \$value with its value variable.#'
         - '#Call to an undefined method ReflectionProperty::getType\(\).#'
-        - '#Cannot call method add() on DateTime|false.#'
+        - '#^Cannot call method add\\(\\) on DateTime\\|false.$#'
         - '#Only booleans are allowed in an if condition, int given.#'
         - '#Anonymous function should have native return typehint "Biurad\\Cache\\CacheItem".#'
         - '#Anonymous function should have native return typehint "array".#'
