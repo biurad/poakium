@@ -25,9 +25,10 @@ jobs:
 
     phpunit:
         name: PHPUnit on ${{ matrix.php }}
-        runs-on: ubuntu-latest
+        runs-on: ${{ matrix.operating-system }}
         strategy:
             matrix:
+                operating-system: [ubuntu-latest, windows-latest, macos-latest]
                 php: ["7.2", "7.3", "7.4"]
                 coverage: [true]
                 composer-flags: [""]
