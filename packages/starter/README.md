@@ -14,7 +14,7 @@ As to why this project exist, it's to serve as a template for future open source
 
 ## 📦 Installation & Basic Usage
 
-This project requires PHP 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
+This project requires [PHP] 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
 $ composer require biurad/php-library-starter
@@ -88,6 +88,7 @@ You're free to use this package, but if it makes it to your production environme
 
 Check out the other cool things people are doing with `biurad/php-library-starter`: <https://packagist.org/packages/biurad/php-library-starter/dependents>
 
+[PHP]: https://php.net
 [Composer]: https://getcomposer.org
 [@divineniiquaye]: https://github.com/divineniiquaye
 [docs]: https://docs.biurad.com/php-library-starter
