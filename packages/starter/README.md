@@ -20,7 +20,7 @@ This project requires [PHP] 7.1 or higher. The recommended way to install, is vi
 $ composer require biurad/php-library-starter
 ```
 
-Write a bit of **How To** use this package, so developers can have abit of idea about the repository before checking out documentation.
+Write a bit of **How To** use this package, so developers can have a bit of idea about the repository before checking out documentation.
 
 ## 📓 Documentation
 
