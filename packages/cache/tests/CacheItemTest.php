@@ -19,6 +19,7 @@ namespace Biurad\Cache\Tests;
 
 use Biurad\Cache\CacheItem;
 use Biurad\Cache\Exceptions\InvalidArgumentException;
+use DateInterval;
 use DateTime;
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -28,12 +29,110 @@ class CacheItemTest extends TestCase
 {
     public function testValidKey(): void
     {
-
         self::assertSame('foo', CacheItem::validateKey('foo'));
+    }
+
+    public function testGetKey(): void
+    {
+        $item = new CacheItem();
+
+        $r = new ReflectionProperty($item, 'key');
+        $r->setAccessible(true);
+        $r->setValue($item, 'test_key');
+
+        self::assertEquals('test_key', $item->getKey());
+    }
+
+    public function testSet(): void
+    {
+        $item = new CacheItem();
+        self::assertEquals(null, $item->get());
+
+        $item->set('data');
+        self::assertEquals('data', $item->get());
+    }
+
+    public function testGet(): void
+    {
+        $item = new CacheItem();
+        self::assertNull($item->get());
+
+        $item->set('data');
+        self::assertEquals('data', $item->get());
+    }
+
+    public function testHit(): void
+    {
+        $item = new CacheItem();
+        self::assertFalse($item->isHit());
+
+        $r    = new ReflectionProperty($item, 'isHit');
+        $r->setAccessible(true);
+        $r->setValue($item, true);
+
+        self::assertTrue($item->isHit());
+    }
+
+    public function testGetExpirationTimestamp(): void
+    {
+        $item = new CacheItem();
+
+        $r = new ReflectionProperty($item, 'expiry');
+        $r->setAccessible(true);
+
+        self::assertNull($r->getValue($item));
+
+        $timestamp = \time();
+
+        $r->setValue($item, $timestamp);
+        self::assertEquals($timestamp, $r->getValue($item));
+    }
+
+    public function testExpiresAt(): void
+    {
+        $item = new CacheItem();
+
+        $r = new ReflectionProperty($item, 'expiry');
+        $r->setAccessible(true);
+
+        $item->expiresAt(new DateTime('30 seconds'));
+        self::assertEquals(30, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
+
+        $item->expiresAt(null);
+        self::assertNull($r->getValue($item));
+    }
+
+    public function testExpiresAtException(): void
+    {
+        $item = new CacheItem();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expiration date must implement DateTimeInterface or be null.');
+
+        $item->expiresAt('string');
+    }
+
+    public function testExpiresAfter(): void
+    {
+        $item      = new CacheItem();
+        $timestamp = \time() + 1;
+
+        $r = new ReflectionProperty($item, 'expiry');
+        $r->setAccessible(true);
+
+        $item->expiresAfter($timestamp);
+        self::assertEquals($timestamp, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
+
+        $item->expiresAfter(new DateInterval('PT1S'));
+        self::assertEquals(1, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
+
+        $item->expiresAfter(null);
+        self::assertNull($r->getValue($item));
     }
 
     /**
      * @dataProvider provideInvalidKey
+     *
      * @param mixed $key
      */
     public function testInvalidKey($key): void
@@ -43,6 +142,9 @@ class CacheItemTest extends TestCase
         CacheItem::validateKey($key);
     }
 
+    /**
+     * @return string[]
+     */
     public function provideInvalidKey(): array
     {
         return [
@@ -62,40 +164,5 @@ class CacheItemTest extends TestCase
             [[[]]],
             [new Exception('foo')],
         ];
-    }
-
-    /**
-     * @throws \ReflectionException
-     */
-    public function testItem(): void
-    {
-        $item = new CacheItem();
-        $r    = new ReflectionProperty($item, 'key');
-        $r->setAccessible(true);
-        $r->setValue($item, 'foo');
-
-        $r = new ReflectionProperty($item, 'defaultLifetime');
-        $r->setAccessible(true);
-        $r->setValue($item, 1);
-
-        $item->set('data');
-
-        self::assertEquals('foo', $item->getKey());
-        self::assertEquals('data', $item->get());
-
-        $item->expiresAt(new DateTime('30 seconds'));
-        $r = new ReflectionProperty(CacheItem::class, 'expiry');
-        $r->setAccessible(true);
-        self::assertIsFloat($r->getValue($item));
-        self::assertEquals(30, (int) (0.1 + $r->getValue($item) - microtime(true)));
-
-        $item->expiresAfter(null);
-        $r = new ReflectionProperty($item, 'expiry');
-        $r->setAccessible(true);
-        self::assertIsFloat($r->getValue($item));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expiration date must implement DateTimeInterface or be null.');
-        $item->expiresAt('string');
     }
 }
