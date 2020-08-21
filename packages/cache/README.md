@@ -37,36 +37,6 @@ The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in 
 
 Now you can create, retrieve, update and delete items using the above caching classes:
 
-### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\SimpleCache`:
-
----
-
-If you want a quick caching strategy for your application, use [PSR-16] caching strategy. Its so simple and straight forward.
-
-```php
-use Biurad\Cache\SimpleCache;
-
-$cache = new SimpleCache($storage); // psr-16 caching
-```
-
-```php
-// assign a value to the item and save it
-$cache->set('stats.products_count', 4711);
-
-// retrieve the cache item
-$productsCount = $cache->get('stats.products_count');
-
-if (null === $productsCount) {
-    // ... item does not exist in the cache
-}
-
-// retrieve the value stored by the item
-$total = $productsCount;
-
-// remove the cache item
-$cache->delete('stats.products_count');
-```
-
 ### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\CacheItemPool`:
 
 ---
@@ -101,6 +71,36 @@ $total = $productsCount->get();
 $cache->deleteItem('stats.products_count');
 ```
 
+### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\SimpleCache`:
+
+---
+
+If you want a quick caching strategy for your application, use [PSR-16] caching strategy. Its so simple and straight forward.
+
+```php
+use Biurad\Cache\SimpleCache;
+
+$cache = new SimpleCache($cache); // psr-16 caching
+```
+
+```php
+// assign a value to the item and save it
+$cache->set('stats.products_count', 4711);
+
+// retrieve the cache item
+$productsCount = $cache->get('stats.products_count');
+
+if (null === $productsCount) {
+    // ... item does not exist in the cache
+}
+
+// retrieve the value stored by the item
+$total = $productsCount;
+
+// remove the cache item
+$cache->delete('stats.products_count');
+```
+
 ### For manipulation with cache using an advanced caching system, we use the `BiuradPHP\Cache\FastCache`:
 
 ---
@@ -115,7 +115,7 @@ use BiuradPHP\Cache\FastCache;
 // you can use any of doctrine cache adapter
 $storage = new Doctrine\Common\Cache\ArrayCache();
 
-$psr6 = new CacheItemPool($psr16 = new SimpleCache($storage)); // psr-16 cache in psr-6 cache.
+$psr16 = new SimpleCache($psr6 = new CacheItemPool($storage)); // psr-6 cache in psr-16 cache.
 
 $cache = new FastCache($psr16);
 //or
