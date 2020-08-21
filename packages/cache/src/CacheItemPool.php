@@ -17,22 +17,18 @@ declare(strict_types=1);
 
 namespace Biurad\Cache;
 
-use BadMethodCallException;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Closure;
-use Exception;
-use Generator;
+use Doctrine\Common\Cache\Cache as DoctrineCache;
+use Doctrine\Common\Cache\FlushableCache;
+use Doctrine\Common\Cache\MultiOperationCache;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
-use Psr\SimpleCache\CacheInterface;
-use stdClass;
-use Traversable;
 
 class CacheItemPool implements CacheItemPoolInterface
 {
-    /**
-     * @var CacheInterface
-     */
-    protected $pool;
+    /** @var DoctrineCache */
+    private $cache;
 
     /**
      * @var Closure needs to be set by class, signature is function(string <key>, mixed <value>, bool <isHit>)
@@ -50,32 +46,194 @@ class CacheItemPool implements CacheItemPoolInterface
     /** @var array<string,string> */
     private $ids = [];
 
-    /** @var stdclass */
-    private $miss;
-
     /**
      * Cache Constructor.
      *
-     * @psalm-suppress InaccessibleProperty
-     * @psalm-suppress PossiblyUndefinedVariable
-     *
-     * @param CacheInterface $psr16
+     * @param DoctrineCache $doctrine
      */
-    public function __construct(CacheInterface $psr16)
+    public function __construct(DoctrineCache $doctrine)
     {
-        $this->pool = $psr16;
-        $this->miss = new stdClass();
+        $this->cache = $doctrine;
 
+        $this->createCacheItem();
+        $this->mergeByLifetime(Closure::fromCallable([$this, 'getId']));
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function __destruct()
+    {
+        if (!empty($this->deferred)) {
+            $this->commit();
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getItem($key): CacheItemInterface
+    {
+        if (!empty($this->deferred)) {
+            $this->commit();
+        }
+
+        $id    = $this->getId($key);
+        $isHit = $this->cache->contains($id);
+        $value = $this->cache->fetch($id);
+
+        return ($this->createCacheItem)($id, $value, $isHit);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getItems(array $keys = [])
+    {
+        $items = [];
+
+        foreach ($keys as $key) {
+            $items[$key] = $this->getItem($key);
+        }
+
+        return $items;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasItem($key): bool
+    {
+        return $this->getItem($key)->isHit();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function clear(): bool
+    {
+        // Clear the deferred items
+        $this->deferred = [];
+
+        if ($this->cache instanceof FlushableCache) {
+            return $this->cache->flushAll();
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteItem($key): bool
+    {
+        return $this->deleteItems([$key]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteItems(array $keys): bool
+    {
+        $deleted = true;
+
+        foreach ($keys as $key) {
+            $key = $this->getId($key);
+
+            // Delete form deferred
+            unset($this->deferred[$key]);
+
+            // We have to commit here to be able to remove deferred hierarchy items
+            $this->commit();
+
+            if (!$this->cache->delete($key)) {
+                $deleted = false;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function save(CacheItemInterface $item): bool
+    {
+        $this->saveDeferred($item);
+
+        return $this->commit();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function saveDeferred(CacheItemInterface $item): bool
+    {
+        $this->deferred[$item->getKey()] = $item;
+
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function commit(): bool
+    {
+        $ok             = true;
+        $byLifetime     = $this->mergeByLifetime;
+        $expiredIds     = [];
+        $byLifetime     = $byLifetime($this->deferred, $expiredIds);
+
+        \assert($this->cache instanceof MultiOperationCache);
+
+        if (!empty($expiredIds)) {
+            $this->cache->deleteMultiple($expiredIds);
+        }
+
+        foreach ($byLifetime as $lifetime => $values) {
+            if ($this->cache->saveMultiple($values, $lifetime)) {
+                continue;
+            }
+
+            $ok = false;
+        }
+        $this->deferred = [];
+
+        return $ok;
+    }
+
+    /**
+     * @param mixed $key
+     *
+     * @return string
+     */
+    private function getId($key): string
+    {
+        if (!\is_string($key)) {
+            throw new InvalidArgumentException(
+                \sprintf('Cache key must be string, "%s" given', \gettype($key))
+            );
+        }
+
+        $key = CacheItem::validateKey($key);
+
+        return $this->ids[$key] ?? $this->ids[$key] = $key;
+    }
+
+    private function createCacheItem(): void
+    {
         $this->createCacheItem = Closure::bind(
-            static function ($key, $value, $isHit) {
+            static function (string $key, $value, bool $isHit): CacheItemInterface {
                 $item = new CacheItem();
-                $item->key = $key;
-                $item->value = $v = $value;
+                $item->key   = $key;
+                $item->value = $v = $isHit ? $value : null;
                 $item->isHit = $isHit;
                 $item->defaultLifetime = 0;
+
                 // Detect wrapped values that encode for their expiry and creation duration
                 // For compactness, these values are packed in the key of an array using
                 // magic numbers in the form 9D-..-..-..-..-00-..-..-..-5F
+                // @codeCoverageIgnoreStart
                 if (
                     \is_array($v) &&
                     1 === \count($v) &&
@@ -86,15 +244,19 @@ class CacheItemPool implements CacheItemPoolInterface
                 ) {
                     $item->value = $v[$k];
                 }
+                // @codeCoverageIgnoreEnd
 
                 return $item;
             },
             null,
             CacheItem::class
         );
-        $getId                 = Closure::fromCallable([$this, 'getId']);
+    }
+
+    private function mergeByLifetime(callable $getId): void
+    {
         $this->mergeByLifetime = Closure::bind(
-            static function ($deferred, &$expiredIds) use ($getId) {
+            static function ($deferred, &$expiredIds) use ($getId): array {
                 $byLifetime = [];
                 $now = \microtime(true);
                 $expiredIds = [];
@@ -120,271 +282,5 @@ class CacheItemPool implements CacheItemPoolInterface
             null,
             CacheItem::class
         );
-    }
-
-    public function __destruct()
-    {
-        if (\count($this->deferred) > 0) {
-            $this->commit();
-        }
-    }
-
-    public function __sleep(): void
-    {
-        throw new BadMethodCallException('Cannot serialize ' . __CLASS__);
-    }
-
-    public function __wakeup(): void
-    {
-        throw new BadMethodCallException('Cannot unserialize ' . __CLASS__);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getItem($key)
-    {
-        if (\count($this->deferred) > 0) {
-            $this->commit();
-        }
-
-        $id    = $this->getId($key);
-        $f     = $this->createCacheItem;
-        $isHit = false;
-        $value = null;
-
-        try {
-            foreach ($this->doFetch([$id]) as $value) {
-                $isHit = true;
-            }
-
-            return $f($key, $value, $isHit);
-        } catch (Exception $e) {
-            return $f($key, null, false);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array<string,CacheItemInterface>|Traversable
-     */
-    public function getItems(array $keys = [])
-    {
-        if (\count($this->deferred) > 0) {
-            $this->commit();
-        }
-        $kIds = [];
-
-        foreach ($keys as $key) {
-            $kIds[] = $this->getId($key);
-        }
-
-        $items  = $this->doFetch($kIds);
-        $kIds   = \array_combine($kIds, $keys);
-
-        return $this->generateItems($items, $kIds);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function hasItem($key)
-    {
-        $id = $this->getId($key);
-
-        if (isset($this->deferred[$key])) {
-            $this->commit();
-        }
-
-        return $this->doHave($id);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function clear()
-    {
-        $this->deferred = [];
-
-        return $this->doClear();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function deleteItem($key)
-    {
-        return $this->deleteItems([$key]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function deleteItems(array $keys)
-    {
-        $kIds = [];
-
-        foreach ($keys as $key) {
-            $kIds[$key] = $this->getId($key);
-            unset($this->deferred[$key]);
-        }
-
-        return $this->doDelete($kIds);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function save(CacheItemInterface $item)
-    {
-        $this->saveDeferred($item);
-
-        return $this->commit();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function saveDeferred(CacheItemInterface $item)
-    {
-        $this->deferred[$item->getKey()] = $item;
-
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function commit()
-    {
-        $ok             = true;
-        $byLifetime     = $this->mergeByLifetime;
-        $this->deferred = $expiredIds = [];
-        $byLifetime     = $byLifetime($this->deferred, $expiredIds);
-
-        if (\count($expiredIds) > 0) {
-            $this->doDelete($expiredIds);
-        }
-
-        foreach ($byLifetime as $lifetime => $values) {
-            if ($this->doSave($values, $lifetime)) {
-                continue;
-            }
-
-            $ok = false;
-        }
-
-        return $ok;
-    }
-
-    /**
-     * Fetches several cache items.
-     *
-     * @param array<mixed,string> $ids The cache identifiers to fetch
-     *
-     * @return iterable<string,CacheItemInterface> The corresponding values found in the cache
-     */
-    protected function doFetch(array $ids)
-    {
-        $fetched = $this->pool->getMultiple($ids, $this->miss);
-
-        if ($fetched instanceof Generator) {
-            $fetched = $fetched->getReturn();
-        }
-
-        foreach ($fetched as $key => $value) {
-            if ($this->miss !== $value) {
-                yield $key => $value;
-            }
-        }
-    }
-
-    /**
-     * Confirms if the cache contains specified cache item.
-     *
-     * @param string $id The identifier for which to check existence
-     *
-     * @return bool True if item exists in the cache, false otherwise
-     */
-    protected function doHave(string $id)
-    {
-        return $this->pool->has($id);
-    }
-
-    /**
-     * Deletes all items in the pool.
-     *
-     * @return bool True if the pool was successfully cleared, false otherwise
-     */
-    protected function doClear()
-    {
-        return $this->pool->clear();
-    }
-
-    /**
-     * Removes multiple items from the pool.
-     *
-     * @param array<string,string> $ids An array of identifiers that should be removed from the pool
-     *
-     * @return bool True if the items were successfully removed, false otherwise
-     */
-    protected function doDelete(array $ids)
-    {
-        return $this->pool->deleteMultiple($ids);
-    }
-
-    /**
-     * Persists several cache items immediately.
-     *
-     * @param array<string,mixed> $values   The values to cache, indexed by their cache identifier
-     * @param int                 $lifetime The lifetime of the cached values, 0 for persisting until manual cleaning
-     *
-     * @return bool a boolean stating if caching succeeded or not
-     */
-    protected function doSave(array $values, int $lifetime)
-    {
-        return $this->pool->setMultiple($values, 0 === $lifetime ? null : $lifetime);
-    }
-
-    /**
-     * @param iterable<string,mixed> $items
-     * @param array<string,string>   $keys
-     *
-     * @return array<string,CacheItemInterface>|Traversable
-     */
-    private function generateItems(iterable $items, array &$keys)
-    {
-        $f = $this->createCacheItem;
-
-        foreach ($items as $id => $value) {
-            if (!isset($keys[$id])) {
-                $id = \key($keys);
-            }
-            $key = $keys[$id];
-            unset($keys[$id]);
-
-            yield $key => $f($key, $value, true);
-        }
-
-        foreach ($keys as $key) {
-            yield $key => $f($key, null, false);
-        }
-    }
-
-    /**
-     * @param mixed $key
-     *
-     * @return string
-     */
-    private function getId($key)
-    {
-        if (\is_string($key) && isset($this->ids[$key])) {
-            return $this->ids[$key];
-        }
-        CacheItem::validateKey($key);
-        $this->ids[$key] = $key;
-
-        return $key;
     }
 }

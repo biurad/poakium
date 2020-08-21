@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Cache;
 
-use Biurad\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Exceptions\CacheException;
 use Doctrine\Common\Cache as DoctrineCache;
 use Memcache;
 use Memcached;
@@ -26,6 +26,8 @@ use SQLite3;
 use TypeError;
 
 /**
+ * @codeCoverageIgnore
+ *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class AdapterFactory
@@ -82,28 +84,34 @@ class AdapterFactory
                 return new DoctrineCache\ZendDataCache();
 
             case self::isPrefixedAdapter($connection, 'redis://'):
-                $adapter = new DoctrineCache\RedisCache();
-
+                $adapter       = new DoctrineCache\RedisCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 8);
-                ($redis = new Redis())->connect($host, (int) $port);
+
+                $redis = new Redis();
+                $redis->connect($host, (int) $port);
+
                 $adapter->setRedis($redis);
 
                 return $adapter;
 
             case self::isPrefixedAdapter($connection, 'memcache://'):
-                $adapter = new DoctrineCache\MemcacheCache();
-
+                $adapter       = new DoctrineCache\MemcacheCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 11);
-                ($memcache = new Memcache())->addServer($host, (int) $port);
+
+                $memcache = new Memcache();
+                $memcache->addServer($host, (int) $port);
+
                 $adapter->setMemcache($memcache);
 
                 return $adapter;
 
             case self::isPrefixedAdapter($connection, 'memcached://'):
-                $adapter = new DoctrineCache\MemcachedCache();
-
+                $adapter       = new DoctrineCache\MemcachedCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 12);
-                ($memcached = new Memcached())->addServer($host, (int) $port);
+
+                $memcached = new Memcached();
+                $memcached->addServer($host, (int) $port);
+
                 $adapter->setMemcached($memcached);
 
                 return $adapter;
@@ -124,7 +132,7 @@ class AdapterFactory
                 return new DoctrineCache\SQLite3Cache(new SQLite3($filename), $table);
         }
 
-        throw new InvalidArgumentException(
+        throw new CacheException(
             \sprintf('Unsupported Cache Adapter: %s.', \is_object($connection) ? \get_class($connection) : $connection)
         );
     }
@@ -142,7 +150,7 @@ class AdapterFactory
             return \explode(':', \substr((string) $connection, $limit));
         }
 
-        if (\strpos(':', $tempDir = \substr((string) $connection, $limit))) {
+        if (false !== \strpos(':', $tempDir = \substr((string) $connection, $limit))) {
             return \explode(':', $tempDir);
         }
 

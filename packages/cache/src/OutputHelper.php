@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\InvalidArgumentException;
+use Biurad\Cache\Interfaces\FastCacheInterface;
 use Psr\Cache\CacheItemInterface;
 
 /**
@@ -25,7 +26,7 @@ use Psr\Cache\CacheItemInterface;
  */
 class OutputHelper
 {
-    /** @var null|FastCache */
+    /** @var null|FastCacheInterface */
     private $cache;
 
     /** @var string */
@@ -33,9 +34,9 @@ class OutputHelper
 
     /**
      * @param FastCache $cache
-     * @param mixed $key
+     * @param mixed     $key
      */
-    public function __construct(FastCache $cache, $key)
+    public function __construct(FastCacheInterface $cache, $key)
     {
         $this->cache = $cache;
         $this->key   = $key;

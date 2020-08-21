@@ -112,7 +112,7 @@ class FastCache implements FastCacheInterface
      */
     public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array
     {
-        if (0 === \count($keys)) {
+        if (empty($keys)) {
             return [];
         }
 
@@ -187,7 +187,7 @@ class FastCache implements FastCacheInterface
         static $setExpired;
 
         $setExpired = Closure::bind(
-            static function (CacheItem $item) {
+            static function (CacheItem $item): ?int {
                 if (null === $item->expiry) {
                     return null;
                 }
@@ -199,7 +199,7 @@ class FastCache implements FastCacheInterface
         );
 
         if ($this->storage instanceof PhpCachePool) {
-            $setExpired = static function (PhpCacheItem $item) {
+            $setExpired = static function (PhpCacheItem $item): ?int {
                 return $item->getExpirationTimestamp();
             };
         }
@@ -226,7 +226,7 @@ class FastCache implements FastCacheInterface
             }
         };
 
-        return $this->doSave($this->storage, $key, $callback, $setExpired, $beta);
+        return $this->doSave($key, $callback, $setExpired, $beta);
     }
 
     /**
@@ -291,7 +291,7 @@ class FastCache implements FastCacheInterface
      *
      * @return string
      */
-    protected function generateKey($key): string
+    private function generateKey($key): string
     {
         if (\is_array($key) && \current($key) instanceof Closure) {
             $key = \spl_object_id($key[0]);
@@ -299,24 +299,24 @@ class FastCache implements FastCacheInterface
 
         $key = \md5(\is_scalar($key) ? (string) $key : \serialize($key));
 
-        return \strpos($this->namespace, '%s') ? \sprintf($this->namespace, $key) : $this->namespace . $key;
+        return false !== \strpos($this->namespace, '%s')
+            ? \sprintf($this->namespace, $key) : $this->namespace . $key;
     }
 
     /**
      * Save cache item.
      *
-     * @param CacheInterface|CacheItemPoolInterface $storage
-     * @param string                                $key
-     * @param Closure                               $callback
-     * @param Closure                               $setExpired
-     * @param null|float                            $beta
-     *
-     * @psalm-suppress RedundantCondition
+     * @param string     $key
+     * @param Closure    $callback
+     * @param Closure    $setExpired
+     * @param null|float $beta
      *
      * @return mixed The corresponding values found in the cache
      */
-    protected function doSave($storage, string $key, Closure $callback, Closure $setExpired, ?float $beta)
+    private function doSave(string $key, Closure $callback, Closure $setExpired, ?float $beta)
     {
+        $storage = clone $this->storage;
+
         if ($storage instanceof CacheItemPoolInterface) {
             $item = $storage->getItem($key);
 
@@ -357,7 +357,7 @@ class FastCache implements FastCacheInterface
      *
      * @return mixed The corresponding values found in the cache
      */
-    protected function doFetch($ids)
+    private function doFetch($ids)
     {
         if ($this->storage instanceof CacheItemPoolInterface) {
             return !\is_array($ids) ? $this->storage->getItem($ids) : $this->storage->getItems($ids);
@@ -373,7 +373,7 @@ class FastCache implements FastCacheInterface
      *
      * @return bool True if the items were successfully removed, false otherwise
      */
-    protected function doDelete(string $id)
+    private function doDelete(string $id)
     {
         if ($this->storage instanceof CacheItemPoolInterface) {
             return $this->storage->deleteItem($id);

@@ -31,19 +31,19 @@ final class CacheItem implements CacheItemInterface
     public const RESERVED_CHARACTERS = '{}()/\@:';
 
     /** @var string */
-    protected $key;
+    private $key;
 
     /** @var mixed */
-    protected $value;
+    private $value;
 
     /** @var bool */
-    protected $isHit = false;
+    private $isHit = false;
 
-    /** @var float|int|null */
-    protected $expiry;
+    /** @var null|float|int */
+    private $expiry;
 
     /** @var int */
-    protected $defaultLifetime;
+    private $defaultLifetime;
 
     /**
      * {@inheritdoc}
@@ -71,10 +71,8 @@ final class CacheItem implements CacheItemInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @return $this
      */
-    public function set($value): self
+    public function set($value)
     {
         $this->value = $value;
 
@@ -83,33 +81,34 @@ final class CacheItem implements CacheItemInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @return $this
      */
-    public function expiresAt($expiration): self
+    public function expiresAt($expiration)
     {
         if (null === $expiration) {
-            $this->expiry = $this->defaultLifetime > 0 ? \microtime(true) + $this->defaultLifetime : null;
-        } elseif ($expiration instanceof DateTimeInterface) {
-            $this->expiry = (float) $expiration->format('U.u');
-        } else {
+            return $this->setDefaultExpiration();
+        }
+
+        if (!$expiration instanceof DateTimeInterface) {
             throw new InvalidArgumentException('Expiration date must implement DateTimeInterface or be null.');
         }
+
+        $this->expiry = (float) $expiration->format('U.u');
 
         return $this;
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @return $this
      */
-    public function expiresAfter($time): self
+    public function expiresAfter($time)
     {
         if (null === $time) {
-            $this->expiry = $this->defaultLifetime > 0 ? \microtime(true) + $this->defaultLifetime : null;
-        } elseif ($time instanceof DateInterval) {
-            $this->expiry = \microtime(true) + (int) DateTime::createFromFormat('U', '0')->add($time)->format('U.u');
+            return $this->setDefaultExpiration();
+        }
+
+        if ($time instanceof DateInterval) {
+            $interval     = DateTime::createFromFormat('U', '0')->add($time);
+            $this->expiry = \microtime(true) + (int) $interval->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);
         } else {
@@ -124,8 +123,9 @@ final class CacheItem implements CacheItemInterface
      *
      * @param string $key The key to validate
      *
-     * @return string
      * @throws InvalidArgumentException When $key is not valid
+     *
+     * @return string
      */
     public static function validateKey($key): string
     {
@@ -144,5 +144,15 @@ final class CacheItem implements CacheItemInterface
         }
 
         return $key;
+    }
+
+    /**
+     * @return static
+     */
+    private function setDefaultExpiration(): self
+    {
+        $this->expiry = $this->defaultLifetime > 0 ? \microtime(true) + $this->defaultLifetime : null;
+
+        return $this;
     }
 }

@@ -17,10 +17,9 @@ declare(strict_types=1);
 
 namespace Biurad\Cache\Exceptions;
 
-use InvalidArgumentException as GlobalInvalidArgumentException;
+use Exception;
 use Psr\Cache\InvalidArgumentException as Psr6Exception;
-use Psr\SimpleCache\InvalidArgumentException as Psr16Exception;
 
-class InvalidArgumentException extends GlobalInvalidArgumentException implements Psr6Exception, Psr16Exception
+class InvalidArgumentException extends Exception implements Psr6Exception
 {
 }
