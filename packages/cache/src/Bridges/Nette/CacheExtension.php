@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Cache\Bridges;
+namespace Biurad\Cache\Bridges\Nette;
 
 use Biurad\Cache\AdapterFactory;
 use Biurad\Cache\Interfaces\CacheAdapterInterface;
