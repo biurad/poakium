@@ -2,7 +2,7 @@
     "name": "biurad/cache",
     "type": "library",
     "description": "A library that provides additional functionality doctrine/cache",
-    "keywords": ["caching","cache","psr6","psr16","doctrine","biuradphp","php7", "php"],
+    "keywords": ["caching","cache","psr6","psr16","doctrine","biurad","php7", "php"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -23,17 +23,20 @@
     },
     "require": {
         "php": "^7.1 || ^8.0",
+        "cache/simple-cache-bridge": "^1.0",
         "doctrine/cache": "^1.9",
         "psr/cache": "^1.0",
         "psr/simple-cache": "^1.0"
     },
     "require-dev": {
         "cache/doctrine-adapter": "^1.0",
+        "cache/integration-tests": "dev-master",
         "composer/package-versions-deprecated": "^1.8",
         "phpstan/phpstan": "^0.12",
         "phpstan/phpstan-strict-rules": "^0.12",
         "phpunit/phpunit": "^8.5 || ^9.0",
         "squizlabs/php_codesniffer": "^3.5",
+        "symfony/phpunit-bridge": "^5.1",
         "vimeo/psalm": "^3.11"
     },
     "suggest": {
