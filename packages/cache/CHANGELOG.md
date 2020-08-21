@@ -13,6 +13,7 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Added **.editorconfig** and **.gitattributes** files
 - Added phpunit tests for PSR6 and PRS-16
 - Added tests for **psalm**, **github actions**, **phpstan** and **phpcs** for PSR-12 coding standing
+- Added **cache/simple-cache-bridge** and **cache/integration-tests** integration
 
 ### Changed
 - Replaced `BiuradPHP` namespace to `Biurad` on all classes.
@@ -24,6 +25,8 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Updated `CHANGELOG.md` file for [unreleased] version
 - Replaced `Support_us.md` with `FUNDING.yml` in **.github** folder
 - Made changes to `CONTRIBUTING.md` file and moved it to **.github** folder
+- Made `Biurad\Cache\SimleCache` class as bridge to PSR-6
+- Updated `BiuradPHP\Cache\Bridges\CacheExtension` class namespace to add a `Nette` before `CacheExtension`
 
 ### Fixed
 - Fixed minor issues with parsing integers when used with **nette/di**
