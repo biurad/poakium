@@ -35,7 +35,7 @@
         </PossiblyUndefinedVariable>
         
         <UndefinedClass>
-            <errorLevel type="supppress">
+            <errorLevel type="suppress">
                 <file name="src/AdapterFactory.php"/>
             </errorLevel>
         </UndefinedClass>
