@@ -13,13 +13,15 @@ matrix:
     fast_finish: true
 
 before_install:
-    - composer self-update
+    - composer self-update --preview
 
 install:
     - composer update --no-interaction
 
 script:
     - ./vendor/bin/phpcs
+    - ./vendor/bin/phpstan
+    - ./vendor/bin/psalm
     - ./vendor/bin/phpunit --coverage-clover=coverage.xml
 
 after_success:
