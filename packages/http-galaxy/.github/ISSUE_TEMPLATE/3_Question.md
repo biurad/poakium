@@ -9,5 +9,5 @@ assignees: ''
 
 ## Question
 
-- Have you tried checking the documentation first? https://docs.biurad.com/php-http
+- Have you tried checking the documentation first? https://docs.biurad.com/http-galaxy
 - Replace this with your question
