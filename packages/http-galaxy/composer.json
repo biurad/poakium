@@ -1,18 +1,8 @@
 {
-    "name": "biurad/biurad-http",
+    "name": "biurad/http-galaxy",
     "type": "library",
-    "description": "Http Pipeline: abstraction for HTTP request, response, and csp protection. Provides careful data sanitization and utility for URL and cookies manipulation.",
-    "keywords": [
-        "http",
-        "request",
-        "response",
-        "csp",
-        "url",
-        "proxy",
-        "cookies",
-        "biuradphp",
-        "php7"
-    ],
+    "description": "Http Galaxy: abstraction for HTTP request, response, and csp protection. Provides careful data sanitization and utility for URL and cookies manipulation.",
+    "keywords": ["http","request","response","csp","url","proxy","cookies","session","PSR-7","PSR-15","PSR-17","PSR-18","biurad","php7"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -25,8 +15,14 @@
             "homepage": "https://biurad.com/contributors"
         }
     ],
+    "support": {
+        "docs": "https://docs.biurad.com/php-http/",
+        "issues": "https://github.com/biurad/php-http/issues",
+        "rss": "https://github.com/biurad/php-http/releases.atom",
+        "source": "https://github.com/biurad/php-http"
+    },
     "require": {
-        "php": "^7.2",
+        "php": "^7.2 || ^8.0",
         "ext-json": "*",
         "ext-mbstring": "*",
         "psr/http-factory": "^1.0",
@@ -35,19 +31,17 @@
         "laminas/laminas-httphandlerrunner": "^1.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "~7.5"
-    },
-    "suggest": {
-        "biurad/biurad-http-cache": "A fully-featured reverse proxy (i.e. gateway cache) written in PHP. Implementation of Symfony HTTP Cache",
-        "biurad/biurad-sessions": "A session object and several utilities that you can use to store information about the user between requests."
+        "composer/package-versions-deprecated": "^1.8",
+        "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-strict-rules": "^0.12",
+        "phpunit/phpunit": "^8.5 || ^9.0",
+        "squizlabs/php_codesniffer": "^3.5",
+        "vimeo/psalm": "^3.11"
     },
     "autoload": {
         "psr-4": {
             "BiuradPHP\\Http\\": "src/"
-        },
-        "exclude-from-classmap": [
-            "/Tests/"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
