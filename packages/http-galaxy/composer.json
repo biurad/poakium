@@ -16,10 +16,10 @@
         }
     ],
     "support": {
-        "docs": "https://docs.biurad.com/php-http/",
-        "issues": "https://github.com/biurad/php-http/issues",
-        "rss": "https://github.com/biurad/php-http/releases.atom",
-        "source": "https://github.com/biurad/php-http"
+        "docs": "https://docs.biurad.com/http-galaxy/",
+        "issues": "https://github.com/biurad/http-galaxy/issues",
+        "rss": "https://github.com/biurad/http-galaxy/releases.atom",
+        "source": "https://github.com/biurad/http-galaxy"
     },
     "require": {
         "php": "^7.2 || ^8.0",
