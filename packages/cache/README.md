@@ -18,7 +18,7 @@ This project requires [PHP] 7.1 or higher. The recommended way to install, is vi
 $ composer require biurad/cache
 ```
 
-This library is designed in an interoperable manner. Using [PSR-16] caching implementation, requires a [Doctrine Cache][] adapter, while [PSR-6] requires [PSR-16].
+This library is designed in an interoperable manner. Using [PSR-6] caching implementation, requires a [Doctrine Cache][] adapter, while [PSR-16] requires [PSR-6].
 
 ```php
 // you can use any of doctrine cache adapter
@@ -37,7 +37,7 @@ The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in 
 
 Now you can create, retrieve, update and delete items using the above caching classes:
 
-### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\CacheItemPool`:
+### For manipulation with cache using [PSR-6], we use the `Biurad\Cache\CacheItemPool`:
 
 ---
 
