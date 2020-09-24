@@ -15,11 +15,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http;
+namespace BiuradPHP\Http\Strategies;
 
-use BiuradPHP\Http\Concerns\IpUtils;
 use BiuradPHP\Http\Interfaces\RequestMatcherInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use BiuradPHP\Http\ServerRequest;
+use BiuradPHP\Http\Utils\IpUtils;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * RequestMatcher compares a pre-defined set of checks against a Request instance.
@@ -29,57 +30,48 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  * Based on https://github.com/symfony/httpfoundation/blob/master/RequestMatcher.php by Fabien
  *
  * @author Fabien Potencier <fabien@symfony.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class Matcher implements RequestMatcherInterface
+class RequestMatcher implements RequestMatcherInterface
 {
-    /**
-     * @var null|string
-     */
+    /** @var null|string */
     private $path;
 
-    /**
-     * @var null|string
-     */
+    /** @var null|string */
     private $host;
 
-    /**
-     * @var null|int
-     */
+    /** @var null|int */
     private $port;
 
-    /**
-     * @var string[]
-     */
+    /** @var string[] */
     private $methods = [];
 
-    /**
-     * @var string[]
-     */
+    /** @var string[] */
     private $ips = [];
 
-    /**
-     * @var array
-     */
+    /** @var array<string,string> */
     private $attributes = [];
 
-    /**
-     * @var string[]
-     */
+    /** @var string[] */
     private $schemes = [];
 
     /**
-     * @param null|string|string[] $methods
-     * @param null|string|string[] $ips
-     * @param null|string|string[] $schemes
+     * @param string               $path
+     * @param string               $host
+     * @param string|string[]      $methods
+     * @param string|string[]      $ips
+     * @param string[]             $schemes
+     * @param int                  $port
+     * @param array<string,string> $attributes
      */
     public function __construct(
         string $path = null,
         string $host = null,
         $methods = null,
         $ips = null,
-        array $attributes = [],
-        $schemes = null,
-        int $port = null
+        array $schemes = null,
+        int $port = null,
+        array $attributes = []
     ) {
         $this->matchPath($path);
         $this->matchHost($host);
@@ -146,7 +138,11 @@ class Matcher implements RequestMatcherInterface
      */
     public function matchIps($ips): void
     {
-        $this->ips = null !== $ips ? (array) $ips : [];
+        $ips = null !== $ips ? (array) $ips : [];
+
+        $this->ips = \array_reduce($ips, static function (array $ips, string $ip) {
+            return \array_merge($ips, \preg_split('/\s*,\s*/', $ip));
+        }, []);
     }
 
     /**
@@ -156,7 +152,7 @@ class Matcher implements RequestMatcherInterface
      */
     public function matchMethod($method): void
     {
-        $this->methods = null !== $method ? \array_map('strtoupper', (array) $method) : [];
+        $this->methods = \array_map('strtoupper', (array) $method ?? []);
     }
 
     /**
@@ -170,15 +166,16 @@ class Matcher implements RequestMatcherInterface
     /**
      * {@inheritdoc}
      */
-    public function matches(Request $request)
+    public function matches(ServerRequestInterface $request): bool
     {
         $requestUri = $request->getUri();
+        $pathInfo   = $this->resolveMatchPath($requestUri->getPath(), $request);
 
-        if ($this->schemes && !\in_array($requestUri->getScheme(), $this->schemes, true)) {
+        if (!empty($this->schemes) && !\in_array($requestUri->getScheme(), $this->schemes, true)) {
             return false;
         }
 
-        if ($this->methods && !\in_array($request->getMethod(), $this->methods, true)) {
+        if (!empty($this->methods) && !\in_array($request->getMethod(), $this->methods, true)) {
             return false;
         }
 
@@ -188,14 +185,7 @@ class Matcher implements RequestMatcherInterface
             }
         }
 
-        $uri      = $requestUri->getPath();
-        $basePath = \dirname($request->getServerParams()['SCRIPT_NAME']);
-
-        if (\strpos($uri, $basePath) !== false) {
-            $uri = \strlen($basePath) > 1 ? \substr($uri, \strlen($basePath)) ?? '/' : $uri;
-        }
-
-        if (null !== $this->path && !\preg_match('{' . $this->path . '}', \rawurldecode($uri))) {
+        if (null !== $this->path && !\preg_match('{' . $this->path . '}', \rawurldecode($pathInfo))) {
             return false;
         }
 
@@ -207,12 +197,32 @@ class Matcher implements RequestMatcherInterface
             return false;
         }
 
-        if (\method_exists($request, 'remoteAddress') && IpUtils::checkIp($request->remoteAddress(), $this->ips)) {
+        if (IpUtils::checkIp($this->resolveMatchIps($request), $this->ips)) {
             return true;
         }
 
         // Note to future implementors: add additional checks above the
         // foreach above or else your check might not be run!
         return 0 === \count($this->ips);
+    }
+
+    private function resolveMatchPath(string $uri, ServerRequestInterface $request): string
+    {
+        $basePath = \dirname($request->getServerParams()['SCRIPT_NAME']);
+
+        if (\strpos($uri, $basePath) !== false) {
+            return \strlen($basePath) > 1 ? \substr($uri, \strlen($basePath)) ?? '/' : $uri;
+        }
+
+        return $uri;
+    }
+
+    private function resolveMatchIps(ServerRequestInterface $request): ?string
+    {
+        if ($request instanceof ServerRequest) {
+            return $request->getRemoteAddress();
+        }
+
+        return $request->getServerParams()['REMOTE_ADDR'] ?? null;
     }
 }
