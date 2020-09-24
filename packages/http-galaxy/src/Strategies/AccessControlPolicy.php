@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Cors;
+namespace BiuradPHP\Http\Strategies;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface;
@@ -35,7 +35,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @internal
  */
-class AccessControl
+class AccessControlPolicy
 {
     private $options;
 

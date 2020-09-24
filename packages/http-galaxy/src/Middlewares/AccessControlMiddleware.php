@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Http\Middlewares;
 
-use BiuradPHP\Http\Cors\AccessControl;
-use BiuradPHP\Http\Matcher;
+use BiuradPHP\Http\Strategies\AccessControlPolicy;
+use BiuradPHP\Http\Strategies\RequestMatcher;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -36,14 +36,14 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-class CorsMiddleware implements MiddlewareInterface
+class AccessControlMiddleware implements MiddlewareInterface
 {
-    /** @var AccessControl */
+    /** @var AccessControlPolicy */
     private $cors;
 
-    public function __construct(?AccessControl $accessControl, array $options = [])
+    public function __construct(?AccessControlPolicy $accessControl, array $options = [])
     {
-        $this->cors = $accessControl ?? new AccessControl($options);
+        $this->cors = $accessControl ?? new AccessControlPolicy($options);
     }
 
     /**
@@ -105,7 +105,7 @@ class CorsMiddleware implements MiddlewareInterface
     {
         // Get the paths from the config or the middleware
         $paths   = $this->cors->getPaths();
-        $matcher =  new Matcher();
+        $matcher =  new RequestMatcher();
 
         foreach ($paths as $path) {
             if ($path !== '/') {
