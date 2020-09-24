@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Cookie;
+namespace BiuradPHP\Http;
 
 use BiuradPHP\Http\Interfaces\CookieInterface;
-use DateTimeInterface;
+use BiuradPHP\Http\Utils\CookieUtil;
 use InvalidArgumentException;
 
 /**
@@ -28,92 +28,11 @@ use InvalidArgumentException;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class CookieFactory implements CookieInterface
+final class Cookie implements CookieInterface
 {
+    use Traits\CookieDecoratorTrait;
+
     public const SAMESITE_COLLECTION = ['lax', 'strict', 'none', null];
-
-    /**
-     * The name of the cookie.
-     *
-     * @var string
-     */
-    private $name = '';
-
-    /**
-     * The value of the cookie. This value is stored on the clients computer; do not store sensitive
-     * information.
-     *
-     * @var null|string
-     */
-    private $value;
-
-    /**
-     * Cookie lifetime. This value specified in seconds and declares period of time in which cookie
-     * will expire relatively to current time() value.
-     *
-     * NOTE: Expires attribute is HTTP 1.0 only and should be avoided.
-     *
-     * @var null|int
-     */
-    private $expires;
-
-    /**
-     * Cookie maxAge. This value specified in seconds and declares period of time in which cookie
-     * will last for.
-     *
-     * @var null|int
-     */
-    private $maxAge;
-
-    /**
-     * The path on the server in which the cookie will be available on.
-     *
-     * If set to '/', the cookie will be available within the entire domain. If set to '/foo/',
-     * the cookie will only be available within the /foo/ directory and all sub-directories such as
-     * /foo/bar/ of domain. The default value is the current directory that the cookie is being set
-     * in.
-     *
-     * @var null|string
-     */
-    private $path;
-
-    /**
-     * The domain that the cookie is available. To make the cookie available on all subdomains of
-     * example.com then you'd set it to '.example.com'. The . is not required but makes it
-     * compatible with more browsers. Setting it to www.example.com will make the cookie only
-     * available in the www subdomain. Refer to tail matching in the spec for details.
-     *
-     * @var null|string
-     */
-    private $domain;
-
-    /**
-     * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the
-     * client. When set to true, the cookie will only be set if a secure connection exists.
-     * On the server-side, it's on the programmer to send this kind of cookie only on secure
-     * connection
-     * (e.g. with respect to $_SERVER["HTTPS"]).
-     *
-     * @var null|bool
-     */
-    private $secure;
-
-    /**
-     * When true the cookie will be made accessible only through the HTTP protocol. This means that
-     * the cookie won't be accessible by scripting languages, such as JavaScript. This setting can
-     * effectively help to reduce identity theft through XSS attacks (although it is not supported
-     * by all browsers).
-     *
-     * @var bool
-     */
-    private $httpOnly = true;
-
-    /**
-     * Indicates the SameSite Attribute on session
-     *
-     * @var string
-     */
-    private $sameSite = 'lax';
 
     /**
      * New Cookie instance, cookies used to schedule cookie set while dispatching Response.
@@ -160,7 +79,7 @@ final class CookieFactory implements CookieInterface
      * @throws InvalidArgumentException if name, value or max age is not valid
      */
     public function __construct(
-        ?string $name = null,
+        string $name,
         string $value = null,
         ?string $path = '/',
         string $domain = null,
@@ -175,17 +94,6 @@ final class CookieFactory implements CookieInterface
         CookieUtil::validateValue($value);
         CookieUtil::validateMaxAge($maxAge);
 
-        // convert expiration time to a Unix timestamp
-        if ($expires instanceof DateTimeInterface) {
-            $expires = $expires->format('U');
-        } elseif (!\is_numeric($expires)) {
-            $expires = \strtotime($expires);
-
-            if (false === $expires) {
-                throw new InvalidArgumentException('The cookie expiration time is not valid.');
-            }
-        }
-
         if (false !== $secure) {
             $httpOnly = false;
         }
@@ -193,7 +101,7 @@ final class CookieFactory implements CookieInterface
         $this->name     = $name;
         $this->value    = $value;
         $this->maxAge   = $maxAge;
-        $this->expires  = $expires;
+        $this->expires  = CookieUtil::normalizeExpires($expires);
         $this->path     = CookieUtil::normalizePath($path);
         $this->domain   = CookieUtil::normalizeDomain($domain);
         $this->secure   = $secure;
@@ -260,21 +168,6 @@ final class CookieFactory implements CookieInterface
 
     /**
      * {@inheritdoc}
-     *
-     * @return CookieFactory
-     */
-    public function withValue(string $value): CookieInterface
-    {
-        CookieUtil::validateValue($value);
-
-        $cookie        = clone $this;
-        $cookie->value = $value;
-
-        return $cookie;
-    }
-
-    /**
-     * {@inheritdoc}
      */
     public function getPath(): ?string
     {
@@ -297,6 +190,32 @@ final class CookieFactory implements CookieInterface
     /**
      * {@inheritdoc}
      */
+    public function getExpires(): ?int
+    {
+        return $this->expires;
+    }
+
+    /**
+     * Gets the max-age attribute.
+     *
+     * @return int
+     */
+    public function getMaxAge(): int
+    {
+        return ($this->expires > 0 && null === $this->maxAge) ? $this->expires - \time() : $this->maxAge;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSameSite(): ?string
+    {
+        return $this->sameSite;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function isSecure(): bool
     {
         return $this->secure;
@@ -305,9 +224,9 @@ final class CookieFactory implements CookieInterface
     /**
      * {@inheritdoc}
      */
-    public function getExpires(): ?int
+    public function isHttpOnly(): bool
     {
-        return $this->expires;
+        return $this->httpOnly;
     }
 
     /**
@@ -328,88 +247,6 @@ final class CookieFactory implements CookieInterface
         }
 
         return false;
-    }
-
-    /**
-     * Gets the max-age attribute.
-     *
-     * @return int
-     */
-    public function getMaxAge(): int
-    {
-        return ($this->expires > 0 && null === $this->maxAge) ? $this->expires - \time() : $this->maxAge;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isHttpOnly(): bool
-    {
-        return $this->httpOnly;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSameSite(): ?string
-    {
-        return $this->sameSite;
-    }
-
-    /**
-     * Checks if this cookie represents the same cookie as $cookie.
-     *
-     * This does not compare the values, only name, domain and path.
-     *
-     * @param CookieInterface $cookie
-     */
-    public function match(self $cookie): bool
-    {
-        return $this->name === $cookie->name && $this->domain === $cookie->domain && $this->path === $cookie->path;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function matchPath($path): bool
-    {
-        return $this->path === $path || (0 === \strpos($path, \rtrim($this->path, '/') . '/'));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function matchDomain($domain): bool
-    {
-        // Domain is not set or exact match
-        if (!isset($this->domain) || 0 === \strcasecmp($domain, $this->domain)) {
-            return true;
-        }
-
-        // Domain is not an IP address
-        if (\filter_var($domain, \FILTER_VALIDATE_IP)) {
-            return false;
-        }
-
-        return (bool) \preg_match(\sprintf('/\b%s$/i', \preg_quote($this->domain)), $domain);
-    }
-
-    /**
-     * Validates cookie attributes of name, value and maxAge.
-     *
-     * @return bool
-     */
-    public function isValid()
-    {
-        try {
-            CookieUtil::validateName($this->name);
-            CookieUtil::validateValue($this->value);
-            CookieUtil::validateMaxAge($this->maxAge);
-        } catch (InvalidArgumentException $e) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

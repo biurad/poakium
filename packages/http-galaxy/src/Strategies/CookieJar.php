@@ -15,8 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Cookie;
+namespace BiuradPHP\Http\Strategies;
 
+use BiuradPHP\Http\Cookie;
 use BiuradPHP\Http\Interfaces\CookieInterface;
 use BiuradPHP\Http\Interfaces\QueueingCookieInterface;
 use Countable;
@@ -262,7 +263,7 @@ class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
      * @param int         $minutes
      * @param int         $maxAge
      *
-     * @return CookieFactory
+     * @return CookieInterface
      */
     protected function setCookie(
         $name,
@@ -274,10 +275,10 @@ class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
         $sameSite = 'lax',
         $maxAge = null,
         $minutes = 0
-    ) {
+    ): CookieInterface {
         [$path, $domain, $secure] = $this->getPathAndDomain($path, $domain, $secure);
 
-        return new CookieFactory($name, $value, $path, $domain, $secure, $httpOnly, $sameSite, $maxAge, $minutes);
+        return new Cookie($name, $value, $path, $domain, $secure, $httpOnly, $sameSite, $maxAge, $minutes);
     }
 
     /**
@@ -285,7 +286,7 @@ class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
      *
      * @param callable $match
      *
-     * @return CookieFactory[]
+     * @return Cookie[]
      */
     protected function findMatchingCookies(callable $match)
     {

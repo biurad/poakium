@@ -92,7 +92,7 @@ interface CookieInterface
     public function getValue(): ?string;
 
     /**
-     * Get new cookie with altered value. Original cookie object should not be changed.
+     * Set new cookie with altered value. Original cookie object should not be changed.
      *
      * @param string $value
      */
@@ -109,12 +109,40 @@ interface CookieInterface
     public function getPath(): ?string;
 
     /**
+     * Set new cookie with altered path. Original cookie object should not be changed.
+     *
+     * @param string $path
+     */
+    public function withPath(string $path): CookieInterface;
+
+    /**
      * The domain that the cookie is available. To make the cookie available on all subdomains of
      * example.com then you'd set it to '.example.com'. The . is not required but makes it
      * compatible with more browsers. Setting it to www.example.com will make the cookie only
      * available in the www subdomain. Refer to tail matching in the spec for details.
      */
     public function getDomain(): ?string;
+
+    /**
+     * Set new cookie with altered domain. Original cookie object should not be changed.
+     *
+     * @param string $domain
+     */
+    public function withDomain(string $domain): CookieInterface;
+
+    /**
+     * Set new cookie with altered secure. Original cookie object should not be changed.
+     *
+     * @param bool $secure
+     */
+    public function withSecure(bool $secure = true): CookieInterface;
+
+    /**
+     * Set new cookie with altered httpOnly. Original cookie object should not be changed.
+     *
+     * @param bool $httpOnly
+     */
+    public function withHttpOnly(bool $httpOnly = true): CookieInterface;
 
     /**
      * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the
@@ -145,6 +173,13 @@ interface CookieInterface
     public function getExpires(): ?int;
 
     /**
+     * Set new cookie with altered expires. Original cookie object should not be changed.
+     *
+     * @param null|\DateTimeInterface|int|string $expires
+     */
+    public function withExpires($expires): CookieInterface;
+
+    /**
      * Gets the max-age attribute, always returns an integer. The reason is if maxAge is not set
      * in cookie instance, an integer value is returned from `getExpires()` method.
      *
@@ -153,11 +188,25 @@ interface CookieInterface
     public function getMaxAge(): int;
 
     /**
+     * Set new cookie with altered maxAge. Original cookie object should not be changed.
+     *
+     * @param null|int $maxAge
+     */
+    public function withMaxAge(?int $maxAge): CookieInterface;
+
+    /**
      * Gets the SameSite attribute, fully supported in php 7.3 above.
      *
      * @return null|string
      */
     public function getSameSite(): ?string;
+
+    /**
+     * Set new cookie with altered sameSite. Original cookie object should not be changed.
+     *
+     * @param null|string $sameSite
+     */
+    public function withSameSite(?string $sameSite): CookieInterface;
 
     /**
      * Checks whether this cookie is meant for this path.

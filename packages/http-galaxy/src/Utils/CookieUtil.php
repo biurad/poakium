@@ -15,11 +15,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Cookie;
+namespace BiuradPHP\Http\Utils;
 
+use BiuradPHP\Http\Interfaces\CookieInterface;
 use DateTime;
+use DateTimeInterface;
 use DateTimeZone;
 use InvalidArgumentException;
+use UnexpectedValueException;
 
 final class CookieUtil
 {
@@ -49,9 +52,9 @@ final class CookieUtil
      *
      * @throws UnexpectedValueException if we cannot parse the cookie date string
      *
-     * @return DateTime
+     * @return DateTimeInterface
      */
-    public static function parseDate($dateValue)
+    public static function parseDate($dateValue): DateTimeInterface
     {
         foreach (self::$dateFormats as $dateFormat) {
             if (false !== $date = DateTime::createFromFormat($dateFormat, $dateValue, new DateTimeZone('GMT'))) {
@@ -64,7 +67,7 @@ final class CookieUtil
             return $date;
         }
 
-        throw new \UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
+        throw new UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
     }
 
     /**
@@ -74,7 +77,7 @@ final class CookieUtil
      *
      * @return string
      */
-    public static function toString(CookieFactory $cookie): string
+    public static function toString(CookieInterface $cookie): string
     {
         $header = [
             \rawurlencode($cookie->getName()) . '=' . \rawurlencode($cookie->getValue() ?? 'deleted'),
@@ -202,7 +205,7 @@ final class CookieUtil
      *
      * @return string
      */
-    public static function normalizeDomain($domain)
+    public static function normalizeDomain($domain): string
     {
         if (isset($domain)) {
             $domain = \ltrim(\strtolower($domain), '.');
@@ -221,7 +224,7 @@ final class CookieUtil
      *
      * @return string
      */
-    public static function normalizePath($path)
+    public static function normalizePath($path): string
     {
         $path = \rtrim($path, '/');
 
@@ -230,5 +233,34 @@ final class CookieUtil
         }
 
         return $path;
+    }
+
+    /**
+     * @param null|DateTimeInterface|int|string $expires
+     *
+     * @return int
+     */
+    public static function normalizeExpires($expires): int
+    {
+        if (null === $expires) {
+            return 0;
+        }
+
+        // convert expiration time to a Unix timestamp
+        if ($expires instanceof DateTimeInterface) {
+            return $expires->format('U');
+        }
+
+        if (\is_numeric($expires)) {
+            return (int) $expires;
+        }
+
+        $time = \strtotime($expires);
+
+        if (!\is_int($time)) {
+            throw new InvalidArgumentException(\sprintf('Invalid expires "%s" provided', $expires));
+        }
+
+        return $time;
     }
 }
