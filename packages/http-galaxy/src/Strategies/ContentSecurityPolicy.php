@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Csp;
+namespace BiuradPHP\Http\Strategies;
 
 use BiuradPHP\Http\Interfaces\CspInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -40,14 +40,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class ContentSecurityPolicy implements CspInterface
 {
-    private $nonceGenerator;
-
+    /** @var bool */
     private $cspDisabled = false;
-
-    public function __construct(NonceGenerator $nonceGenerator)
-    {
-        $this->nonceGenerator = $nonceGenerator;
-    }
 
     /**
      * Returns an array of nonces and Content-Security-Policy headers.
@@ -195,7 +189,7 @@ class ContentSecurityPolicy implements CspInterface
      */
     private function generateNonce(): string
     {
-        return $this->nonceGenerator->generate();
+        return \bin2hex(\random_bytes(16));
     }
 
     /**

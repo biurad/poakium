@@ -17,9 +17,8 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Http\Middlewares;
 
-use BiuradPHP\Http\Csp\ContentSecurityPolicy;
-use BiuradPHP\Http\Csp\NonceGenerator;
 use BiuradPHP\Http\Interfaces\CspInterface;
+use BiuradPHP\Http\Strategies\ContentSecurityPolicy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -39,7 +38,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
  * @license BSD-3-Clause
  */
-class CspMiddleware implements MiddlewareInterface
+class ContentSecurityPolicyMiddleware implements MiddlewareInterface
 {
     /** @var ContentSecurityPolicy */
     private $csp;
@@ -49,7 +48,7 @@ class CspMiddleware implements MiddlewareInterface
      */
     public function __construct(?CspInterface $csp)
     {
-        $this->csp = $csp ?? new ContentSecurityPolicy(new NonceGenerator());
+        $this->csp = $csp ?? new ContentSecurityPolicy();
     }
 
     /**
