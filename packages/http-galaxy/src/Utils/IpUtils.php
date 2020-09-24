@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Concerns;
+namespace BiuradPHP\Http\Utils;
 
 use RuntimeException;
 
@@ -44,7 +44,7 @@ class IpUtils
      *
      * @return bool Whether the IP is valid
      */
-    public static function checkIp(?string $requestIp, $ips)
+    public static function checkIp(?string $requestIp, $ips): bool
     {
         if (!\is_array($ips)) {
             $ips = [$ips];
@@ -69,7 +69,7 @@ class IpUtils
      *
      * @return bool Whether the request IP matches the IP, or whether the request IP is within the CIDR subnet
      */
-    public static function checkIp4(?string $requestIp, string $ip)
+    public static function checkIp4(?string $requestIp, string $ip): bool
     {
         $cacheKey = $requestIp . '-' . $ip;
 
@@ -100,13 +100,7 @@ class IpUtils
             return self::$checkedIps[$cacheKey] = false;
         }
 
-        return (
-            self::$checkedIps[$cacheKey] = 0 === \substr_compare(
-                \sprintf('%032b', \ip2long($requestIp)),
-                \sprintf('%032b', \ip2long($address)),
-                0,
-                $netmask
-            ));
+        return self::$checkedIps[$cacheKey] = 0 === \substr_compare(\sprintf('%032b', \ip2long($requestIp)), \sprintf('%032b', \ip2long($address)), 0, $netmask);
     }
 
     /**
@@ -123,7 +117,7 @@ class IpUtils
      *
      * @return bool Whether the IP is valid
      */
-    public static function checkIp6(?string $requestIp, string $ip)
+    public static function checkIp6(?string $requestIp, string $ip): bool
     {
         $cacheKey = $requestIp . '-' . $ip;
 
@@ -132,9 +126,7 @@ class IpUtils
         }
 
         if (!((\extension_loaded('sockets') && \defined('AF_INET6')) || @\inet_pton('::1'))) {
-            throw new RuntimeException(
-                'Unable to check Ipv6. Check that PHP was not compiled with option "disable-ipv6".'
-            );
+            throw new RuntimeException('Unable to check Ipv6. Check that PHP was not compiled with option "disable-ipv6".');
         }
 
         if (false !== \strpos($ip, '/')) {
