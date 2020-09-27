@@ -198,9 +198,9 @@ final class Cookie implements CookieInterface
     /**
      * Gets the max-age attribute.
      *
-     * @return int
+     * @return int|null
      */
-    public function getMaxAge(): int
+    public function getMaxAge(): ?int
     {
         return ($this->expires > 0 && null === $this->maxAge) ? $this->expires - \time() : $this->maxAge;
     }

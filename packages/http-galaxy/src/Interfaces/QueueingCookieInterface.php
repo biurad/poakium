@@ -78,9 +78,9 @@ interface QueueingCookieInterface
     /**
      * Returns all matching cookies.
      *
-     * @param Cookie $cookie
+     * @param CookieInterface $cookie
      *
-     * @return array|CookieFactory[]
+     * @return CookieInterface[]
      */
     public function getMatchingCookies(CookieInterface $cookie): array;
 

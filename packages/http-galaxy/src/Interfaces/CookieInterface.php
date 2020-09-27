@@ -185,7 +185,7 @@ interface CookieInterface
      *
      * Returns `$this->getExpires() - time();` if $maxAge is null and expires is greater than 0.
      */
-    public function getMaxAge(): int;
+    public function getMaxAge(): ?int;
 
     /**
      * Set new cookie with altered maxAge. Original cookie object should not be changed.

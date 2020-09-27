@@ -85,7 +85,7 @@ trait CookieDecoratorTrait
      * connection
      * (e.g. with respect to $_SERVER["HTTPS"]).
      *
-     * @var null|bool
+     * @var bool
      */
     private $secure;
 
