@@ -15,9 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Bridges;
+namespace BiuradPHP\Http\Bridges\Nette;
 
 use BiuradPHP;
+use BiuradPHP\Http\Strategies\AccessControlPolicy;
 use Laminas\HttpHandlerRunner\Emitter\EmitterStack;
 use Nette;
 use Nette\DI\Definitions\Reference;
@@ -114,12 +115,11 @@ class HttpExtension extends Nette\DI\CompilerExtension
             ->setFactory(BiuradPHP\Http\Response::class);
 
         $builder->addDefinition($this->prefix('access_control'))
-            ->setFactory(BiuradPHP\Http\Cors\AccessControl::class, [$this->config['headers']['cors']]);
+            ->setFactory(AccessControlPolicy::class, [$this->config['headers']['cors']]);
 
         $csPolicy = $builder->addDefinition($this->prefix('csp'))
             ->setType(BiuradPHP\Http\Interfaces\CspInterface::class)
-            ->setFactory(BiuradPHP\Http\Csp\ContentSecurityPolicy::class)
-            ->setArguments([new Statement(BiuradPHP\Http\Csp\NonceGenerator::class)]);
+            ->setFactory(BiuradPHP\Http\Strategies\ContentSecurityPolicy::class);
 
         if (false === ($builder->parameters['access']['CONTENT_SECURITY_POLICY'] ?? true)) {
             $csPolicy->addSetup('disableCsp');
