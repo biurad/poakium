@@ -19,4 +19,55 @@
             <directory name="vendor"/>
         </ignoreFiles>
     </projectFiles>
+
+    <issueHandlers>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <file name="src\Factories\LaminasPsr7Factory.php"/>
+            </errorLevel>
+        </UndefinedClass>
+
+        <PossiblyUndefinedMethod>
+            <errorLevel type="suppress">
+                <file name="src\Session.php"/>
+            </errorLevel>
+        </PossiblyUndefinedMethod>
+
+        <InvalidDocblock>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr17Factory.php"/>
+            </errorLevel>
+        </InvalidDocblock>
+
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr7Bridge.php"/>
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+
+        <PossiblyNullArgument>
+            <errorLevel type="suppress">
+                <referencedFunction name="BiuradPHP\Http\UploadedFile::__construct" />
+            </errorLevel>
+        </PossiblyNullArgument>
+
+        <InvalidScalarArgument>
+            <errorLevel type="suppress">
+                <referencedFunction name="UnexpectedValueException::__construct"/>
+            </errorLevel>
+        </InvalidScalarArgument>
+
+        <ArgumentTypeCoercion>
+            <errorLevel type="suppress">
+                <referencedFunction name="ReflectionClass::implementsInterface"/>
+            </errorLevel>
+        </ArgumentTypeCoercion>
+
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr7Bridge.php"/>
+                <file name="src\Factories\LaminasPsr7Factory.php"/>
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+    </issueHandlers>
 </psalm>
