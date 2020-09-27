@@ -25,6 +25,7 @@ use GuzzleHttp\Exception\InvalidArgumentException;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 use function GuzzleHttp\Psr7\stream_for;

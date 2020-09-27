@@ -66,7 +66,6 @@ class HttpMiddleware implements MiddlewareInterface
 
     private function resolveResponse(ResponseInterface &$response, array $config): void
     {
-        $config     = $this->config;
         $policies   = $config['policies'] ?? [];
         $headers    = \array_map('strval', $config['headers']['response'] ?? []);
 

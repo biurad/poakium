@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace BiuradPHP\Http;
 
-use BiuradPHP\Http\Concerns\IpUtils;
+use BiuradPHP\Http\Utils\IpUtils;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\LazyOpenStream;
 use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
@@ -269,11 +269,11 @@ class ServerRequest implements ServerRequestInterface
     }
 
     /**
-     * Get request content type.
+     * Set request content type.
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return null|string The request content type, if known
+     * @return $this
      */
     public function withContentType($contentName)
     {

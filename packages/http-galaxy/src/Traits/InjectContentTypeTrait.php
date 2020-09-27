@@ -22,7 +22,7 @@ trait InjectContentTypeTrait
     /**
      * Inject the provided Content-Type, if none is already present.
      *
-     * @return array Headers with injected Content-Type
+     * @return array<string,string> Headers with injected Content-Type
      */
     private function injectContentType(string $contentType, array $headers): array
     {

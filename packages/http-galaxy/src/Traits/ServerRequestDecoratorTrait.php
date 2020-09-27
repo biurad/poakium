@@ -40,7 +40,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAttribute($name, $default = null)
     {
@@ -48,7 +48,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAttributes()
     {
@@ -56,7 +56,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCookieParams()
     {
@@ -64,7 +64,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getParsedBody()
     {
@@ -72,7 +72,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getQueryParams()
     {
@@ -80,7 +80,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getServerParams()
     {
@@ -88,7 +88,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getUploadedFiles()
     {
@@ -96,7 +96,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withAttribute($name, $value)
     {
@@ -106,6 +106,9 @@ trait ServerRequestDecoratorTrait
         return $new;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function withAttributes(array $attributes)
     {
         $new = clone $this;
@@ -118,7 +121,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withoutAttribute($name)
     {
@@ -129,7 +132,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withCookieParams(array $cookies)
     {
@@ -140,7 +143,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withParsedBody($data)
     {
@@ -151,7 +154,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withQueryParams(array $query)
     {
@@ -162,7 +165,7 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function withUploadedFiles(array $uploadedFiles)
     {

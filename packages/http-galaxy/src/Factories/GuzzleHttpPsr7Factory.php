@@ -29,7 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class GuzzleHttpPsr7Factory extends Psr17Factory
+class GuzzleHttpPsr7Factory extends Psr17Factory
 {
     /**
      * {@inheritdoc}

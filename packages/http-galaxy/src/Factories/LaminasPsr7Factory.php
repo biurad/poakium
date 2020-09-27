@@ -37,7 +37,7 @@ use function Laminas\Diactoros\parseCookieHeader;
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class LaminasPsr7Factory extends Psr17Factory
+class LaminasPsr7Factory extends Psr17Factory
 {
     /**
      * Function to use to get apache request headers; present only to simplify mocking.

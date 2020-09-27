@@ -218,7 +218,7 @@ class Psr7Bridge
      * - The first is an array of headers
      * - The second is a StreamInterface containing the body content
      *
-     * @throws Exception\DeserializationException for invalid headers
+     * @throws UnexpectedValueException for invalid headers
      */
     protected static function splitStream(StreamInterface $stream): array
     {

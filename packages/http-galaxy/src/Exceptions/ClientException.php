@@ -60,7 +60,7 @@ class ClientException extends HttpException
      *
      * @param \Psr\Http\Message\ResponseInterface $response
      */
-    public static function withResponse(ResponseInterface $response): void
+    public function withResponse(ResponseInterface $response): void
     {
         $this->response = $response;
     }
