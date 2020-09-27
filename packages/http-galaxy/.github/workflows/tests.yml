@@ -59,8 +59,5 @@ jobs:
             bash <(curl -s https://codecov.io/bash) -f coverage.clover
           fi
 
-      - name: Test with Phpstan
-        run: vendor/bin/phpstan analyse
-
       - name: Test with Psalm
         run: vendor/bin/psalm
