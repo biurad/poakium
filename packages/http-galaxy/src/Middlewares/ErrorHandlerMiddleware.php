@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,25 +15,25 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Middlewares;
+namespace Biurad\Http\Middlewares;
 
-use BiuradPHP\Http\Exceptions\ClientException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\AccessDeniedException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\BadRequestException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\ConflictException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\GoneException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\LengthRequiredException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\MethodNotAllowedException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\NotAcceptableException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\NotFoundException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\PreconditionFailedException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\PreconditionRequiredException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\ServerErrorException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\ServiceUnavailableException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\TooManyRequestsException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\UnauthorizedException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\UnprocessableEntityException;
-use BiuradPHP\Http\Exceptions\ClientExceptions\UnsupportedMediaTypeException;
+use Biurad\Http\Exceptions\ClientException;
+use Biurad\Http\Exceptions\ClientExceptions\AccessDeniedException;
+use Biurad\Http\Exceptions\ClientExceptions\BadRequestException;
+use Biurad\Http\Exceptions\ClientExceptions\ConflictException;
+use Biurad\Http\Exceptions\ClientExceptions\GoneException;
+use Biurad\Http\Exceptions\ClientExceptions\LengthRequiredException;
+use Biurad\Http\Exceptions\ClientExceptions\MethodNotAllowedException;
+use Biurad\Http\Exceptions\ClientExceptions\NotAcceptableException;
+use Biurad\Http\Exceptions\ClientExceptions\NotFoundException;
+use Biurad\Http\Exceptions\ClientExceptions\PreconditionFailedException;
+use Biurad\Http\Exceptions\ClientExceptions\PreconditionRequiredException;
+use Biurad\Http\Exceptions\ClientExceptions\ServerErrorException;
+use Biurad\Http\Exceptions\ClientExceptions\ServiceUnavailableException;
+use Biurad\Http\Exceptions\ClientExceptions\TooManyRequestsException;
+use Biurad\Http\Exceptions\ClientExceptions\UnauthorizedException;
+use Biurad\Http\Exceptions\ClientExceptions\UnprocessableEntityException;
+use Biurad\Http\Exceptions\ClientExceptions\UnsupportedMediaTypeException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;

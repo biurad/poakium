@@ -44,12 +44,12 @@
     },
     "autoload": {
         "psr-4": {
-            "BiuradPHP\\Http\\": "src/"
+            "Biurad\\Http\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "BiuradPHP\\Http\\Tests\\": "tests/"
+            "Biurad\\Http\\Tests\\": "tests/"
         }
     },
     "extra": {

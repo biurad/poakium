@@ -1,6 +1,6 @@
 # Http Pipeline: abstraction for HTTP request, response, and csp protection plus more.
 
-HTTP request and response are encapsulated in `BiuradPHP\Http\Request` and `BiuradPHP\Http\Response` objects which offer comfortable API and also act as
+HTTP request and response are encapsulated in `Biurad\Http\Request` and `Biurad\Http\Response` objects which offer comfortable API and also act as
 sanitization filter. This package uses [guzzlehttp/psr7](https://github.com/guzzlehttp/psr7).
 
 **`Please note that you can get the documentation for this dependency on guzzlehttp website, psr7`**
@@ -17,9 +17,9 @@ It requires PHP version 7.1 and supports PHP up to 7.4. The dev-master version r
 
 ## How To Use
 
-You have no limitation to what you can do with this package. This package has two factories that implements Psr17 http factories. This package is shipped with two http factories, thus `BiuradPHP\Http\Factory\GuzzleHttpPsr17Factory` and `BiuradPHP\Http\Factory\LaminasPs17Factory`, you can create you custom factory by extending it to abstract class `BiuradPHP\Http\Factory\Psr17Factory`.
+You have no limitation to what you can do with this package. This package has two factories that implements Psr17 http factories. This package is shipped with two http factories, thus `Biurad\Http\Factory\GuzzleHttpPsr17Factory` and `Biurad\Http\Factory\LaminasPs17Factory`, you can create you custom factory by extending it to abstract class `Biurad\Http\Factory\Psr17Factory`.
 
-If you are using a different package for psr7 http messages, and you want to migrate it this package, use our BiuradPHP\Http\Factory\Psr17Bridge.
+If you are using a different package for psr7 http messages, and you want to migrate it this package, use our Biurad\Http\Factory\Psr17Bridge.
 
 ## Changelog
 

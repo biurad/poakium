@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Proxy;
+namespace Biurad\Http\Sessions\Proxy;
 
-use BiuradPHP\Http\Interfaces\SessionBagInterface;
+use Biurad\Http\Interfaces\SessionBagInterface;
 
 /**
  * @author Nicolas Grekas <p@tchwork.com>

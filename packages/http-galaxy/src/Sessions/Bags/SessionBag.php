@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Bags;
+namespace Biurad\Http\Sessions\Bags;
 
 use ArrayIterator;
-use BiuradPHP\Http\Interfaces\SessionDataInterface;
+use Biurad\Http\Interfaces\SessionDataInterface;
 
 /**
  * Represents part of $this->attributes array.

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,11 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Strategies;
+namespace Biurad\Http\Strategies;
 
-use BiuradPHP\Http\Interfaces\RequestMatcherInterface;
-use BiuradPHP\Http\ServerRequest;
-use BiuradPHP\Http\Utils\IpUtils;
+use Biurad\Http\Interfaces\RequestMatcherInterface;
+use Biurad\Http\ServerRequest;
+use Biurad\Http\Utils\IpUtils;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**

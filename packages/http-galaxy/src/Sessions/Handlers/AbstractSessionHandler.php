@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Handlers;
+namespace Biurad\Http\Sessions\Handlers;
 
-use BiuradPHP\Http\Cookie;
-use BiuradPHP\Http\Utils\SessionUtils;
+use Biurad\Http\Cookie;
+use Biurad\Http\Utils\SessionUtils;
 use LogicException;
 use SessionHandlerInterface;
 use SessionUpdateTimestampHandlerInterface;

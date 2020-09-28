@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Handlers;
+namespace Biurad\Http\Sessions\Handlers;
 
-use BiuradPHP\Http\Cookie;
-use BiuradPHP\Http\Interfaces\QueueingCookieInterface;
+use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\QueueingCookieInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class CookieSessionHandler extends AbstractSessionHandler

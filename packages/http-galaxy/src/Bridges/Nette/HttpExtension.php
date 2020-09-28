@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Bridges\Nette;
+namespace Biurad\Http\Bridges\Nette;
 
-use BiuradPHP;
-use BiuradPHP\Http\Strategies\AccessControlPolicy;
+use Biurad;
+use Biurad\Http\Strategies\AccessControlPolicy;
 use Laminas\HttpHandlerRunner\Emitter\EmitterStack;
 use Nette;
 use Nette\DI\Definitions\Reference;
@@ -103,8 +103,8 @@ class HttpExtension extends Nette\DI\CompilerExtension
         $builder = $this->getContainerBuilder();
 
         $builder->addDefinition($this->prefix('factory'))
-            ->setType(BiuradPHP\Http\Interfaces\Psr17Interface::class)
-            ->setFactory(BiuradPHP\Http\Factories\GuzzleHttpPsr7Factory::class);
+            ->setType(Biurad\Http\Interfaces\Psr17Interface::class)
+            ->setFactory(Biurad\Http\Factories\GuzzleHttpPsr7Factory::class);
 
         $builder->addDefinition($this->prefix('request'))
             ->setType(\Psr\Http\Message\ServerRequestInterface::class)
@@ -112,38 +112,38 @@ class HttpExtension extends Nette\DI\CompilerExtension
 
         $builder->addDefinition($this->prefix('response'))
             ->setType(\Psr\Http\Message\ResponseInterface::class)
-            ->setFactory(BiuradPHP\Http\Response::class);
+            ->setFactory(Biurad\Http\Response::class);
 
         $builder->addDefinition($this->prefix('access_control'))
             ->setFactory(AccessControlPolicy::class, [$this->config['headers']['cors']]);
 
         $csPolicy = $builder->addDefinition($this->prefix('csp'))
-            ->setType(BiuradPHP\Http\Interfaces\CspInterface::class)
-            ->setFactory(BiuradPHP\Http\Strategies\ContentSecurityPolicy::class);
+            ->setType(Biurad\Http\Interfaces\CspInterface::class)
+            ->setFactory(Biurad\Http\Strategies\ContentSecurityPolicy::class);
 
         if (false === ($builder->parameters['access']['CONTENT_SECURITY_POLICY'] ?? true)) {
             $csPolicy->addSetup('disableCsp');
         }
 
         $builder->addDefinition($this->prefix('http_middleware'))
-            ->setFactory(BiuradPHP\Http\Middlewares\HttpMiddleware::class, [$this->config]);
+            ->setFactory(Biurad\Http\Middlewares\HttpMiddleware::class, [$this->config]);
 
         if (
-            \class_exists(BiuradPHP\HttpCache\HttpCache::class) &&
-            \class_exists(BiuradPHP\Routing\Bridges\RoutingExtension::class)
+            \class_exists(Biurad\HttpCache\HttpCache::class) &&
+            \class_exists(Biurad\Routing\Bridges\RoutingExtension::class)
         ) {
             $surrogate = null;
 
             if ('esi' === $this->config['caching']['surrogate']) {
-                $surrogate = new Statement(BiuradPHP\HttpCache\Esi::class);
+                $surrogate = new Statement(Biurad\HttpCache\Esi::class);
             } elseif ('ssi' === $this->config['caching']['surrogate']) {
-                $surrogate = new Statement(BiuradPHP\HttpCache\Ssi::class);
+                $surrogate = new Statement(Biurad\HttpCache\Ssi::class);
             }
             unset($this->config['caching']['surrogate']);
 
             $builder->addDefinition($this->prefix('cache'))
-                ->setFactory(BiuradPHP\HttpCache\HttpCache::class)
-                ->setArgument('store', new Statement(BiuradPHP\HttpCache\Store::class, [$this->tempDir]))
+                ->setFactory(Biurad\HttpCache\HttpCache::class)
+                ->setArgument('store', new Statement(Biurad\HttpCache\Store::class, [$this->tempDir]))
                 ->setArgument('options', $this->config['caching'])
                 ->setArgument('surrogate', $surrogate);
         }

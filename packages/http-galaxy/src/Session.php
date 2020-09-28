@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,19 +15,19 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http;
+namespace Biurad\Http;
 
 use ArrayIterator;
-use BiuradPHP\Http\Interfaces\SessionBagInterface;
-use BiuradPHP\Http\Interfaces\SessionInterface;
-use BiuradPHP\Http\Interfaces\SessionStorageInterface;
-use BiuradPHP\Http\Sessions\Bags\FlashBag;
-use BiuradPHP\Http\Sessions\Bags\SessionBag;
-use BiuradPHP\Http\Sessions\Handlers\CookieSessionHandler;
-use BiuradPHP\Http\Sessions\MetadataBag;
-use BiuradPHP\Http\Sessions\Proxy\AbstractProxy;
-use BiuradPHP\Http\Sessions\Proxy\SessionBagProxy;
-use BiuradPHP\Http\Sessions\Storage\NativeSessionStorage;
+use Biurad\Http\Interfaces\SessionBagInterface;
+use Biurad\Http\Interfaces\SessionInterface;
+use Biurad\Http\Interfaces\SessionStorageInterface;
+use Biurad\Http\Sessions\Bags\FlashBag;
+use Biurad\Http\Sessions\Bags\SessionBag;
+use Biurad\Http\Sessions\Handlers\CookieSessionHandler;
+use Biurad\Http\Sessions\MetadataBag;
+use Biurad\Http\Sessions\Proxy\AbstractProxy;
+use Biurad\Http\Sessions\Proxy\SessionBagProxy;
+use Biurad\Http\Sessions\Storage\NativeSessionStorage;
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use SessionHandlerInterface;

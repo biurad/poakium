@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Bridges\Nette;
+namespace Biurad\Http\Bridges\Nette;
 
-use BiuradPHP\Http\Sessions\HandlerFactory;
-use BiuradPHP\Http\Strategies\CookieJar;
+use Biurad\Http\Sessions\HandlerFactory;
+use Biurad\Http\Strategies\CookieJar;
 use Nette;
 use Nette\DI\Definitions\Reference;
 use Nette\DI\Definitions\Statement;
@@ -80,7 +80,7 @@ class SessionExtension extends Nette\DI\CompilerExtension
             ->addSetup('setOptions', [$this->config['options']]);
 
         $session = $builder->addDefinition('session')
-            ->setFactory(\BiuradPHP\Http\Session::class)
+            ->setFactory(\Biurad\Http\Session::class)
             ->addSetup('setHandler', [new Reference($this->prefix('handler'))])
         ;
 

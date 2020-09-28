@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Middlewares;
+namespace Biurad\Http\Middlewares;
 
-use BiuradPHP\Http\Interfaces\SessionInterface;
+use Biurad\Http\Interfaces\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -74,7 +74,7 @@ class SessionMiddleware implements MiddlewareInterface
              * This Middleware should be executed as one of the last Middlewares, so that previous Middlewares
              * can still operate on the open session. This prevents the overhead of restarting it.
              * Middlewares after closing the session can still work with the session as usual because
-             * BiuradPHP session implementation starts the session on demand. So writing to it after
+             * Biurad session implementation starts the session on demand. So writing to it after
              * it is saved will just restart it.
              */
             $this->session->save();

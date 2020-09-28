@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,15 +15,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Storage;
+namespace Biurad\Http\Sessions\Storage;
 
-use BiuradPHP\Http\Interfaces\SessionBagInterface;
-use BiuradPHP\Http\Interfaces\SessionStorageInterface;
-use BiuradPHP\Http\Sessions\Handlers\StrictSessionHandler;
-use BiuradPHP\Http\Sessions\MetadataBag;
-use BiuradPHP\Http\Sessions\Proxy\AbstractProxy;
-use BiuradPHP\Http\Sessions\Proxy\SessionHandlerProxy;
-use BiuradPHP\Http\Utils\SessionUtils;
+use Biurad\Http\Interfaces\SessionBagInterface;
+use Biurad\Http\Interfaces\SessionStorageInterface;
+use Biurad\Http\Sessions\Handlers\StrictSessionHandler;
+use Biurad\Http\Sessions\MetadataBag;
+use Biurad\Http\Sessions\Proxy\AbstractProxy;
+use Biurad\Http\Sessions\Proxy\SessionHandlerProxy;
+use Biurad\Http\Utils\SessionUtils;
 use InvalidArgumentException;
 use LogicException;
 use RuntimeException;

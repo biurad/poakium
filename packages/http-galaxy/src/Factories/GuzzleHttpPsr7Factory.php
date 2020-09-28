@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,15 +15,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Factories;
+namespace Biurad\Http\Factories;
 
-use BiuradPHP\Http\Factory\RequestFactory;
-use BiuradPHP\Http\Factory\ResponseFactory;
-use BiuradPHP\Http\Factory\ServerRequestFactory;
-use BiuradPHP\Http\Factory\StreamFactory;
-use BiuradPHP\Http\Factory\UploadedFileFactory;
-use BiuradPHP\Http\Factory\UriFactory;
-use BiuradPHP\Http\ServerRequest;
+use Biurad\Http\Factory\RequestFactory;
+use Biurad\Http\Factory\ResponseFactory;
+use Biurad\Http\Factory\ServerRequestFactory;
+use Biurad\Http\Factory\StreamFactory;
+use Biurad\Http\Factory\UploadedFileFactory;
+use Biurad\Http\Factory\UriFactory;
+use Biurad\Http\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**

@@ -47,7 +47,7 @@
 
         <PossiblyNullArgument>
             <errorLevel type="suppress">
-                <referencedFunction name="BiuradPHP\Http\UploadedFile::__construct" />
+                <referencedFunction name="Biurad\Http\UploadedFile::__construct" />
             </errorLevel>
         </PossiblyNullArgument>
 

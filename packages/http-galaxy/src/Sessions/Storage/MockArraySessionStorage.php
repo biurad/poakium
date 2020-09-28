@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,11 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Sessions\Storage;
+namespace Biurad\Http\Sessions\Storage;
 
-use BiuradPHP\Http\Interfaces\SessionBagInterface;
-use BiuradPHP\Http\Interfaces\SessionStorageInterface;
-use BiuradPHP\Http\Sessions\MetadataBag;
+use Biurad\Http\Interfaces\SessionBagInterface;
+use Biurad\Http\Interfaces\SessionStorageInterface;
+use Biurad\Http\Sessions\MetadataBag;
 use InvalidArgumentException;
 use LogicException;
 use RuntimeException;

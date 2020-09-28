@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,9 +15,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Exceptions;
+namespace Biurad\Http\Exceptions;
 
-use BiuradPHP\Http\Interfaces\RequestExceptionInterface;
+use Biurad\Http\Interfaces\RequestExceptionInterface;
 use DomainException;
 use UnexpectedValueException;
 

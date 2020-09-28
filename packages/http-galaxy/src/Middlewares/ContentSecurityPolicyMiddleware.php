@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.2 and above required
  *
@@ -15,10 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Http\Middlewares;
+namespace Biurad\Http\Middlewares;
 
-use BiuradPHP\Http\Interfaces\CspInterface;
-use BiuradPHP\Http\Strategies\ContentSecurityPolicy;
+use Biurad\Http\Interfaces\CspInterface;
+use Biurad\Http\Strategies\ContentSecurityPolicy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
