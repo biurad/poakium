@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
+use Biurad\Http\Interfaces\CookieInterface;
 use Biurad\Http\Utils\IpUtils;
 use GuzzleHttp\Psr7\CachingStream;
 use GuzzleHttp\Psr7\LazyOpenStream;
@@ -46,22 +47,6 @@ class ServerRequest implements ServerRequestInterface
     public const HEADER_X_FORWARDED_ALL = 0b11110; // All "X-Forwarded-*" headers
 
     public const HEADER_X_FORWARDED_AWS_ELB = 0b11010; // AWS ELB doesn't send X-Forwarded-Host
-
-    /**
-     * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-     */
-    private const HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES = [
-        'must_revalidate'  => false,
-        'no_cache'         => false,
-        'no_store'         => false,
-        'no_transform'     => false,
-        'public'           => false,
-        'private'          => false,
-        'proxy_revalidate' => false,
-        'max_age'          => true,
-        's_maxage'         => true,
-        'immutable'        => false,
-    ];
 
     /**
      * @var array|string[]
@@ -166,74 +151,6 @@ class ServerRequest implements ServerRequestInterface
     public function getTrustedProxies(): array
     {
         return $this->trustedProxies;
-    }
-
-    /**
-     * Sets the request's cache headers (validation and/or expiration).
-     *
-     * Available options are: must_revalidate, no_cache, no_store, no_transform, public,
-     *       private, proxy_revalidate, max_age, s_maxage, and immutable.
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @param array $options
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return ServerRequest
-     *
-     * @final
-     */
-    public function withCacheControl(array $options): self
-    {
-        $cacheControl = [];
-        $request      = $this->getRequest();
-
-        if ($diff = \array_diff(\array_keys($options), \array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
-            throw new InvalidArgumentException(
-                \sprintf(
-                    'Response does not support the following options: "%s".',
-                    \implode('", "', $diff)
-                )
-            );
-        }
-
-        $cacheControl['max-age']  = isset($options['max_age']) ? \sprintf('=%s', $options['max_age']) : null;
-        $cacheControl['s-maxage'] = isset($options['s_maxage']) ? \sprintf('=%s', $options['s_maxage']) : null;
-
-        foreach (self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES as $directive => $hasValue) {
-            if (!$hasValue && isset($options[$directive])) {
-                if ($options[$directive]) {
-                    $cacheControl[\str_replace('_', '-', $directive)] = true;
-                } else {
-                    unset($cacheControl[\str_replace('_', '-', $directive)]);
-                }
-            }
-        }
-
-        if (isset($options['public']) && $options['public']) {
-            $cacheControl['public'] = true;
-            unset($cacheControl['private']);
-        }
-
-        if (isset($options['private']) && $options['private']) {
-            $cacheControl['private'] = true;
-            unset($cacheControl['public']);
-        }
-
-        \ksort($cacheControl);
-        $cacheControl = \array_filter($cacheControl);
-
-        $directives = \array_reduce(\array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
-            $add = \implode(' ', (array) $cacheControl[$name]);
-
-            return ('' !== $res ? $res . ', ' : '') . \sprintf('%s%s', $name, '1' === $add ? '' : $add);
-        }, '');
-
-        $new          = clone $this;
-        $new->message = $request->withHeader('Cache-Control', \strtr($directives, ' 1', ''));
-
-        return $new;
     }
 
     /**
