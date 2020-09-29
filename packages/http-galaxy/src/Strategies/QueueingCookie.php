@@ -40,7 +40,7 @@ use UnexpectedValueException;
  *
  * @see http://wp.netscape.com/newsref/std/cookie_spec.html for some specs.
  */
-class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
+class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInterface
 {
     /**
      * The default path (if specified).
@@ -206,7 +206,7 @@ class CookieJar implements Countable, IteratorAggregate, QueueingCookieInterface
     public function getMatchingCookies(CookieInterface $cookie): array
     {
         $match = function ($matchCookie) use ($cookie) {
-            return $matchCookie->match($cookie);
+            return $matchCookie->matches($cookie);
         };
 
         return $this->findMatchingCookies($match);

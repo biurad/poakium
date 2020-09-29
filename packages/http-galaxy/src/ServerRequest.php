@@ -305,9 +305,9 @@ class ServerRequest implements ServerRequestInterface
      * @param string $key     the attribute name
      * @param mixed  $default default value to return if the attribute does not exist
      *
-     * @return mixed
+     * @return null|CookieInterface
      */
-    public function getCookieParam($key, $default = null)
+    public function getCookie($key, $default = null): ?CookieInterface
     {
         $cookies = $this->getRequest()->getCookieParams();
         $result  = $default;
@@ -316,7 +316,7 @@ class ServerRequest implements ServerRequestInterface
             $result = $cookies[$key];
         }
 
-        return $result;
+        return null !== $result ? Cookie::fromString($result) : $result;
     }
 
     /**
@@ -330,7 +330,7 @@ class ServerRequest implements ServerRequestInterface
      */
     public function hasCookie($name): bool
     {
-        return null !== $this->getCookieParam($name);
+        return null !== $this->getCookie($name);
     }
 
     /**

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
+use Biurad\Http\Interfaces\CookieInterface;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -26,9 +27,10 @@ use GuzzleHttp\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use RuntimeException;
 
 use function GuzzleHttp\Psr7\stream_for;
+
+use RuntimeException;
 
 /**
  * Class Response
@@ -337,6 +339,26 @@ class Response implements ResponseInterface
         foreach ($headers as $header) {
             $response = $response->withoutHeader($header);
         }
+        $new->message = $response;
+
+        return $new;
+    }
+
+    /**
+     * Set a cookie on response.
+     *
+     * @param CookieInterface $cookie
+     *
+     * @return Response
+     *
+     * @final
+     */
+    public function withCookie(CookieInterface $cookie): self
+    {
+        $response = $this->getResponse();
+        $response = $response->withHeader('Set-Cookie', (string) $cookie);
+
+        $new          = clone $this;
         $new->message = $response;
 
         return $new;
