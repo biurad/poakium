@@ -29,13 +29,6 @@ interface CookieInterface
     public function __toString();
 
     /**
-     * Create a new SetCookie object from a string.
-     *
-     * @param string $cookie Set-Cookie header string
-     */
-    public static function fromString(string $cookie): self;
-
-    /**
      * Get the cookie name.
      *
      * @return string
@@ -172,7 +165,7 @@ interface CookieInterface
      *
      * @return int|null
      */
-    public function getMaxAge(): ?int;
+    public function getMaxAge();
 
     /**
      * Set new cookie with altered maxAge.
@@ -186,7 +179,7 @@ interface CookieInterface
      *
      * @return null|string
      */
-    public function getSameSite(): ?string;
+    public function getSameSite();
 
     /**
      * Set new cookie with altered sameSite.
@@ -248,5 +241,5 @@ interface CookieInterface
      *
      * @return bool
      */
-    public function matchesDomain($domain): bool;
+    public function matchesDomain(string $domain): bool;
 }
