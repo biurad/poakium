@@ -401,7 +401,7 @@ class NativeSessionStorage implements SessionStorageInterface
 
                     continue;
                 }
-                \ini_set('url_rewriter.tags' !== $key ? 'session.' . $key : $key, $value);
+                \ini_set('url_rewriter.tags' !== $key ? 'session.' . $key : $key, (string) $value);
             }
         }
     }
