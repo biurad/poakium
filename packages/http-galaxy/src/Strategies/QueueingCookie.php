@@ -21,6 +21,7 @@ use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieInterface;
 use Biurad\Http\Interfaces\QueueingCookieInterface;
 use Countable;
+use DateTimeInterface;
 use IteratorAggregate;
 use SplObjectStorage;
 use UnexpectedValueException;
@@ -253,32 +254,45 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     /**
      * Create a new cookie instance.
      *
-     * @param string      $name
-     * @param string      $value
-     * @param null|string $path
-     * @param null|string $domain
-     * @param null|bool   $secure
-     * @param bool        $httpOnly
-     * @param string      $sameSite
-     * @param int         $minutes
-     * @param int         $maxAge
+     * @param string                            $name
+     * @param string                            $value
+     * @param null|string                       $domain
+     * @param string                            $path
+     * @param int                               $maxAge
+     * @param null|DateTimeInterface|int|string $expires
+     * @param bool                              $secure
+     * @param bool                              $discard
+     * @param bool                              $httpOnly
+     * @param string                            $sameSite
      *
      * @return CookieInterface
      */
     protected function setCookie(
         $name,
         $value,
-        $path = null,
         $domain = null,
-        $secure = null,
-        $httpOnly = true,
-        $sameSite = 'lax',
+        $path = '/',
         $maxAge = null,
-        $minutes = 0
+        $expires = null,
+        $secure = false,
+        $discard = false,
+        $httpOnly = false,
+        $sameSite = null
     ): CookieInterface {
         [$path, $domain, $secure] = $this->getPathAndDomain($path, $domain, $secure);
 
-        return new Cookie($name, $value, $path, $domain, $secure, $httpOnly, $sameSite, $maxAge, $minutes);
+        return new Cookie([
+            'Name'     => $name,
+            'Value'    => $value,
+            'Domain'   => $domain,
+            'Path'     => $path,
+            'Max-Age'  => $maxAge,
+            'Expires'  => $expires,
+            'Secure'   => $secure,
+            'Discard'  => $discard,
+            'HttpOnly' => $httpOnly,
+            'SameSite' => $sameSite,
+        ]);
     }
 
     /**

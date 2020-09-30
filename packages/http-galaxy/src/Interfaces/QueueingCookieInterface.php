@@ -29,7 +29,7 @@ interface QueueingCookieInterface
     /**
      * Queue a cookie to send with the next response.
      *
-     * @param array|CookieInterface $parameters
+     * @param array<string,string,null|string,string,int,null|DateTimeInterface|int|string,bool,bool,bool,string>|CookieInterface $parameters
      */
     public function addCookie(...$parameters): void;
 
@@ -57,7 +57,7 @@ interface QueueingCookieInterface
     /**
      * Returns the cookies which have been queued for the next request.
      *
-     * @return array|CookieInterface[]
+     * @return CookieInterface[]
      */
     public function getCookies(): array;
 
