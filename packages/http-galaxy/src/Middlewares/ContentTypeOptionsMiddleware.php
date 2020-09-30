@@ -30,20 +30,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 class ContentTypeOptionsMiddleware implements MiddlewareInterface
 {
     /**
-     * @param ServerRequestInterface  $request
-     * @param RequestHandlerInterface $handler
-     *
-     * @return ResponseInterface
+     * {@inheritdoc}
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        /** @var ResponseInterface $response */
         $response = $handler->handle($request);
 
         // prevent content sniffing (MIME sniffing)
         if (!$response->hasHeader('X-Content-Type-Options')) {
-            $response = $response
-                ->withAddedHeader('X-Content-Type-Options', 'nosniff');
+            return $response->withAddedHeader('X-Content-Type-Options', 'nosniff');
         }
 
         return $response;

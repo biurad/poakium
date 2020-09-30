@@ -36,7 +36,7 @@ class BasicAuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Process a request and return a response.
+     * {@inheritdoc}
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {

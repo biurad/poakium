@@ -17,118 +17,113 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use Biurad\Http\Interfaces\CookieInterface;
-use Biurad\Http\Interfaces\QueueingCookieInterface as Queueing;
-use Biurad\Security\Exceptions\DecryptException;
-use Biurad\Security\Interfaces\EncrypterInterface;
+use Biurad\Http\Interfaces\QueueingCookieInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Throwable;
 
-class CookiesMiddleware implements MiddlewareInterface
+/**
+ * Handle request cookies.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+final class CookieMiddleware implements MiddlewareInterface
 {
-    /**
-     * The cookie instance.
-     *
-     * @var Queueing
-     */
-    protected $cookies;
+    // request attribute
+    public const ATTRIBUTE = 'queueCookie';
 
     /**
-     * The encrypter instance.
+     * Queued Cookie storage.
      *
-     * @var null|EncrypterInterface
+     * @var QueueingCookieInterface
      */
-    protected $encrypter;
+    private $cookieJar;
 
     /**
-     * The names of the cookies that should not be encrypted.
+     * A callable encrypter
      *
-     * @var array
+     * @var null|callable(string|null,bool)
      */
-    protected $except = [];
+    private $encrypter;
 
     /**
-     * Indicates if cookies should be serialized.
-     *
-     * @var bool
+     * @param QueueingCookieInterface $cookieJar
+     * @param null|callable           $encrypter
      */
-    protected static $serialize = false;
-
-    /**
-     * Create a new CookieGuard instance.
-     *
-     * @param Queueing                $cookie
-     * @param null|EncrypterInterface $encrypter
-     */
-    public function __construct(Queueing $cookie, ?EncrypterInterface $encrypter)
+    public function __construct(QueueingCookieInterface $cookieJar, ?callable $encrypter = null)
     {
-        $this->cookies   = $cookie;
+        $this->cookieJar = $cookieJar;
         $this->encrypter = $encrypter;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @param Request        $request
-     * @param RequestHandler $handler
-     *
-     * @return \Psr\Http\Message\ResponseInterface
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
         // Decrypt the cookie values on request.
-        $response = $handler->handle($this->decrypt($request));
+        $response = $handler->handle($this->resolveCookies($request));
 
         // Encrypt all cookies queued to the response
-        return $this->encrypt($this->cookies, $response);
+        return $this->getCookies($request, $response);
     }
 
     /**
-     * Disable encryption for the given cookie name(s).
+     * Encrypt the cookies on an outgoing response.
      *
-     * @param array|string $name
+     * @param Request           $request
+     * @param ResponseInterface $response
+     *
+     * @return ResponseInterface
      */
-    public function disableFor($name): void
+    private function getCookies(Request $request, ResponseInterface $response): ResponseInterface
     {
-        $this->except = \array_merge($this->except, (array) $name);
-    }
+        $headers = $response->getHeader('Set-Cookie');
 
-    /**
-     * Determine whether encryption has been disabled for the given cookie.
-     *
-     * @param string $name
-     *
-     * @return bool
-     */
-    public function isDisabled($name)
-    {
-        return \in_array($name, $this->except);
-    }
+        foreach ($this->cookieJar->getCookies() as $cookie) {
+            if ($cookie->isExpired()) {
+                continue;
+            }
 
-    /**
-     * Determine if the cookie contents should be serialized.
-     *
-     * @param string $name
-     *
-     * @return bool
-     */
-    public static function serialized($name)
-    {
-        return static::$serialize;
+            if (!$cookie->matchesDomain($request->getUri()->getHost())) {
+                continue;
+            }
+
+            if (!$cookie->matchesPath($request->getUri()->getPath())) {
+                continue;
+            }
+
+            if ($cookie->getSecure() && ('https' !== $request->getUri()->getScheme())) {
+                continue;
+            }
+
+            if (null !== $this->encrypter) {
+                $cookie->setValue('ecp@' . ($this->encrypter)($cookie->getValue(), true));
+            }
+
+            $headers[] = (string) $cookie;
+        }
+
+        if (!empty($headers)) {
+            $response = $response->withHeader('Set-Cookie', $headers);
+        }
+
+        return $response;
     }
 
     /**
      * Decrypt the cookies on the request.
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param Request $request
      *
-     * @return \Psr\Http\Message\ServerRequestInterface
+     * @return Request
      */
-    protected function decrypt(Request $request)
+    private function resolveCookies(Request $request): Request
     {
         $cookies = [];
+        $request = $request->withAttribute(self::ATTRIBUTE, $this->cookieJar);
 
         if (null === $this->encrypter) {
             return $request;
@@ -136,13 +131,9 @@ class CookiesMiddleware implements MiddlewareInterface
 
         // Handle an incoming request cookie.
         foreach ($request->getCookieParams() as $key => $cookie) {
-            if ($this->isDisabled($key)) {
-                continue;
-            }
-
             try {
-                $cookies[$key] = $this->decryptCookie($key, $cookie);
-            } catch (DecryptException $e) {
+                $cookies[$key] = $this->decryptCookie($cookie);
+            } catch (Throwable $e) {
                 // If cookie failed to decrypt, which means the cookie
                 // wasn't encrypted. Hence, we will pass the cookie values
                 // in raw state.
@@ -157,66 +148,41 @@ class CookiesMiddleware implements MiddlewareInterface
     /**
      * Decrypt the given cookie and return the value.
      *
-     * @param string       $name
-     * @param array|string $cookie
+     * @param string                      $name
+     * @param array<string,string>|string $cookie
      *
-     * @return array|string
+     * @return array<string,string>|string
      */
-    protected function decryptCookie($name, $cookie)
+    private function decryptCookie($cookie)
     {
-        return \is_array($cookie)
-            ? $this->decryptArray($cookie)
-            : $this->encrypter->decrypt($cookie, static::serialized($name));
+        if (\is_array($cookie)) {
+            return $this->decryptArray($cookie);
+        }
+
+        if ('ecp@' === \substr($cookie, 0, 3)) {
+            $cookie = ($this->encrypter)($cookie, false);
+        }
+
+        return $cookie;
     }
 
     /**
      * Decrypt an array based cookie.
      *
-     * @param array $cookie
+     * @param array<string,string> $cookie
      *
-     * @return array
+     * @return array<string,string>
      */
-    protected function decryptArray(array $cookie)
+    private function decryptArray(array $cookie)
     {
         $decrypted = [];
 
         foreach ($cookie as $key => $value) {
             if (\is_string($value)) {
-                $decrypted[$key] = $this->encrypter->decrypt($value, static::serialized($key));
+                $decrypted[$key] = $this->decryptCookie($value);
             }
         }
 
         return $decrypted;
-    }
-
-    /**
-     * Encrypt the cookies on an outgoing response.
-     *
-     * @param Queueing          $cookies
-     * @param ResponseInterface $response
-     *
-     * @return ResponseInterface
-     */
-    protected function encrypt(Queueing $cookies, ResponseInterface $response)
-    {
-        $headers = $response->getHeader('Set-Cookie');
-
-        /** @var CookieInterface $cookie */
-        foreach ($cookies->getCookies() as $cookie) {
-            if ($this->isDisabled($cookie->getName())) {
-                //Nothing to protect
-                continue;
-            }
-
-            if (null !== $this->encrypter) {
-                $cookie = $cookie->withValue(
-                    $this->encrypter->encrypt($cookie->getValue(), self::serialized($cookie->getName()))
-                );
-            }
-
-            $headers[] = (string) $cookie;
-        }
-
-        return $headers ? $response->withAddedHeader('Set-Cookie', $headers) : $response;
     }
 }

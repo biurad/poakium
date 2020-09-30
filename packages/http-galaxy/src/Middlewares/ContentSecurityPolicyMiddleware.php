@@ -36,9 +36,8 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  * @see     https://www.owasp.org/index.php/Content_Security_Policy
  *
  * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
-class ContentSecurityPolicyMiddleware implements MiddlewareInterface
+final class ContentSecurityPolicyMiddleware implements MiddlewareInterface
 {
     /** @var ContentSecurityPolicy */
     private $csp;
@@ -46,7 +45,7 @@ class ContentSecurityPolicyMiddleware implements MiddlewareInterface
     /**
      * @param CspInterface $csp
      */
-    public function __construct(?CspInterface $csp)
+    public function __construct(?CspInterface $csp = null)
     {
         $this->csp = $csp ?? new ContentSecurityPolicy();
     }

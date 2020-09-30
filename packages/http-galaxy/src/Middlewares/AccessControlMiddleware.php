@@ -34,25 +34,19 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  * @see     https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
  *
  * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
 class AccessControlMiddleware implements MiddlewareInterface
 {
     /** @var AccessControlPolicy */
     private $cors;
 
-    public function __construct(?AccessControlPolicy $accessControl, array $options = [])
+    public function __construct(?AccessControlPolicy $accessControl = null, array $options = [])
     {
         $this->cors = $accessControl ?? new AccessControlPolicy($options);
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @param Request        $request
-     * @param RequestHandler $handler
-     *
-     * @return ResponseInterface
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
