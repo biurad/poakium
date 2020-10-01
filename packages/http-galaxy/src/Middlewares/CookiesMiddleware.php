@@ -159,8 +159,8 @@ final class CookieMiddleware implements MiddlewareInterface
             return $this->decryptArray($cookie);
         }
 
-        if ('ecp@' === \substr($cookie, 0, 3)) {
-            $cookie = ($this->encrypter)($cookie, false);
+        if ('ecp@' === $encrypted = \substr($cookie, 0, 3)) {
+            $cookie = ($this->encrypter)($encrypted, false);
         }
 
         return $cookie;
