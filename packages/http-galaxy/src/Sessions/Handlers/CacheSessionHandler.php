@@ -17,14 +17,14 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Handlers;
 
-use Psr\SimpleCache\CacheInterface;
+use Psr\Cache\CacheItemPoolInterface;
 
 class CacheSessionHandler extends AbstractSessionHandler
 {
     /**
      * The cache repository instance.
      *
-     * @var \Psr\SimpleCache\CacheInterface
+     * @var CacheItemPoolInterface
      */
     protected $cache;
 
@@ -45,10 +45,10 @@ class CacheSessionHandler extends AbstractSessionHandler
     /**
      * Create a new cache driven handler instance.
      *
-     * @param \Psr\SimpleCache\CacheInterface $cache
+     * @param CacheItemPoolInterface $cache
      * @param null|int|string                 $minutes
      */
-    public function __construct(CacheInterface $cache, $minutes = null)
+    public function __construct(CacheItemPoolInterface $cache, $minutes = null)
     {
         $this->cache = $cache;
 
@@ -97,13 +97,13 @@ class CacheSessionHandler extends AbstractSessionHandler
      */
     public function doDestroy($sessionId)
     {
-        $exists = $this->cache->has($sessionId);
+        $exists = $this->cache->hasItem($sessionId);
 
         if (!(bool) $exists) {
             return true;
         }
 
-        return (bool) $this->cache->delete($sessionId);
+        return (bool) $this->cache->deleteItem($sessionId);
     }
 
     /**
@@ -127,7 +127,7 @@ class CacheSessionHandler extends AbstractSessionHandler
      */
     protected function doRead($sessionId)
     {
-        return (string) $this->cache->get($sessionId);
+        return (string) $this->cache->getItem($sessionId)->get();
     }
 
     /**
@@ -135,6 +135,9 @@ class CacheSessionHandler extends AbstractSessionHandler
      */
     protected function doWrite($sessionId, $data)
     {
-        return $this->cache->set($sessionId, $data, $this->minutes);
+        $item = $this->cache->getItem($sessionId)
+            ->expiresAt($this->minutes);
+
+        return $this->cache->save($item->set($data));
     }
 }
