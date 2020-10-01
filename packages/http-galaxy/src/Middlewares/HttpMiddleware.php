@@ -40,11 +40,6 @@ class HttpMiddleware implements MiddlewareInterface
 
     /**
      * {@inheritDoc}
-     *
-     * @param Request        $request
-     * @param RequestHandler $handler
-     *
-     * @return ResponseInterface
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
