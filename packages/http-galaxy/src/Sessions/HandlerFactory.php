@@ -20,8 +20,7 @@ namespace Biurad\Http\Sessions;
 use Biurad\Http\Interfaces\QueueingCookieInterface;
 use InvalidArgumentException;
 use PDO;
-use Psr\SimpleCache\CacheInterface;
-use Spiral\Database\DatabaseInterface;
+use Psr\Cache\CacheItemPoolInterface;
 use TypeError;
 
 /**
@@ -29,33 +28,27 @@ use TypeError;
  */
 class HandlerFactory
 {
-    /** @var null|CacheInterface */
+    /** @var null|CacheItemPoolInterface */
     private $cache;
 
     /** @var null|QueueingCookieInterface */
     private $cookie;
 
-    /** @var null|DatabaseInterface */
-    private $database;
-
     /** @var null|int|string */
     private $minutes;
 
     /**
-     * @param null|CacheInterface          $cache
+     * @param null|CacheItemPoolInterface  $cache
      * @param null|QueueingCookieInterface $cookie
-     * @param null|DatabaseInterface       $database
      * @param null|int|string              $minutes
      */
     public function __construct(
-        ?CacheInterface $cache = null,
+        ?CacheItemPoolInterface $cache = null,
         ?QueueingCookieInterface $cookie = null,
-        ?DatabaseInterface $database = null,
         $minutes = null
     ) {
         $this->cache    = $cache;
         $this->cookie   = $cookie;
-        $this->database = $database;
         $this->minutes  = $minutes;
     }
 
@@ -96,19 +89,6 @@ class HandlerFactory
 
             case 0 === \strpos($connection, 'cache-based'):
                 return new Handlers\CacheSessionHandler($this->cache, $this->minutes);
-
-            case 0 === \strpos($connection, 'database'):
-            case 0 === \strpos($connection, 'cycle'):
-                if (!$this->database instanceof DatabaseInterface) {
-                    throw new InvalidArgumentException(
-                        \sprintf(
-                            'Unsupported DSN "%s". Try running "composer require spiral/database".',
-                            $connection
-                        )
-                    );
-                }
-                $connection = $this->database->getDriver()->getPDO();
-                // no break;
 
             case 0 === \strpos($connection, 'mssql://'):
             case 0 === \strpos($connection, 'mysql://'):
