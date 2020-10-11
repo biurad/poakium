@@ -29,7 +29,7 @@ use Throwable;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class CookieMiddleware implements MiddlewareInterface
+final class CookiesMiddleware implements MiddlewareInterface
 {
     // request attribute
     public const ATTRIBUTE = 'queueCookie';
@@ -159,8 +159,8 @@ final class CookieMiddleware implements MiddlewareInterface
             return $this->decryptArray($cookie);
         }
 
-        if ('ecp@' === $encrypted = \substr($cookie, 0, 3)) {
-            $cookie = ($this->encrypter)($encrypted, false);
+        if ('ecp@' === \substr($cookie, 0, 3)) {
+            $cookie = ($this->encrypter)(\substr($cookie, 3), false);
         }
 
         return $cookie;
