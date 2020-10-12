@@ -41,5 +41,6 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Delete `BiuradPHP\Cache\Bridges\Connection` class as it's unused
 - Deleted `Biurad\Cache\Preloader` class, use darkghosthunter/preloader library instead
 - Removed memory cache implementation for var_export
+- Removed classes under `Biurad\Cache\Bridges` sub-namspace and folder
 
 [unreleased]: https://github.com/biurad/biurad-caching/compare/v0.2.4...master

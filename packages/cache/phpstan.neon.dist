@@ -7,9 +7,6 @@ parameters:
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: false
 
-    excludes_analyse:
-        - src/Bridges/*/*
-
     ignoreErrors:
         - "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
         -

@@ -21,9 +21,6 @@
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">src</directory>
-            <exclude>
-                <directory suffix=".php">src/Bridges</directory>
-            </exclude>
         </whitelist>
     </filter>
 </phpunit>

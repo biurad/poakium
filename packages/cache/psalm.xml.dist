@@ -16,7 +16,6 @@
     <projectFiles>
         <directory name="src"/>
         <ignoreFiles>
-            <directory name="src/Bridges"/>
             <directory name="vendor"/>
         </ignoreFiles>
     </projectFiles>
@@ -33,7 +32,7 @@
                 <file name="src/CacheItemPool.php"/>
             </errorLevel>
         </PossiblyUndefinedVariable>
-        
+
         <UndefinedClass>
             <errorLevel type="suppress">
                 <file name="src/AdapterFactory.php"/>
