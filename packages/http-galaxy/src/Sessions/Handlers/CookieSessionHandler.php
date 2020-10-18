@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace Biurad\Http\Sessions\Handlers;
 
 use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\CookieInterface;
 use Biurad\Http\Interfaces\QueueingCookieInterface;
-use Biurad\Http\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 
 class CookieSessionHandler extends AbstractSessionHandler
@@ -46,14 +46,29 @@ class CookieSessionHandler extends AbstractSessionHandler
     protected $minutes;
 
     /**
+     * The session cookie name.
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
+     * Whether gc() has been called
+     *
+     * @var bool
+     */
+    private $gcCalled = false;
+
+    /**
      * Create a new cookie driven handler instance.
      *
      * @param QueueingCookieInterface $cookie
-     * @param int $minutes
+     * @param int                     $minutes
      */
     public function __construct(QueueingCookieInterface $cookie, $minutes = null)
     {
         $this->cookie = $cookie;
+        $this->name   = 'sess_' . \hash('md5', __CLASS__);
 
         // convert expiration time to a Unix timestamp
         $minutes       = !\is_numeric($minutes) ? \strtotime($minutes) : $minutes;
@@ -65,15 +80,13 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function doRead($sessionId)
     {
-        $value = '';
+        $value = [];
 
-        $sessionCookies = $this->request->getCookieParams();
-
-        if (isset($sessionCookies[$sessionId]) && !empty($sessionCookies)) {
-            $value = $sessionCookies[$sessionId];
+        if (null !== $cookie = $this->getCookie($this->name)) {
+            $value = \json_decode($cookie, true);
         }
 
-        if (null !== ($decoded = \json_decode($value, true)) && \is_array($decoded)) {
+        if (null !== ($decoded = $value[$sessionId] ?? null) && \is_array($decoded)) {
             if ($decoded['expires'] > 0 && $decoded['expires'] < \time()) {
                 return $decoded['data'];
             }
@@ -91,24 +104,18 @@ class CookieSessionHandler extends AbstractSessionHandler
             ? $this->request->isSecured()
             : \array_key_exists('HTTPS', $this->request->getServerParams());
 
-        $value = \json_encode(['data' => $data, 'expires' => $this->minutes]);
+        $value = \json_encode([$sessionId => ['data' => $data, 'expires' => $this->minutes]]);
 
         $session  = new Cookie([
-            'Name'     => $sessionId,
+            'Name'     => $this->name,
             'Value'    => $value,
             'Domain'   => '',
             'Path'     => '/',
             'Max-Age'  => $this->minutes,
             'Secure'   => $secured,
-            'Discard'  => false,
             'HttpOnly' => !$secured,
             'SameSite' => null,
         ]);
-
-        if ($this->request instanceof ServerRequest && $this->request->hasCookie($sessionId)) {
-            $session = $this->cookie->getCookieByName($sessionId);
-            $session->setValue($value);
-        }
 
         $this->cookie->addCookie($session);
 
@@ -120,7 +127,20 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function updateTimestamp($sessionId, $sessionData)
     {
-        return $this->write($sessionId, $sessionData);
+        $expiry = \time() + $this->minutes;
+        $value  = [];
+
+        if (null !== $cookie = $this->getCookie($this->name)) {
+            $value = \json_decode($cookie, true);
+        }
+
+        if (isset($value[$sessionId])) {
+            $this->cookie->addCookie($this->name, $cookie, null, '/', null, $expiry);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -128,9 +148,19 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function doDestroy($sessionId)
     {
-        $this->cookie->unqueueCookie($sessionId);
+        $value = [];
 
-        return true;
+        if (null !== $cookie = $this->getCookie($this->name)) {
+            $value = \json_decode($cookie, true);
+        }
+
+        if (isset($value[$sessionId])) {
+            $this->cookie->addCookie($this->name, \json_encode([$sessionId => '']), null, '/', null, 0);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -138,6 +168,22 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function close()
     {
+        if ($this->gcCalled) {
+            $this->gcCalled = false;
+            $value          = [];
+
+            if (null !== $cookie = $this->getCookie($this->name)) {
+                $value = \json_decode($cookie, true);
+            }
+
+            // delete the session records that have expired
+            foreach ($value as $sessionId => $decoded) {
+                if ($decoded['expires'] > 0 && $decoded['expires'] > \time()) {
+                    $this->cookie->addCookie($this->name, \json_encode([$sessionId => '']), null, '/', null, 0);
+                }
+            }
+        }
+
         return true;
     }
 
@@ -146,6 +192,10 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function gc($lifetime)
     {
+        // We delay gc() to close() so that it is executed outside the transactional and blocking read-write process.
+        // This way, pruning expired sessions does not block them from being started while the current session is used.
+        $this->gcCalled = true;
+
         return true;
     }
 
@@ -157,5 +207,17 @@ class CookieSessionHandler extends AbstractSessionHandler
     public function setRequest(ServerRequestInterface $request): void
     {
         $this->request = $request;
+    }
+
+    /**
+     * Get the cookie from request if exists
+     *
+     * @param string $cookieName
+     *
+     * @return null|CookieInterface|string
+     */
+    private function getCookie(string $cookieName)
+    {
+        return $this->request->getCookieParams()[$cookieName] ?? null;
     }
 }
