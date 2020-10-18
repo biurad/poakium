@@ -136,7 +136,7 @@ class CacheSessionHandler extends AbstractSessionHandler
     protected function doWrite($sessionId, $data)
     {
         $item = $this->cache->getItem($sessionId)
-            ->expiresAt($this->minutes);
+            ->expiresAfter($this->minutes);
 
         return $this->cache->save($item->set($data));
     }
