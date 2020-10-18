@@ -19,6 +19,7 @@ namespace Biurad\Http\Sessions\Handlers;
 
 use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\QueueingCookieInterface;
+use Biurad\Http\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 
 class CookieSessionHandler extends AbstractSessionHandler
@@ -31,9 +32,9 @@ class CookieSessionHandler extends AbstractSessionHandler
     protected $cookie;
 
     /**
-     * The request instance.
+     * The server request instance.
      *
-     * @var Request
+     * @var ServerRequestInterface
      */
     protected $request;
 
@@ -90,17 +91,25 @@ class CookieSessionHandler extends AbstractSessionHandler
             ? $this->request->isSecured()
             : \array_key_exists('HTTPS', $this->request->getServerParams());
 
+        $value = \json_encode(['data' => $data, 'expires' => $this->minutes]);
+
         $session  = new Cookie([
             'Name'     => $sessionId,
-            'Value'    => \json_encode(['data' => $data, 'expires' => $this->minutes]),
+            'Value'    => $value,
             'Domain'   => '',
             'Path'     => '/',
-            'Expires'  => $this->minutes,
+            'Max-Age'  => $this->minutes,
             'Secure'   => $secured,
             'Discard'  => false,
             'HttpOnly' => !$secured,
             'SameSite' => null,
         ]);
+
+        if ($this->request instanceof ServerRequest && $this->request->hasCookie($sessionId)) {
+            $session = $this->cookie->getCookieByName($sessionId);
+            $session->setValue($value);
+        }
+
         $this->cookie->addCookie($session);
 
         return true;

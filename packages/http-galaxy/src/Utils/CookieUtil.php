@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Utils;
 
-use Biurad\Http\Interfaces\CookieInterface;
 use DateTime;
 use DateTimeInterface;
 use DateTimeZone;
@@ -68,53 +67,6 @@ final class CookieUtil
         }
 
         throw new UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
-    }
-
-    /**
-     * Convert cookie instance to string.
-     *
-     * @see http://www.w3.org/Protocols/rfc2109/rfc2109
-     *
-     * @return string
-     */
-    public static function toString(CookieInterface $cookie): string
-    {
-        $header = [
-            \rawurlencode($cookie->getName()) . '=' . \rawurlencode($cookie->getValue() ?? 'deleted'),
-        ];
-
-        if ($cookie->getExpires() > 0) {
-            $header[] = 'Expires=' . \gmdate(self::DATE_FORMAT, $cookie->getExpires());
-            $header[] = 'Max-Age=' . $cookie->getMaxAge();
-        } elseif (
-            null === $cookie->getValue() &&
-            (0 === $cookie->getExpires() || null == $cookie->getExpires())
-        ) {
-            $header[] = 'Expires=' . \gmdate(self::DATE_FORMAT, \time() - 31536001);
-            $header[] = 'Max-Age=0';
-        }
-
-        if (!empty($cookie->getPath())) {
-            $header[] = 'Path=' . $cookie->getPath();
-        }
-
-        if (!empty($cookie->getDomain())) {
-            $header[] = 'Domain=' . $cookie->getDomain();
-        }
-
-        if ($cookie->isSecure()) {
-            $header[] = 'Secure';
-        }
-
-        if ($cookie->isHttpOnly()) {
-            $header[] = 'HttpOnly';
-        }
-
-        if (null !== $cookie->getSameSite()) {
-            $header[] = 'SameSite=' . $cookie->getSameSite();
-        }
-
-        return \join('; ', $header);
     }
 
     /**
@@ -179,22 +131,6 @@ final class CookieUtil
     }
 
     /**
-     * Validates a Max-Age attribute.
-     *
-     * @param null|int $maxAge
-     *
-     * @throws InvalidArgumentException if the Max-Age is not an empty or integer value
-     */
-    public static function validateMaxAge($maxAge): void
-    {
-        if (isset($maxAge)) {
-            if (!\is_int($maxAge)) {
-                throw new InvalidArgumentException('Max-Age must be integer');
-            }
-        }
-    }
-
-    /**
      * Remove the leading '.' and lowercase the domain as per spec in RFC 6265.
      *
      * @see http://tools.ietf.org/html/rfc6265#section-4.1.2.3
@@ -248,7 +184,7 @@ final class CookieUtil
 
         // convert expiration time to a Unix timestamp
         if ($expires instanceof DateTimeInterface) {
-            return $expires->format('U');
+            return (int) $expires->format('U');
         }
 
         if (\is_numeric($expires)) {

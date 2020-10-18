@@ -222,18 +222,17 @@ class ServerRequest implements ServerRequestInterface
      * @param string $key     the attribute name
      * @param mixed  $default default value to return if the attribute does not exist
      *
-     * @return null|CookieInterface
+     * @return mixed|CookieInterface
      */
-    public function getCookie($key, $default = null): ?CookieInterface
+    public function getCookie($key, $default = null)
     {
         $cookies = $this->getRequest()->getCookieParams();
-        $result  = $default;
 
         if (isset($cookies[$key])) {
-            $result = $cookies[$key];
+            return Cookie::fromString($cookies[$key]);
         }
 
-        return null !== $result ? Cookie::fromString($result) : $result;
+        return $default;
     }
 
     /**

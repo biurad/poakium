@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Http\Middlewares;
 
 use Biurad\Http\Interfaces\QueueingCookieInterface;
+use Biurad\Http\Strategies\QueueingCookie;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -32,7 +33,7 @@ use Throwable;
 final class CookiesMiddleware implements MiddlewareInterface
 {
     // request attribute
-    public const ATTRIBUTE = 'queueCookie';
+    public const ATTRIBUTE = QueueingCookie::class;
 
     /**
      * Queued Cookie storage.

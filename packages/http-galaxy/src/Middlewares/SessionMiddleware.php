@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Http\Middlewares;
 
 use Biurad\Http\Interfaces\SessionInterface;
+use Biurad\Http\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -26,7 +27,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 class SessionMiddleware implements MiddlewareInterface
 {
     // request attribute
-    public const ATTRIBUTE = 'session';
+    public const ATTRIBUTE = Session::class;
 
     /**
      * The session instance.
@@ -50,6 +51,8 @@ class SessionMiddleware implements MiddlewareInterface
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
+        $this->session->setRequestOnHandler($request); // For cookie handlers
+
         $response = $handler->handle($request->withAttribute(static::ATTRIBUTE, $this->session));
 
         if ($this->session->isStarted()) {

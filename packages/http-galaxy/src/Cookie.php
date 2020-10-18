@@ -75,6 +75,16 @@ final class Cookie extends SetCookie implements CookieInterface
     }
 
     /**
+     * Create a new cookie object from a string.
+     *
+     * @param string $cookie Set-Cookie header string
+     */
+    public static function fromString(string $cookie): self
+    {
+        return new self(parent::fromString($cookie)->toArray());
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function setExpires($timestamp): void
@@ -103,7 +113,9 @@ final class Cookie extends SetCookie implements CookieInterface
      */
     public function matches(CookieInterface $cookie): bool
     {
-        return $this->name === $cookie->name && $this->domain === $cookie->domain && $this->path === $cookie->path;
+        return $this->getName() === $cookie->getName() &&
+            $this->getDomain() === $cookie->getDomain() &&
+            $this->getPath() === $cookie->getPath();
     }
 
     /**
