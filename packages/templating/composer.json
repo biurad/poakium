@@ -1,5 +1,5 @@
 {
-    "name": "biurad/php-starter",
+    "name": "biurad/php-templating",
     "description": "A PHP package template repository.",
     "type": "library",
     "keywords": ["biurad","biuradphp","php7"],
@@ -16,10 +16,10 @@
         }
     ],
     "support": {
-        "docs": "https://docs.biurad.com/php-starter/",
-        "issues": "https://github.com/biurad/php-starter/issues",
-        "rss": "https://github.com/biurad/php-starter/releases.atom",
-        "source": "https://github.com/biurad/php-starter"
+        "docs": "https://docs.biurad.com/php-templating/",
+        "issues": "https://github.com/biurad/php-templating/issues",
+        "rss": "https://github.com/biurad/php-templating/releases.atom",
+        "source": "https://github.com/biurad/php-templating"
     },
     "require": {
         "php": "^7.1 || ^8.0"
