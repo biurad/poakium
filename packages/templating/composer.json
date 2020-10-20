@@ -1,6 +1,6 @@
 {
     "name": "biurad/php-templating",
-    "description": "A PHP package template repository.",
+    "description": "A library that provides all the tools needed in working with any kind of template system",
     "type": "library",
     "keywords": ["biurad","biuradphp","php7"],
     "homepage": "https://www.biurad.com",
@@ -34,12 +34,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Biurad\\Package\\": "src/"
+            "Biurad\\UI\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Biurad\\Package\\Tests\\": "tests/"
+            "Biurad\\UI\\Tests\\": "tests/"
         }
     },
     "scripts": {
