@@ -4,3 +4,17 @@ includes:
 parameters:
     level: max
     paths: [src]
+    checkGenericClassInNonGenericObjectType: false
+
+    ignoreErrors:
+        - "#^Cannot access offset bool\\|string on callable\\(\\): mixed.$#"
+        - "#^Only booleans are allowed in (a negated boolean|an if condition), (array<string>|string\\|null) given.$#"
+        -
+           message: "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
+           path: "src/Loader.php"
+        -
+           message: "#^Method Biurad\\\\UI\\\\Storage\\\\CacheStorage\\:\\:load\\(\\) should return string\\|null but returns string\\|false.$#"
+           path: "src/Storage/CacheStorage.php"
+        -
+           message: "#^Method Biurad\\\\UI\\\\Storage\\\\FilesystemStorage\\:\\:load\\(\\) should return string\\|null but returns string\\|false.$#"
+           path: "src/Storage/FilesystemStorage.php"
