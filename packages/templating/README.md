@@ -20,7 +20,7 @@ $ composer require biurad/templating
 
 This library is a collection of user interfaces of template files which include static (HTML) and dynamic parts. This library is not a compiler, but a hub to allow multiple rendering of server side template engines.
 
-To render view in controller or other service simply invoke `render` method of `Biurad\UI\Template`. The view name does not need to include extension (default to be used) by can include namespace. Template UI returns compiled template (ultimate HTML).
+To render view in controller or other service simply invoke `render` method of `Biurad\UI\Template`. The view name does not need to include extension (default to be used) but can include namespace. Template UI returns compiled template (ultimate HTML).
 
 ```php
 use Biurad\UI\Renders\PhpNativeRender;
