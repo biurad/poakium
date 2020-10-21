@@ -50,12 +50,12 @@ interface TemplateInterface
     /**
      * Renders a template.
      *
-     * @param string              $name       A template name or a namepace name to path
+     * @param string              $template   A template name or a namepace name to path
      * @param array<string,mixed> $parameters An array of parameters to pass to the template
      *
      * @throws RuntimeException if the template cannot be rendered
      *
      * @return string The evaluated template as a string
      */
-    public function render(string $name, array $parameters = []): string;
+    public function render(string $template, array $parameters = []): string;
 }
