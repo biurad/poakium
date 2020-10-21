@@ -28,7 +28,7 @@ use Psr\Cache\CacheItemInterface;
  *
  * @author Iain Connor <iainconnor@gmail.com>
  */
-interface CacheListener
+interface CacheListenerInterface
 {
     /**
      * Called before the cache plugin returns the response, with information on whether that response came from cache.
