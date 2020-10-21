@@ -84,11 +84,6 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
         $this->current       = $key;
         $this->parents[$key] = null;
 
-        // Avoid recompiling
-        if ($source->isCached()) {
-            return $source->getContent();
-        }
-
         // Render
         if (false === $content = $this->evaluate($source, $parameters)) {
             throw new RuntimeException(\sprintf('The template "%s" cannot be rendered.', $template));
@@ -334,20 +329,27 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
         // the view variable is exposed to the require file below
         $view = $this;
 
+        if ($this->evalTemplate->isCached() || !$this->evalTemplate->isFile()) {
+            extract($this->evalParameters, \EXTR_SKIP);
+            $this->evalParameters = null;
+
+            ob_start();
+            eval('; ?>'.$this->evalTemplate.'<?php ;');
+
+            $this->evalTemplate = null;
+
+            return ob_get_clean();
+        }
+
         \extract($this->evalParameters, \EXTR_SKIP);
         $this->evalParameters = null;
 
-        \ob_start();
-
-        if ($this->evalTemplate->isFile()) {
-            require $this->evalTemplate;
-        } else {
-            eval('; ?>' . $this->evalTemplate . '<?php ;');
-        }
+        ob_start();
+        require $this->evalTemplate;
 
         $this->evalTemplate = null;
 
-        return \ob_get_clean();
+        return ob_get_clean();
     }
 
     /**

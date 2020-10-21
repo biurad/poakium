@@ -83,7 +83,7 @@ class CacheStorage implements StorageInterface
             return null;
         }
 
-        $content = \file_get_contents($storage);
+        $content = file_exists($storage) ? \file_get_contents($storage) : $storage;
 
         if (!\is_dir($dir) && !@\mkdir($dir, 0777, true) && !\is_dir($dir)) {
             throw new RuntimeException(\sprintf('Cache Loader was not able to create directory "%s".', $dir));
