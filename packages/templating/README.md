@@ -1,4 +1,4 @@
-# The Biurad PHP Library Template
+# The Biurad PHP Template UI
 
 [![Latest Version](https://img.shields.io/packagist/v/biurad/templating.svg?style=flat-square)](https://packagist.org/packages/biurad/templating)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
@@ -8,7 +8,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-templating.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-templating)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-templating** is server side template ui for [PHP] 7.1+ created by [Divine Niiquaye][@divineniiquaye]. This library provides all the tools needed in working with any kind of template system.
+**biurad/php-templating** is server side template ui for [PHP] 7.1+ created by [Divine Niiquaye][@divineniiquaye]. This library provides all the tools needed in working with any kind of template system and offers a structured solution to implement server side renderable template engines (Twig, Stempler, Latte, Blade, or native PHP templates) segregation.
 
 ## 📦 Installation & Basic Usage
 
@@ -18,7 +18,29 @@ This project requires [PHP] 7.1 or higher. The recommended way to install, is vi
 $ composer require biurad/templating
 ```
 
-Write a bit of **How To** use this package, so developers can have a bit of idea about the repository before checking out documentation.
+This library is a collection of user interfaces of template files which include static (HTML) and dynamic parts. This library is not a compiler, but a hub to allow multiple rendering of server side template engines.
+
+To render view in controller or other service simply invoke `render` method of `Biurad\UI\Template`. The view name does not need to include extension (default to be used) by can include namespace. Template UI returns compiled template (ultimate HTML).
+
+```php
+use Biurad\UI\Renders\PhpNativeRender;
+use Biurad\UI\Helper\SlotsHelper;
+use Biurad\UI\FilesystemStorage;
+use Biurad\UI\Template;
+
+$filesystemLoader = new FilesystemStorage(__DIR__.'/views');
+
+$phpRenderEngine  = new PhpNativeRender();
+$phpRenderEngine->set(new SlotsHelper());
+
+$templating = new Template($filesystemLoader);
+$templating->addRender($phpRenderEngine);
+
+echo $templating->render('hello', ['firstname' => 'Divine']);
+
+// hello.phtml or hello.php or hello.html
+Hello, <?= $view->escape($firstname) ?>!
+```
 
 ## 📓 Documentation
 
