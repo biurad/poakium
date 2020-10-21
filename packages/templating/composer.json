@@ -1,5 +1,5 @@
 {
-    "name": "biurad/php-templating",
+    "name": "biurad/templating",
     "description": "A library that provides all the tools needed in working with any kind of template system",
     "type": "library",
     "keywords": ["biurad","biuradphp","php7"],
@@ -40,6 +40,11 @@
     "autoload-dev": {
         "psr-4": {
             "Biurad\\UI\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
         }
     },
     "scripts": {
