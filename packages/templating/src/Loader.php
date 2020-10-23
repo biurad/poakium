@@ -28,8 +28,8 @@ use InvalidArgumentException;
  */
 final class Loader implements LoaderInterface
 {
-    /** @var array<string,Source> */
-    protected $founds = [];
+    /** @var null|Profile */
+    protected $profiler;
 
     /** @var string[] */
     protected $extensions = [];
@@ -43,9 +43,10 @@ final class Loader implements LoaderInterface
     /**
      * @param StorageInterface $storage
      */
-    public function __construct(StorageInterface $storage)
+    public function __construct(StorageInterface $storage, ?Profile $profile = null)
     {
-        $this->storage = $storage;
+        $this->storage  = $storage;
+        $this->profiler = $profile;
     }
 
     /**
@@ -105,25 +106,29 @@ final class Loader implements LoaderInterface
      */
     public function find(string $view): Source
     {
-        if (isset($this->founds[$view])) {
-            return $this->founds[$view];
-        }
-
         if (!$this->exists($view, $template)) {
             throw new LoaderException("Unable to load view `$view`, file does not exists.");
         }
 
-        return $this->founds[$view] = new Source($template, $this->storage instanceof CacheStorage);
+        if (null !== $this->profiler) {
+            $profile = new Profile(Profile::TEMPLATE, $view);
+        }
+
+        try {
+            return new Source($template, $this->storage instanceof CacheStorage);
+        } finally {
+            if (null !== $this->profiler) {
+                $this->profiler->addProfile($profile->leave());
+            }
+        }
     }
 
     /**
-     * Get All found templates served to the user.
-     *
-     * @return array<string,Source>
+     * @return null|Profile
      */
-    public function getFounds(): array
+    public function getProfile(): ?Profile
     {
-        return $this->founds;
+        return $this->profiler;
     }
 
     /**

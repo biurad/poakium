@@ -36,11 +36,12 @@ final class Template implements TemplateInterface
 
     /**
      * @param StorageInterface  $storage
+     * @param null|Profile      $profile
      * @param RenderInterface[] $renders An array of RenderInterface instances to add
      */
-    public function __construct(StorageInterface $storage, array $renders = [])
+    public function __construct(StorageInterface $storage, ?Profile $profile = null, array $renders = [])
     {
-        $this->loader = new Loader($storage);
+        $this->loader = new Loader($storage, $profile);
 
         foreach ($renders as $render) {
             $this->addRender($render);
