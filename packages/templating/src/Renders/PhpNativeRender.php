@@ -329,27 +329,22 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
         // the view variable is exposed to the require file below
         $view = $this;
 
-        if ($this->evalTemplate->isCached() || !$this->evalTemplate->isFile()) {
-            extract($this->evalParameters, \EXTR_SKIP);
-            $this->evalParameters = null;
-
-            ob_start();
-            eval('; ?>'.$this->evalTemplate.'<?php ;');
-
-            $this->evalTemplate = null;
-
-            return ob_get_clean();
-        }
-
         \extract($this->evalParameters, \EXTR_SKIP);
         $this->evalParameters = null;
 
-        ob_start();
-        require $this->evalTemplate;
+        \ob_start();
 
+        if ($this->evalTemplate->isCached() || !$this->evalTemplate->isFile()) {
+            eval('; ?>' . $this->evalTemplate . '<?php ;');
+            $this->evalTemplate = null;
+
+            return \ob_get_clean();
+        }
+
+        require $this->evalTemplate;
         $this->evalTemplate = null;
 
-        return ob_get_clean();
+        return \ob_get_clean();
     }
 
     /**

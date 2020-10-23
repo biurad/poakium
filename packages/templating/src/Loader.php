@@ -28,7 +28,7 @@ use InvalidArgumentException;
  */
 final class Loader implements LoaderInterface
 {
-    /** @var Source[] */
+    /** @var array<string,Source> */
     protected $founds = [];
 
     /** @var string[] */
@@ -114,6 +114,16 @@ final class Loader implements LoaderInterface
         }
 
         return $this->founds[$view] = new Source($template, $this->storage instanceof CacheStorage);
+    }
+
+    /**
+     * Get All found templates served to the user.
+     *
+     * @return array<string,Source>
+     */
+    public function getFounds(): array
+    {
+        return $this->founds;
     }
 
     /**
