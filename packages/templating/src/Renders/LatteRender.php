@@ -49,7 +49,7 @@ final class LatteRender extends AbstractRender
         $source     = $this->getLoader()->find($template);
 
         $this->latte->setLoader(new StringLoader([
-            $template => (string) $source->isFile() ? \file_get_contents($source) : $source,
+            $template => $source->isFile() ? \file_get_contents($source) : $source->getContent(),
         ]));
 
         return $this->latte->renderToString($template, $parameters);

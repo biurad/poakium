@@ -56,7 +56,7 @@ final class TwigRender extends AbstractRender
 
         $this->environment->setLoader(new ChainLoader([
             new ArrayLoader([
-                $template => (string) $source->isFile() ? \file_get_contents($source) : $source,
+                $template => $source->isFile() ? \file_get_contents($source) : $source->getContent(),
             ]),
             $this->environment->getLoader(),
         ]));
