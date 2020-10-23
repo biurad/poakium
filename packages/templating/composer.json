@@ -26,11 +26,17 @@
     },
     "require-dev": {
         "composer/package-versions-deprecated": "^1.8",
+        "latte/latte": "^2.8",
         "phpstan/phpstan": "^0.12",
         "phpstan/phpstan-strict-rules": "^0.12",
         "phpunit/phpunit": "^8.5 || ^9.0",
         "squizlabs/php_codesniffer": "^3.5",
+        "twig/twig": "^3.1",
         "vimeo/psalm": "^3.11 || ^4.0"
+    },
+    "suggest": {
+        "latte/latte": "For a intuitive and fast template engine",
+        "twig/twig": "A flexible, fast, and secure template language for PHP"
     },
     "autoload": {
         "psr-4": {
