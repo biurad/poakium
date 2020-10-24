@@ -28,14 +28,19 @@ final class Profile implements IteratorAggregate
 {
     public const TEMPLATE = 'template';
 
+    /** @var string */
     private $template;
 
+    /** @var string */
     private $name;
 
+    /** @var array<string,int|float> */
     private $starts = [];
 
+    /** @var array<string,int|float> */
     private $ends = [];
 
+    /** @var Profile[] */
     private $profiles = [];
 
     public function __construct(string $template = 'main', string $name = 'main')
@@ -45,11 +50,6 @@ final class Profile implements IteratorAggregate
         $this->enter();
     }
 
-    public function getTemplate(): string
-    {
-        return $this->template;
-    }
-
     public function getName(): string
     {
         return $this->name;
@@ -57,7 +57,7 @@ final class Profile implements IteratorAggregate
 
     public function isTemplate(): bool
     {
-        return self::TEMPLATE === $this->type;
+        return self::TEMPLATE === $this->template;
     }
 
     /**
@@ -68,6 +68,9 @@ final class Profile implements IteratorAggregate
         return $this->profiles;
     }
 
+    /**
+     * @param Profile $profile
+     */
     public function addProfile(self $profile): void
     {
         $this->profiles[] = $profile;
