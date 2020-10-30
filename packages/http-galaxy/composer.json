@@ -36,7 +36,7 @@
         "phpunit/phpunit": "^8.5 || ^9.0",
         "psr/cache": "^1.0",
         "squizlabs/php_codesniffer": "^3.5",
-        "vimeo/psalm": "^3.11"
+        "vimeo/psalm": "^3.11 || ^4.0"
     },
     "suggest": {
         "biurad/cache": "To use the Cache Session Handler",
