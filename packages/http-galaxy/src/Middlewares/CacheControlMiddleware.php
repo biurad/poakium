@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
+use ArrayObject;
+use Biurad\Http\Cache\CacheControl;
 use Biurad\Http\Cache\Generator\SimpleGenerator;
 use Biurad\Http\Interfaces\CacheKeyGeneratorInterface;
 use Biurad\Http\Interfaces\CacheListenerInterface;
@@ -49,13 +51,13 @@ class CacheControlMiddleware implements MiddlewareInterface
     /** @var StreamFactoryInterface */
     private $streamFactory;
 
-    /** @var array<string,mixed> */
+    /** @var ArrayObject */
     private $config;
 
     /**
      * Cache directives indicating if a response can not be cached.
      *
-     * @var array
+     * @var string[]
      */
     private $noCacheFlags = ['no-cache', 'private', 'no-store'];
 
@@ -188,7 +190,7 @@ class CacheControlMiddleware implements MiddlewareInterface
         $nocacheDirectives = \array_intersect($this->config['respect_response_cache_directives'], $this->noCacheFlags);
 
         foreach ($nocacheDirectives as $nocacheDirective) {
-            if ($this->getCacheControlDirective($response, $nocacheDirective)) {
+            if (CacheControl::getCacheControlDirective($response, $nocacheDirective)) {
                 return false;
             }
         }
@@ -301,32 +303,6 @@ class CacheControlMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Get the value of a parameter in the cache control header.
-     *
-     * @param ResponseInterface $response
-     * @param string            $name     The field of Cache-Control to fetch
-     *
-     * @return bool|string The value of the directive, true if directive without value, false if directive not present
-     */
-    private function getCacheControlDirective(ResponseInterface $response, $name)
-    {
-        $headers = $response->getHeader('Cache-Control');
-
-        foreach ($headers as $header) {
-            if (\preg_match(\sprintf('|%s=?([0-9]+)?|i', $name), $header, $matches)) {
-                // return the value for $name if it exists
-                if (isset($matches[1])) {
-                    return $matches[1];
-                }
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * @param RequestInterface $request
      *
      * @return string
@@ -352,7 +328,7 @@ class CacheControlMiddleware implements MiddlewareInterface
         }
 
         // check for max age in the Cache-Control header
-        $maxAge = $this->getCacheControlDirective($response, 'max-age');
+        $maxAge = CacheControl::getCacheControlDirective($response, 'max-age');
 
         if (!\is_bool($maxAge)) {
             $ageHeaders = $response->getHeader('Age');
@@ -378,19 +354,23 @@ class CacheControlMiddleware implements MiddlewareInterface
      * Configure default options for cache control.
      *
      * @param array<string,mixed> $options
+     *
+     * @return ArrayObject
      */
-    private function configureOptions(array $options)
+    private function configureOptions(array $options): ArrayObject
     {
-        return \array_replace([
-            'cache_lifetime'                    => 86400 * 30, // 30 days
-            'default_ttl'                       => 0,
-            'hash_algo'                         => 'sha1',
-            'methods'                           => ['GET', 'HEAD'],
-            'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
-            'cache_key_generator'               => null,
-            'cache_listeners'                   => [],
-            'blacklisted_paths'                 => [],
-        ], $options);
+        return new ArrayObject(
+            \array_replace([
+                'cache_lifetime'                    => 86400 * 30, // 30 days
+                'default_ttl'                       => 0,
+                'hash_algo'                         => 'sha1',
+                'methods'                           => ['GET', 'HEAD'],
+                'respect_response_cache_directives' => ['no-cache', 'private', 'max-age', 'no-store'],
+                'cache_key_generator'               => null,
+                'cache_listeners'                   => [],
+                'blacklisted_paths'                 => [],
+            ], $options)
+        );
     }
 
     /**

@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Cache\Listener;
 
-use Biurad\Http\Interfaces\CacheListener;
+use Biurad\Http\Interfaces\CacheListenerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Cache\CacheItemInterface;
@@ -27,7 +27,7 @@ use Psr\Cache\CacheItemInterface;
  *
  * @author Iain Connor <iainconnor@gmail.com>
  */
-class AddHeaderCacheListener implements CacheListener
+class AddHeaderCacheListener implements CacheListenerInterface
 {
     /** @var string */
     private $headerName;
