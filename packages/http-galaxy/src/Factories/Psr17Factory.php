@@ -19,6 +19,12 @@ namespace Biurad\Http\Factories;
 
 use Biurad\Http\Exceptions;
 use Biurad\Http\Interfaces\Psr17Interface;
+use Biurad\Http\Request;
+use Biurad\Http\Response;
+use Biurad\Http\ServerRequest;
+use Biurad\Http\Stream;
+use Biurad\Http\UploadedFile;
+use Biurad\Http\Uri;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -40,34 +46,22 @@ use ReflectionClass;
  */
 abstract class Psr17Factory implements Psr17Interface
 {
-    /**
-     * @var string<ResponseFactoryInterface>
-     */
+    /** @var string<ResponseFactoryInterface> */
     protected $responseFactoryClass;
 
-    /**
-     * @var string<RequestFactoryInterface>
-     */
+    /** @var string<RequestFactoryInterface> */
     protected $serverRequestFactoryClass;
 
-    /**
-     * @var string<RequestFactoryInterface>
-     */
+    /** @var string<RequestFactoryInterface> */
     protected $requestFactoryClass;
 
-    /**
-     * @var string<StreamFactoryInterface>
-     */
+    /** @var string<StreamFactoryInterface> */
     protected $streamFactoryClass;
 
-    /**
-     * @var string<UriFactoryInterface>
-     */
+    /** @var string<UriFactoryInterface> */
     protected $uriFactoryClass;
 
-    /**
-     * @var string<UploadedFileFactoryInterface>
-     */
+    /** @var string<UploadedFileFactoryInterface> */
     protected $uploadedFilesFactoryClass;
 
     public function __construct()
@@ -80,10 +74,16 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createRequest(string $method, $uri): RequestInterface
     {
-        $factory = self::isFactoryDecoratorAvailable($this->requestFactoryClass, RequestFactoryInterface::class);
-        \assert($factory instanceof RequestFactoryInterface);
+        /** @var RequestFactoryInterface $factory */
+        $factory  = self::isFactoryDecoratorAvailable($this->requestFactoryClass, RequestFactoryInterface::class);
+        $response = $factory->createRequest($method, $uri);
 
-        return $factory->createRequest($method, $uri);
+        if (!$response instanceof Request) {
+            $request  = new Request($response->getMethod(), $response->getUri());
+            $response = $request->withRequest($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -91,10 +91,16 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
     {
+        /** @var ResponseFactoryInterface $factory */
         $factory = self::isFactoryDecoratorAvailable($this->responseFactoryClass, ResponseFactoryInterface::class);
-        \assert($factory instanceof ResponseFactoryInterface);
 
-        return $factory->createResponse($code, $reasonPhrase);
+        $response = $factory->createResponse($code, $reasonPhrase);
+
+        if (!$response instanceof Response) {
+            $response = (new Response())->withResponse($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -102,10 +108,16 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
+        /** @var StreamFactoryInterface $factory */
         $factory = self::isFactoryDecoratorAvailable($this->streamFactoryClass, StreamFactoryInterface::class);
-        \assert($factory instanceof StreamFactoryInterface);
 
-        return $factory->createStream($content);
+        $response = $factory->createStream($content);
+
+        if (!$response instanceof Stream) {
+            $response = (new Stream())->withStream($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -113,14 +125,19 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
+        /** @var StreamFactoryInterface $factory */
         $factory = self::isFactoryDecoratorAvailable($this->streamFactoryClass, StreamFactoryInterface::class);
-        \assert($factory instanceof StreamFactoryInterface);
 
         if ('' === $mode || false === \in_array($mode[0], ['r', 'w', 'a', 'x', 'c'], true)) {
             throw new Exceptions\InvalidPsr17FactoryException('The mode ' . $mode . ' is invalid.');
         }
+        $response = $factory->createStreamFromFile($filename, $mode);
 
-        return $factory->createStreamFromFile($filename, $mode);
+        if (!$response instanceof Stream) {
+            $response = (new Stream())->withStream($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -128,10 +145,15 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        $factory = self::isFactoryDecoratorAvailable($this->streamFactoryClass, StreamFactoryInterface::class);
-        \assert($factory instanceof StreamFactoryInterface);
+        /** @var StreamFactoryInterface $factory */
+        $factory  = self::isFactoryDecoratorAvailable($this->streamFactoryClass, StreamFactoryInterface::class);
+        $response = $factory->createStreamFromResource($resource);
 
-        return $factory->createStreamFromResource($resource);
+        if (!$response instanceof Stream) {
+            $response = (new Stream())->withStream($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -144,13 +166,20 @@ abstract class Psr17Factory implements Psr17Interface
         string $clientFilename = null,
         string $clientMediaType = null
     ): UploadedFileInterface {
+        /** @var UploadedFileFactoryInterface $factory */
         $factory = self::isFactoryDecoratorAvailable(
             $this->uploadedFilesFactoryClass,
             UploadedFileFactoryInterface::class
         );
-        \assert($factory instanceof UploadedFileFactoryInterface);
 
-        return $factory->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType);
+        $response = $factory->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType);
+
+        if (!$response instanceof UploadedFile) {
+            $uploaded = new UploadedFile($response->getStream(), $response->getSize(), $response->getError());
+            $response = $uploaded->withUploadFile($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -158,10 +187,15 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createUri(string $uri = ''): UriInterface
     {
-        $factory = self::isFactoryDecoratorAvailable($this->uriFactoryClass, UriFactoryInterface::class);
-        \assert($factory instanceof UriFactoryInterface);
+        /** @var UriFactoryInterface $factory */
+        $factory  = self::isFactoryDecoratorAvailable($this->uriFactoryClass, UriFactoryInterface::class);
+        $response = $factory->createUri($uri);
 
-        return $factory->createUri($uri);
+        if (!$response instanceof Uri) {
+            $response = (new Uri())->withUri($response);
+        }
+
+        return $response;
     }
 
     /**
@@ -169,10 +203,16 @@ abstract class Psr17Factory implements Psr17Interface
      */
     public function createServerRequest(string $method, $uri, array $serverParams = []): ServerRequestInterface
     {
-        $factory = self::isFactoryDecoratorAvailable($this->streamFactoryClass, ServerRequestFactoryInterface::class);
-        \assert($factory instanceof ServerRequestFactoryInterface);
+        /** @var ServerRequestFactoryInterface $factory */
+        $factory  = self::isFactoryDecoratorAvailable($this->streamFactoryClass, ServerRequestFactoryInterface::class);
+        $response = $factory->createServerRequest($method, $uri, $serverParams);
 
-        return $factory->createServerRequest($method, $uri, $serverParams);
+        if (!$response instanceof ServerRequest) {
+            $request  = new ServerRequest($response->getMethod(), $response->getUri());
+            $response = $request->withRequest($response);
+        }
+
+        return $response;
     }
 
     /**
