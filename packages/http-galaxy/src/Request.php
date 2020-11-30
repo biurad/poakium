@@ -24,7 +24,9 @@ use Psr\Http\Message\UriInterface;
 
 class Request implements RequestInterface
 {
-    use Traits\RequestDecoratorTrait;
+    use Traits\RequestDecoratorTrait {
+        getRequest as private;
+    }
 
     /**
      * @param string                               $method  HTTP method

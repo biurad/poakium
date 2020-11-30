@@ -17,7 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Traits;
 
+use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\CookieInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use stdClass;
 
 trait ServerRequestDecoratorTrait
 {
@@ -37,6 +40,21 @@ trait ServerRequestDecoratorTrait
         $message = $this->getMessage();
 
         return $message;
+    }
+
+    /**
+     * Exchanges the underlying server request with another.
+     *
+     * @param ServerRequestInterface $request
+     *
+     * @return ServerRequestInterface
+     */
+    public function withRequest(ServerRequestInterface $request): ServerRequestInterface
+    {
+        $new          = clone $this;
+        $new->message = $request;
+
+        return $new;
     }
 
     /**
@@ -109,20 +127,6 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withAttributes(array $attributes)
-    {
-        $new = clone $this;
-
-        foreach ($attributes as $attribute => $value) {
-            $new->message = $new->withAttribute($attribute, $value);
-        }
-
-        return $new;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function withoutAttribute($name)
     {
         $new          = clone $this;
@@ -173,5 +177,115 @@ trait ServerRequestDecoratorTrait
         $new->message = $this->getRequest()->withUploadedFiles($uploadedFiles);
 
         return $new;
+    }
+
+    /**
+     * Fetch cookie value from cookies sent by the client to the server.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param string $key     the attribute name
+     * @param mixed  $default default value to return if the attribute does not exist
+     *
+     * @return CookieInterface|mixed
+     */
+    public function getCookie(string $key, $default = null)
+    {
+        $cookies = $this->getRequest()->getCookieParams();
+
+        if (isset($cookies[$key])) {
+            return Cookie::fromString($cookies[$key]);
+        }
+
+        return $default;
+    }
+
+    /**
+     * Checks if a cookie exists in the browser's request
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param string $name The cookie name
+     *
+     * @return bool
+     */
+    public function hasCookie(string $name): bool
+    {
+        return $this->getCookie($name) instanceof CookieInterface;
+    }
+
+    /**
+     * Fetch serverRequest parameter value from server, body or query string (in that order).
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param string $key     the parameter key
+     * @param mixed  $default the default value
+     *
+     * @return mixed the parameter value
+     */
+    public function getParameter(string $key, $default = null)
+    {
+        $request = $this->getRequest();
+
+        $postParams = $request->getParsedBody();
+        $getParams  = $request->getQueryParams();
+        $result     = $default;
+
+        if (array_key_exists($key, $serverParams = $request->getServerParams())) {
+            return $serverParams[$key];
+        }
+
+        if (\is_array($postParams) && isset($postParams[$key])) {
+            $result = $postParams[$key];
+        } elseif (\is_object($postParams) && $postParams instanceof stdClass) {
+            $result = $postParams->{$key};
+        }
+
+        if (null === $result && isset($getParams[$key])) {
+            $result = $getParams[$key];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Generates a normalized URI for the given path,
+     * Including active port on current domain.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param string $path A path to use instead of the current one
+     *
+     * @return string The normalized URI for the path
+     */
+    public function getUriForPath(string $path): string
+    {
+        $uri    = $this->getUri();
+        $port   = $uri->getPort();
+        $query  = $uri->getQuery();
+
+        if ('' !== $query) {
+            $query = '?' . $query;
+        }
+
+        if (null !== $uri->getPort() && !\in_array($uri->getPort(), [80, 443], true)) {
+            $port = ':' . $uri->getPort();
+        }
+
+        return \sprintf('%s://%s%s', $uri->getScheme(), $uri->getAuthority(), $port . $path . $query);
+    }
+
+    /**
+     * Get ip addr resolved from $_SERVER['REMOTE_ADDR']. Will return null if nothing if key not
+     * exists. Consider using psr-15 middlewares to customize configuration.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @return null|string
+     */
+    public function getRemoteAddress(): ?string
+    {
+        return $this->getParameter('REMOTE_ADDR');
     }
 }

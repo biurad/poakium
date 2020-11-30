@@ -24,9 +24,6 @@ class Uri implements UriInterface
 {
     use Traits\UriDecorationTrait;
 
-    /** @var array Array of Uri query. */
-    private $queryParams;
-
     public function __construct(string $uri = '')
     {
         $this->uri = new GuzzleUri($uri);
@@ -36,6 +33,8 @@ class Uri implements UriInterface
      * Whether the URI has the default port of the current scheme.
      *
      * `$uri->getPort()` may return the standard port. This method can be used for some non-http/https Uri.
+     *
+     * Note: This method is not part of the PSR-7 standard.
      *
      * @return bool
      */
@@ -54,6 +53,8 @@ class Uri implements UriInterface
      * - absolute-path references, e.g. '/path'
      * - relative-path references, e.g. 'subpath'
      *
+     * Note: This method is not part of the PSR-7 standard.
+     *
      * @return bool
      *
      * @see https://tools.ietf.org/html/rfc3986#section-4
@@ -67,6 +68,8 @@ class Uri implements UriInterface
      * Whether the URI is a network-path reference.
      *
      * A relative reference that begins with two slash characters is termed an network-path reference.
+     *
+     * Note: This method is not part of the PSR-7 standard.
      *
      * @return bool
      *
@@ -82,6 +85,8 @@ class Uri implements UriInterface
      *
      * A relative reference that begins with a single slash character is termed an absolute-path reference.
      *
+     * Note: This method is not part of the PSR-7 standard.
+     *
      * @return bool
      *
      * @see https://tools.ietf.org/html/rfc3986#section-4.2
@@ -95,6 +100,8 @@ class Uri implements UriInterface
      * Whether the URI is a relative-path reference.
      *
      * A relative reference that does not begin with a slash character is termed a relative-path reference.
+     *
+     * Note: This method is not part of the PSR-7 standard.
      *
      * @return bool
      *
@@ -111,6 +118,8 @@ class Uri implements UriInterface
      * A same-document reference refers to a URI that is, aside from its fragment
      * component, identical to the base URI. When no base URI is given, only an empty
      * URI reference (apart from its fragment) is considered a same-document reference.
+     *
+     * Note: This method is not part of the PSR-7 standard.
      *
      * @param null|UriInterface $base An optional base URI to compare against
      *

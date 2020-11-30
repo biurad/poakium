@@ -23,33 +23,65 @@ use Psr\Http\Message\UploadedFileInterface;
 trait UploadedFileDecoratorTrait
 {
     /** @var UploadedFileInterface */
-    protected $uploadedFile;
+    private $uploadedFile;
 
+    /**
+     * Exchanges the underlying uploadedFile with another.
+     *
+     * @param UploadedFileInterface $uploadedFile
+     *
+     * @return UploadedFileInterface
+     */
+    public function withUploadFile(UploadedFileInterface $uploadedFile): UploadedFileInterface
+    {
+        $this->uploadedFile = $uploadedFile;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getStream(): StreamInterface
     {
         return $this->uploadedFile->getStream();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function moveTo($targetPath): void
     {
         $this->uploadedFile->moveTo($targetPath);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getSize(): ?int
     {
         return $this->uploadedFile->getSize();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getError(): int
     {
         return $this->uploadedFile->getError();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getClientFilename(): ?string
     {
         return $this->uploadedFile->getClientFilename();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getClientMediaType(): ?string
     {
         return $this->uploadedFile->getClientMediaType();

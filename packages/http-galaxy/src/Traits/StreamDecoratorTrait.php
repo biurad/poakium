@@ -22,7 +22,7 @@ use Psr\Http\Message\StreamInterface;
 trait StreamDecoratorTrait
 {
     /** @var StreamInterface */
-    protected $stream;
+    private $stream;
 
     public function __destruct()
     {
@@ -35,6 +35,20 @@ trait StreamDecoratorTrait
     public function __toString(): string
     {
         return $this->stream->__toString();
+    }
+
+    /**
+     * Exchanges the underlying stream with another.
+     *
+     * @param StreamInterface $stream
+     *
+     * @return StreamInterface
+     */
+    public function withStream(StreamInterface $stream): StreamInterface
+    {
+        $this->stream = $stream;
+
+        return $this;
     }
 
     /**
