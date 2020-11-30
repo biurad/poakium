@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Factory;
 
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -24,18 +25,18 @@ class StreamFactory implements StreamFactoryInterface
 {
     public function createStream(string $content = ''): StreamInterface
     {
-        return \GuzzleHttp\Psr7\stream_for($content);
+        return Utils::streamFor($content);
     }
 
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        $resource = \GuzzleHttp\Psr7\try_fopen($file, $mode);
+        $resource = Utils::tryFopen($file, $mode);
 
-        return \GuzzleHttp\Psr7\stream_for($resource);
+        return Utils::streamFor($resource);
     }
 
     public function createStreamFromResource($resource): StreamInterface
     {
-        return \GuzzleHttp\Psr7\stream_for($resource);
+        return Utils::streamFor($resource);
     }
 }
