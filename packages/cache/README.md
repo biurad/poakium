@@ -1,4 +1,4 @@
-# The Biurad PHP-Cache
+# The Biurad PHP Cache
 
 [![Latest Version](https://img.shields.io/packagist/v/biurad/cache.svg?style=flat-square)](https://packagist.org/packages/biurad/cache)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
