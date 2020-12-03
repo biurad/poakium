@@ -19,7 +19,7 @@ namespace Biurad\Cache\Tests;
 
 use Biurad\Cache\AdapterFactory;
 use Biurad\Cache\CacheItemPool;
-use Biurad\Cache\SimpleCache;
+use Biurad\Cache\LoggableStorage;
 use Cache\IntegrationTests\CachePoolTest;
 
 class CacheItemPoolTest extends CachePoolTest
@@ -27,7 +27,7 @@ class CacheItemPoolTest extends CachePoolTest
     public function createCachePool()
     {
         $adapter = AdapterFactory::createHandler('file://' . __DIR__ . '/caches/psr6');
-        
-        return new CacheItemPool($adapter);
+
+        return new CacheItemPool(new LoggableStorage($adapter));
     }
 }

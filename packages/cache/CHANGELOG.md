@@ -14,6 +14,7 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 - Added phpunit tests for PSR6 and PRS-16
 - Added tests for **psalm**, **github actions**, **phpstan** and **phpcs** for PSR-12 coding standing
 - Added **cache/simple-cache-bridge** and **cache/integration-tests** integration
+- Added `Biurad\Cache\LoggableStorage` class to debug doctrine cache adapter
 
 ### Changed
 - Replaced `BiuradPHP` namespace to `Biurad` on all classes.

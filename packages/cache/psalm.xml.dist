@@ -33,6 +33,12 @@
             </errorLevel>
         </PossiblyUndefinedVariable>
 
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/LoggableStorage.php"/>
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+
         <UndefinedClass>
             <errorLevel type="suppress">
                 <file name="src/AdapterFactory.php"/>
