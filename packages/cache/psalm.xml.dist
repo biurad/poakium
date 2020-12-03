@@ -44,6 +44,12 @@
                 <file name="src/AdapterFactory.php"/>
             </errorLevel>
         </UndefinedClass>
+        
+        <InvalidLiteralArgument>
+            <errorLevel type="suppress">
+                <file name="src/AdapterFactory.php"/>
+            </errorLevel>
+        </InvalidLiteralArgument>
 
         <RedundantCondition>
             <errorLevel type="suppress">
