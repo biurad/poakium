@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions;
 
-use Biurad\Http\Interfaces\QueueingCookieInterface;
+use Biurad\Http\Interfaces\CookieFactoryInterface;
 use InvalidArgumentException;
 use PDO;
 use Psr\Cache\CacheItemPoolInterface;
@@ -31,7 +31,7 @@ class HandlerFactory
     /** @var null|CacheItemPoolInterface */
     private $cache;
 
-    /** @var null|QueueingCookieInterface */
+    /** @var null|CookieFactoryInterface */
     private $cookie;
 
     /** @var null|int|string */
@@ -39,12 +39,12 @@ class HandlerFactory
 
     /**
      * @param null|CacheItemPoolInterface  $cache
-     * @param null|QueueingCookieInterface $cookie
+     * @param null|CookieFactoryInterface $cookie
      * @param null|int|string              $minutes
      */
     public function __construct(
         ?CacheItemPoolInterface $cache = null,
-        ?QueueingCookieInterface $cookie = null,
+        ?CookieFactoryInterface $cookie = null,
         $minutes = null
     ) {
         $this->cache    = $cache;

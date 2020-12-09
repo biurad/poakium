@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace Biurad\Http\Sessions\Handlers;
 
 use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Biurad\Http\Interfaces\CookieInterface;
-use Biurad\Http\Interfaces\QueueingCookieInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class CookieSessionHandler extends AbstractSessionHandler
@@ -27,7 +27,7 @@ class CookieSessionHandler extends AbstractSessionHandler
     /**
      * The cookie jar instance.
      *
-     * @var QueueingCookieInterface
+     * @var CookieFactoryInterface
      */
     protected $cookie;
 
@@ -62,10 +62,10 @@ class CookieSessionHandler extends AbstractSessionHandler
     /**
      * Create a new cookie driven handler instance.
      *
-     * @param QueueingCookieInterface $cookie
+     * @param CookieFactoryInterface $cookie
      * @param int                     $minutes
      */
-    public function __construct(QueueingCookieInterface $cookie, $minutes = null)
+    public function __construct(CookieFactoryInterface $cookie, $minutes = null)
     {
         $this->cookie = $cookie;
         $this->name   = 'sess_' . \hash('md5', __CLASS__);
@@ -100,20 +100,16 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     public function doWrite($sessionId, $data)
     {
-        $secured = \method_exists($this->request, 'isSecured')
-            ? $this->request->isSecured()
-            : \array_key_exists('HTTPS', $this->request->getServerParams());
-
-        $value = \json_encode([$sessionId => ['data' => $data, 'expires' => $this->minutes]]);
+        $secured = 'https' === $this->request->getUri()->getScheme();
+        $value   = \json_encode([$sessionId => ['data' => $data, 'expires' => $this->minutes]]);
 
         $session  = new Cookie([
             'Name'     => $this->name,
             'Value'    => $value,
-            'Domain'   => '',
+            'Domain'   => null,
             'Path'     => '/',
             'Max-Age'  => $this->minutes,
             'Secure'   => $secured,
-            'HttpOnly' => !$secured,
             'SameSite' => null,
         ]);
 

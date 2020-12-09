@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Handlers;
 
-use Biurad\Http\Cookie;
+use Biurad\Http\Utils\CookieUtil;
 use Biurad\Http\Utils\SessionUtils;
 use LogicException;
 use SessionHandlerInterface;
@@ -140,7 +140,7 @@ abstract class AbstractSessionHandler implements SessionHandlerInterface, Sessio
              * started the session).
              */
             if (null === $cookie || isset($_COOKIE[$this->sessionName])) {
-                Cookie::setcookie(
+                CookieUtil::setcookie(
                     $this->sessionName,
                     '',
                     0,
