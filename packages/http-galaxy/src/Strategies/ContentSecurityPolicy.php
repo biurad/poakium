@@ -44,6 +44,14 @@ class ContentSecurityPolicy implements CspInterface
     private $cspDisabled = false;
 
     /**
+     * @param bool $disable
+     */
+    public function __construct(bool $disable = false)
+    {
+        $this->cspDisabled = $disable;
+    }
+
+    /**
      * Returns an array of nonces and Content-Security-Policy headers.
      *
      * Nonce can be provided by;
@@ -52,9 +60,9 @@ class ContentSecurityPolicy implements CspInterface
      *  - The response -  A call to getNonces() has already been done previously. Same nonce are returned
      *  - They are otherwise randomly generated
      *
-     * @return array
+     * @return array<string,string>
      */
-    public function getNonces(ServerRequestInterface $request, ResponseInterface &$response): array
+    public function getNonces(ServerRequestInterface $request, ResponseInterface $response): array
     {
         if ($request->hasHeader('X-Script-Nonce') && $request->hasHeader('X-Style-Nonce')) {
             return [
@@ -75,20 +83,7 @@ class ContentSecurityPolicy implements CspInterface
             'csp_style_nonce'  => $this->generateNonce(),
         ];
 
-        $response = $response->withAddedHeader('X-Script-Nonce', $nonces['csp_script_nonce'])
-            ->withAddedHeader('X-Style-Nonce', $nonces['csp_style_nonce']);
-
         return $nonces;
-    }
-
-    /**
-     * Disables Content-Security-Policy.
-     *
-     * All related headers will be removed.
-     */
-    public function disableCsp(): void
-    {
-        $this->cspDisabled = true;
     }
 
     /**
@@ -102,20 +97,18 @@ class ContentSecurityPolicy implements CspInterface
             return $this->removeCspHeaders($response);
         }
 
-        $nonces     = $this->getNonces($request, $response);
-        $response   = $this->cleanHeaders($response);
-        $nonces     = $this->updateCspHeaders($response, $nonces);
+        $nonces   = $this->getNonces($request, $response);
+        $response = $this->cleanHeaders($response);
+        $nonces   = $this->updateCspHeaders($response, $nonces);
 
         return $nonces;
     }
 
-    private function &cleanHeaders(ResponseInterface $response): ResponseInterface
+    private function cleanHeaders(ResponseInterface $response): ResponseInterface
     {
-        $response = $response
+        return $response
             ->withoutHeader('X-Script-Nonce')
             ->withoutHeader('X-Style-Nonce');
-
-        return $response;
     }
 
     private function removeCspHeaders(ResponseInterface $response): ResponseInterface
