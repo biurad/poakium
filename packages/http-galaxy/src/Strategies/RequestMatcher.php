@@ -37,8 +37,8 @@ class RequestMatcher implements RequestMatcherInterface
     /** @var null|string */
     private $path;
 
-    /** @var null|string */
-    private $host;
+    /** @var null|string|string[] */
+    private $hosts = [];
 
     /** @var null|int */
     private $port;
@@ -57,7 +57,7 @@ class RequestMatcher implements RequestMatcherInterface
 
     /**
      * @param string               $path
-     * @param string               $host
+     * @param string|string[]      $host
      * @param string|string[]      $methods
      * @param string|string[]      $ips
      * @param string[]             $schemes
@@ -66,7 +66,7 @@ class RequestMatcher implements RequestMatcherInterface
      */
     public function __construct(
         string $path = null,
-        string $host = null,
+        $host = null,
         $methods = null,
         $ips = null,
         array $schemes = null,
@@ -97,10 +97,12 @@ class RequestMatcher implements RequestMatcherInterface
 
     /**
      * Adds a check for the URL host name.
+     *
+     * @param string|string[] $regexp
      */
-    public function matchHost(?string $regexp): void
+    public function matchHost($regexp): void
     {
-        $this->host = $regexp;
+        $this->hosts = (array) $regexp;
     }
 
     /**
@@ -189,8 +191,12 @@ class RequestMatcher implements RequestMatcherInterface
             return false;
         }
 
-        if (null !== $this->host && !\preg_match('{' . $this->host . '}i', $requestUri->getHost())) {
-            return false;
+        if (\count($this->hosts) > 0) {
+            foreach ($this->hosts as $hostRegexp) {
+                if (!\preg_match('{' . $hostRegexp . '}i', $requestUri->getHost())) {
+                    return false;
+                }
+            }
         }
 
         if (null !== $this->port && 0 < $this->port && $requestUri->getPort() !== $this->port) {
