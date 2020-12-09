@@ -278,7 +278,7 @@ class AccessControlMiddleware implements MiddlewareInterface
         ], $options);
 
         // normalize array('*') to true
-        foreach (['allow_origin', 'allow_headers'] as $wildcard) {
+        foreach (['allow_origin', 'allow_headers', 'allow_paths'] as $wildcard) {
             if ($options[$wildcard] === '*') {
                 $options[$wildcard] = true;
             }
