@@ -45,6 +45,48 @@ final class CookieUtil
     ];
 
     /**
+     * Proxy for the native setcookie function - to allow mocking in unit tests so that they do not fail when headers
+     * have been sent. But can serve better when used natively to set cookies.
+     *
+     * @param string      $name
+     * @param string      $value
+     * @param int         $expire
+     * @param string      $path
+     * @param string      $domain
+     * @param bool        $secure
+     * @param bool        $httponly
+     * @param null|string $sameSite
+     *
+     * @return bool
+     *
+     * @see setcookie
+     */
+    public static function setcookie(
+        $name,
+        $value = '',
+        $expires = 0,
+        $path = '',
+        $domain = '',
+        $secure = false,
+        $httponly = false,
+        $samesite = null
+    ) {
+        if (\PHP_VERSION_ID >= 70300) {
+            return \setcookie($name, $value, \compact('path', 'expires', 'domain', 'secure', 'httponly', 'samesite'));
+        }
+
+        return \setcookie(
+            $name,
+            $value,
+            $expires,
+            $path . ($samesite ? "; SameSite=$samesite" : ''),
+            $domain,
+            $secure,
+            $httponly
+        );
+    }
+
+    /**
      * @see https://github.com/symfony/symfony/blob/master/src/Symfony/Component/BrowserKit/Cookie.php
      *
      * @param string $dateValue

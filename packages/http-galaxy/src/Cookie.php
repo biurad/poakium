@@ -60,10 +60,13 @@ final class Cookie extends SetCookie implements CookieInterface
     public function __construct(array $data = [])
     {
         /** @var null|array $replaced will be null in case of replace error */
-        $replaced = \array_replace(self::$defaults, $data);
-
-        if ($replaced === null) {
+        if (null === $replaced = \array_replace(self::$defaults, $data)) {
             throw new InvalidArgumentException('Unable to replace the default values for the Cookie.');
+        }
+
+        // Set HttpOnly to opposite if Secure exists
+        if (isset($replaced['Secure'])) {
+            $replaced['HttpOnly'] = !$replaced['Secure'];
         }
 
         if (!\in_array($replaced['SameSite'], self::SAMESITE_COLLECTION, true)) {
@@ -133,47 +136,5 @@ final class Cookie extends SetCookie implements CookieInterface
         }
 
         return false;
-    }
-
-    /**
-     * Proxy for the native setcookie function - to allow mocking in unit tests so that they do not fail when headers
-     * have been sent. But can serve better when used natively to set cookies.
-     *
-     * @param string      $name
-     * @param string      $value
-     * @param int         $expire
-     * @param string      $path
-     * @param string      $domain
-     * @param bool        $secure
-     * @param bool        $httponly
-     * @param null|string $sameSite
-     *
-     * @return bool
-     *
-     * @see setcookie
-     */
-    public static function setcookie(
-        $name,
-        $value = '',
-        $expires = 0,
-        $path = '',
-        $domain = '',
-        $secure = false,
-        $httponly = false,
-        $samesite = null
-    ) {
-        if (\PHP_VERSION_ID >= 70300) {
-            return \setcookie($name, $value, \compact('path', 'expires', 'domain', 'secure', 'httponly', 'samesite'));
-        }
-
-        return \setcookie(
-            $name,
-            $value,
-            $expires,
-            $path . ($samesite ? "; SameSite=$samesite" : ''),
-            $domain,
-            $secure,
-            $httponly
-        );
     }
 }
