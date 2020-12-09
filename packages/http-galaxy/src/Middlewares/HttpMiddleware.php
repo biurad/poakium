@@ -35,7 +35,7 @@ class HttpMiddleware implements MiddlewareInterface
 
     public function __construct(array $config = [])
     {
-        $this->config = $config;
+        $this->config = $this->normalizeConfig($config);
     }
 
     /**
@@ -64,25 +64,30 @@ class HttpMiddleware implements MiddlewareInterface
         $policies   = $config['policies'] ?? [];
         $headers    = \array_map('strval', $config['headers']['response'] ?? []);
 
-        if (($frames = $policies['frame_policy']) === false) {
-            $frames = 'DENY';
-        } elseif (\preg_match('#^https?:#', $policies['frame_policy'])) {
-            $frames = "ALLOW-FROM $frames";
+        if (null !== $frames = $policies['frame_policy']) {
+            if (\preg_match('#^https?:#', $policies['frame_policy'])) {
+                $frames = "ALLOW-FROM $frames";
+            }
+
+            $headers['X-Frame-Options'] = false === $frames ? 'DENY' : $frames;
         }
 
-        $headers['X-Frame-Options'] = $frames;
-
         foreach (['content_security_policy', 'csp_report_only'] as $key) {
+            $cpKey = ($key === 'content_security_policy' ? '' : '-Report-Only');
+
             if (!isset($policies[$key])) {
                 continue;
             }
 
-            $cpKey                                       = ($key === 'content_security_policy' ? '' : '-Report-Only');
             $headers['Content-Security-Policy' . $cpKey] = $value = $this->buildPolicy($policies[$key]);
         }
 
         if (isset($config['feature_policy'])) {
             $headers['Feature-Policy'] = $this->buildPolicy($config['feature_policy']);
+        }
+
+        if (isset($config['referrer_policy'])) {
+            $headers['Referrer-Policy'] = \implode(', ', $config['referrer_policy']);
         }
 
         foreach ($headers as $key => $value) {
@@ -113,5 +118,24 @@ class HttpMiddleware implements MiddlewareInterface
         }
 
         return $value;
+    }
+
+    /**
+     * Normalize the options for usage
+     *
+     * @param array $options
+     *
+     * @return array
+     */
+    private function normalizeConfig(array $options = []): array
+    {
+        $options = \array_merge([
+            'headers'      => ['response' => [], 'request' => []],
+            'policies'     => [
+                'frame_policy' => null,
+            ],
+        ], $options);
+
+        return $options;
     }
 }
