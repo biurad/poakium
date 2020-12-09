@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use Biurad\Http\Interfaces\QueueingCookieInterface;
-use Biurad\Http\Strategies\QueueingCookie;
+use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -33,12 +33,12 @@ use Throwable;
 final class CookiesMiddleware implements MiddlewareInterface
 {
     // request attribute
-    public const ATTRIBUTE = QueueingCookie::class;
+    public const ATTRIBUTE = Cookie::class;
 
     /**
      * Queued Cookie storage.
      *
-     * @var QueueingCookieInterface
+     * @var CookieFactoryInterface
      */
     private $cookieJar;
 
@@ -50,10 +50,10 @@ final class CookiesMiddleware implements MiddlewareInterface
     private $encrypter;
 
     /**
-     * @param QueueingCookieInterface $cookieJar
-     * @param null|callable           $encrypter
+     * @param CookieFactoryInterface $cookieJar
+     * @param null|callable          $encrypter
      */
-    public function __construct(QueueingCookieInterface $cookieJar, ?callable $encrypter = null)
+    public function __construct(CookieFactoryInterface $cookieJar, ?callable $encrypter = null)
     {
         $this->cookieJar = $cookieJar;
         $this->encrypter = $encrypter;
