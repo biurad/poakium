@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Interfaces;
 
-interface QueueingCookieInterface
+interface CookieFactoryInterface
 {
     /**
      * Checks if there is a cookie.
@@ -29,7 +29,7 @@ interface QueueingCookieInterface
     /**
      * Queue a cookie to send with the next response.
      *
-     * @param array<string,string,null|string,string,int,null|DateTimeInterface|int|string,bool,bool,bool,string>|CookieInterface $parameters
+     * @param mixed|CookieInterface $parameters
      */
     public function addCookie(...$parameters): void;
 
@@ -47,7 +47,7 @@ interface QueueingCookieInterface
      *
      * @return null|CookieInterface cookie that was found or null if not found
      */
-    public function getCookieByName($name): ?CookieInterface;
+    public function getCookieByName(string $name): ?CookieInterface;
 
     /**
      * Checks if there are cookies.
@@ -66,14 +66,14 @@ interface QueueingCookieInterface
      *
      * @param string $CookieName The cookie's name
      */
-    public function hasQueuedCookie($CookieName): bool;
+    public function hasQueuedCookie(string $CookieName): bool;
 
     /**
      * Remove a cookie from the queue.
      *
      * @param string $CookieName The cookie's name
      */
-    public function unqueueCookie($CookieName): void;
+    public function unqueueCookie(string $CookieName): void;
 
     /**
      * Returns all matching cookies.

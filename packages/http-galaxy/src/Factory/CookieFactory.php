@@ -15,11 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Strategies;
+namespace Biurad\Http\Factory;
 
 use Biurad\Http\Cookie;
+use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Biurad\Http\Interfaces\CookieInterface;
-use Biurad\Http\Interfaces\QueueingCookieInterface;
 use Countable;
 use DateTimeInterface;
 use IteratorAggregate;
@@ -41,7 +41,7 @@ use UnexpectedValueException;
  *
  * @see http://wp.netscape.com/newsref/std/cookie_spec.html for some specs.
  */
-class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInterface
+class CookieFactory implements Countable, IteratorAggregate, CookieFactoryInterface
 {
     /**
      * The default path (if specified).
@@ -53,7 +53,7 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     /**
      * The default domain (if specified).
      *
-     * @var string
+     * @var null|string
      */
     protected $domain;
 
@@ -89,10 +89,9 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
      */
     public function addCookie(...$parameters): void
     {
-        $cookie = \reset($parameters) instanceof CookieInterface
-            ? \reset($parameters) : \call_user_func_array([$this, 'setCookie'], $parameters);
+        $cookie = $this->resolveCookie($parameters);
 
-        if (!\assert($cookie instanceof CookieInterface)) {
+        if (!$cookie instanceof CookieInterface) {
             throw new UnexpectedValueException(
                 \sprintf('Expected cookie to be instance of %s', CookieInterface::class)
             );
@@ -129,13 +128,9 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     /**
      * {@inheritdoc}
      */
-    public function getCookieByName($name): ?CookieInterface
+    public function getCookieByName(string $name): ?CookieInterface
     {
-        // don't allow a non string name
-        if ($name === null || !\is_scalar($name)) {
-            return null;
-        }
-
+        /** @var CookieInterface $cookie */
         foreach ($this->cookies as $cookie) {
             if ($cookie->getName() !== null && \strcasecmp($cookie->getName(), $name) === 0) {
                 return $cookie;
@@ -168,7 +163,7 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     /**
      * {@inheritdoc}
      */
-    public function hasQueuedCookie($CookieName): bool
+    public function hasQueuedCookie(string $CookieName): bool
     {
         return null !== $this->getCookieByName($CookieName);
     }
@@ -176,7 +171,7 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     /**
      * {@inheritdoc}
      */
-    public function unqueueCookie($CookieName): void
+    public function unqueueCookie(string $CookieName): void
     {
         if (!$this->hasQueuedCookie($CookieName)) {
             return;
@@ -194,7 +189,7 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
      *
      * @return $this
      */
-    public function setDefaultPathAndDomain($path, $domain, $secure = false)
+    public function setDefaultPathAndDomain(string $path, string $domain, bool $secure = false)
     {
         [$this->path, $this->domain, $this->secure] = [$path, $domain, $secure];
 
@@ -238,26 +233,12 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
     }
 
     /**
-     * Get the path and domain, or the default values.
-     *
-     * @param string    $path
-     * @param string    $domain
-     * @param null|bool $secure
-     *
-     * @return array
-     */
-    protected function getPathAndDomain($path, $domain, $secure = null)
-    {
-        return [$path ?: $this->path, $domain ?: $this->domain, \is_bool($secure) ? $secure : $this->secure];
-    }
-
-    /**
      * Create a new cookie instance.
      *
      * @param string                            $name
      * @param string                            $value
      * @param null|string                       $domain
-     * @param string                            $path
+     * @param null|string                       $path
      * @param int                               $maxAge
      * @param null|DateTimeInterface|int|string $expires
      * @param bool                              $secure
@@ -271,7 +252,7 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
         $name,
         $value,
         $domain = null,
-        $path = '/',
+        $path = null,
         $maxAge = null,
         $expires = null,
         $secure = false,
@@ -279,16 +260,14 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
         $httpOnly = false,
         $sameSite = null
     ): CookieInterface {
-        [$path, $domain, $secure] = $this->getPathAndDomain($path, $domain, $secure);
-
         return new Cookie([
             'Name'     => $name,
             'Value'    => $value,
-            'Domain'   => $domain,
-            'Path'     => $path,
+            'Domain'   => $domain ?? $this->domain,
+            'Path'     => $path ?? $this->path,
             'Max-Age'  => $maxAge,
             'Expires'  => $expires,
-            'Secure'   => $secure,
+            'Secure'   => $secure ?? $this->secure,
             'Discard'  => $discard,
             'HttpOnly' => $httpOnly,
             'SameSite' => $sameSite,
@@ -313,5 +292,30 @@ class QueueingCookie implements Countable, IteratorAggregate, QueueingCookieInte
         }
 
         return $cookies;
+    }
+
+    /**
+     * @param CookieInterface|mixed[] $parameters
+     *
+     * @return CookieInterface
+     */
+    protected function resolveCookie($parameters)
+    {
+        $cookie = \reset($parameters);
+
+        if (!$cookie instanceof CookieInterface) {
+            /** @var CookieInterface $cookie */
+            $cookie = \call_user_func_array([$this, 'setCookie'], $parameters);
+        }
+
+        if (null === $cookie->getDomain() && null !== $this->domain) {
+            $cookie->setDomain($this->domain);
+        }
+
+        if (null === $cookie->getSecure()) {
+            $cookie->setSecure($this->secure);
+        }
+
+        return $cookie;
     }
 }
