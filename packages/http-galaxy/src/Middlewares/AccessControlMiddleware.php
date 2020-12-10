@@ -211,7 +211,7 @@ class AccessControlMiddleware implements MiddlewareInterface
         $paths   = $this->options['allow_paths'];
         $matcher = new RequestMatcher();
 
-        if (\count($paths) === 1 && $this->isWildcard('allow_paths')) {
+        if (is_bool($paths) && $this->isWildcard('allow_paths')) {
             return true;
         }
 
