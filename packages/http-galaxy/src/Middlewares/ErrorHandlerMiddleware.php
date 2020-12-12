@@ -30,6 +30,17 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  */
 final class ErrorHandlerMiddleware implements MiddlewareInterface
 {
+    /** @var bool */
+    private $throwDisabled;
+
+    /**
+     * @param bool $disable
+     */
+    public function __construct(bool $disable = false)
+    {
+        $this->throwDisabled = $disable;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -50,7 +61,7 @@ final class ErrorHandlerMiddleware implements MiddlewareInterface
         }
 
         // If is below 4XX Responses code will never throw an exception
-        if ($response->getStatusCode() < 400) {
+        if (true !== $this->throwDisabled || $response->getStatusCode() < 400) {
             return $response;
         }
 
