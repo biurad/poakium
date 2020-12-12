@@ -79,7 +79,7 @@ class AccessControlMiddleware implements MiddlewareInterface
             return $this->getPreflightResponse($request, $response);
         }
 
-        $response;
+        return $response;
     }
 
     /**
@@ -184,7 +184,7 @@ class AccessControlMiddleware implements MiddlewareInterface
 
         if ($this->options['origin_regex'] === true) {
             // origin regex matching
-            foreach ($this->options['allow_origin'] as $originRegexp) {
+            foreach ((array) $this->options['allow_origin'] as $originRegexp) {
                 if (\preg_match('{' . $originRegexp . '}i', $origin)) {
                     return true;
                 }
@@ -222,7 +222,7 @@ class AccessControlMiddleware implements MiddlewareInterface
             $matcher->matchHost($options['hosts'] ?? []);
 
             if ($matcher->matches($request)) {
-                $this->options = \array_merge($this->options, $options);
+                $this->options->exchangeArray(array_merge($this->options->getArrayCopy(), $options));
 
                 return true;
             }
