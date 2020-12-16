@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
-use GuzzleHttp\Psr7\CachingStream;
-use GuzzleHttp\Psr7\LazyOpenStream;
 use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -64,18 +62,10 @@ class ServerRequest implements ServerRequestInterface
      */
     public static function fromGlobals()
     {
-        $method   = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $headers  = getallheaders();
-        $uri      = Psr7ServerRequest::getUriFromGlobals();
-        $body     = new CachingStream(new LazyOpenStream('php://input', 'r+'));
-        $protocol = \str_replace('HTTP/', '', $_SERVER['SERVER_PROTOCOL'] ?? 'Http/1.1');
+        $method        = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $uri           = Psr7ServerRequest::getUriFromGlobals();
+        $serverRequest = new static($method, $uri);
 
-        $serverRequest = new static($method, $uri, $headers, $body, $protocol, $_SERVER);
-
-        return $serverRequest
-            ->withCookieParams($_COOKIE)
-            ->withQueryParams($_GET)
-            ->withParsedBody($_POST)
-            ->withUploadedFiles(Psr7ServerRequest::normalizeFiles($_FILES));
+        return $serverRequest->withRequest(Psr7ServerRequest::fromGlobals());
     }
 }
