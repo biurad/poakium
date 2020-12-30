@@ -28,17 +28,14 @@ use InvalidArgumentException;
 use Iterator;
 use IteratorAggregate;
 use OuterIterator;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
-class FileLocator implements ClassInterface, FileLocatorInterface, LoggerAwareInterface, IteratorAggregate, Countable
+class FileLocator implements ClassInterface, FileLocatorInterface, IteratorAggregate, Countable
 {
-    use LoggerAwareTrait;
-
     public const IGNORE_VCS_FILES = [
         '.svn',
         '_svn',
@@ -51,23 +48,31 @@ class FileLocator implements ClassInterface, FileLocatorInterface, LoggerAwareIn
         '.hg',
     ];
 
+    /** @var array */
     private $paths = [];
 
+    /** @var array */
     private $excludes = [];
 
+    /** @var int */
     private $maxDepth = -1;
+
+    /** @var null|LoggerInterface */
+    private $logger;
 
     /**
      * @param array $directories
      * @param array $excludes
      */
-    public function __construct(array $directories = [], $excludes = [])
+    public function __construct(array $directories = [], $excludes = [], ?LoggerInterface $logger = null)
     {
         if (!empty($directories)) {
             $this->paths = $directories;
         }
 
         $this->setExcludes($excludes);
+
+        $this->logger = $logger;
     }
 
     public function getPaths(): array
