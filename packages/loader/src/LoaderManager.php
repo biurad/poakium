@@ -52,7 +52,7 @@ class LoaderManager implements LoaderInterface
 
         foreach ($this->loaders as $supports => $loader) {
             if ($type === $supports) {
-                return $loader;
+                return $loader($resource);
             }
         }
 
