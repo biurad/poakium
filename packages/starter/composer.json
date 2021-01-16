@@ -22,7 +22,7 @@
         "source": "https://github.com/biurad/php-starter"
     },
     "require": {
-        "php": "^7.1 || ^8.1"
+        "php": "^7.1 || ^8.0"
     },
     "require-dev": {
         "composer/package-versions-deprecated": "^1.11",
