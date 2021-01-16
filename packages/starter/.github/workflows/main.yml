@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Test and Build (PHP ${{ matrix.php-versions }} on ${{ matrix.operating-system }})
+    name: (PHP ${{ matrix.php-versions }} on ${{ matrix.operating-system }})
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
@@ -72,5 +72,5 @@ jobs:
       - name: Test with Psalm
         run: |
           if [ "${{ matrix.static-tests }}" == "true" ]; then
-             vendor/bin/psalm --output-format=github
+            vendor/bin/psalm --output-format=github
           fi
