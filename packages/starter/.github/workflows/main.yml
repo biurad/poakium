@@ -7,12 +7,12 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        php-versions: ['7.2', '7.3', '7.4', '8.0']
+        php-versions: ['7.4', '8.0']
         coverage: ["true"]
         composer-flags: [""]
         static-tests: ["true"]
         include:
-          - php-versions: "7.2"
+          - php-versions: ['7.2', '7.3']
             static-tests: "false"
 
           - php-versions: "8.0"
