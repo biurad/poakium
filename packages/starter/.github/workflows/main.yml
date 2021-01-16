@@ -21,7 +21,7 @@ jobs:
           - php-versions: "8.1"
             coverage: "false"
             composer-flags: "--ignore-platform-req=php"
-    runs-on: ${{ matrix.operating-system }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
