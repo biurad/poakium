@@ -14,7 +14,7 @@ As to why this project exist, it's to serve as a template for future open source
 
 ## 📦 Installation & Basic Usage
 
-This project requires [PHP] 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
+This project requires [PHP] 7.2 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
 $ composer require biurad/php-starter
