@@ -19,11 +19,7 @@ namespace Biurad\Cache\Tests;
 
 use Biurad\Cache\CacheItem;
 use Biurad\Cache\Exceptions\InvalidArgumentException;
-use DateInterval;
-use DateTime;
-use Exception;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 
 class CacheItemTest extends TestCase
 {
@@ -36,7 +32,7 @@ class CacheItemTest extends TestCase
     {
         $item = new CacheItem();
 
-        $r = new ReflectionProperty($item, 'key');
+        $r = new \ReflectionProperty($item, 'key');
         $r->setAccessible(true);
         $r->setValue($item, 'test_key');
 
@@ -66,7 +62,7 @@ class CacheItemTest extends TestCase
         $item = new CacheItem();
         self::assertFalse($item->isHit());
 
-        $r    = new ReflectionProperty($item, 'isHit');
+        $r    = new \ReflectionProperty($item, 'isHit');
         $r->setAccessible(true);
         $r->setValue($item, true);
 
@@ -77,7 +73,7 @@ class CacheItemTest extends TestCase
     {
         $item = new CacheItem();
 
-        $r = new ReflectionProperty($item, 'expiry');
+        $r = new \ReflectionProperty($item, 'expiry');
         $r->setAccessible(true);
 
         self::assertNull($r->getValue($item));
@@ -92,10 +88,10 @@ class CacheItemTest extends TestCase
     {
         $item = new CacheItem();
 
-        $r = new ReflectionProperty($item, 'expiry');
+        $r = new \ReflectionProperty($item, 'expiry');
         $r->setAccessible(true);
 
-        $item->expiresAt(new DateTime('30 seconds'));
+        $item->expiresAt(new \DateTime('30 seconds'));
         self::assertEquals(30, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
 
         $item->expiresAt(null);
@@ -117,13 +113,13 @@ class CacheItemTest extends TestCase
         $item      = new CacheItem();
         $timestamp = \time() + 1;
 
-        $r = new ReflectionProperty($item, 'expiry');
+        $r = new \ReflectionProperty($item, 'expiry');
         $r->setAccessible(true);
 
         $item->expiresAfter($timestamp);
         self::assertEquals($timestamp, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
 
-        $item->expiresAfter(new DateInterval('PT1S'));
+        $item->expiresAfter(new \DateInterval('PT1S'));
         self::assertEquals(1, (int) (0.1 + $r->getValue($item) - (float) \microtime(true)));
 
         $item->expiresAfter(null);
@@ -162,7 +158,7 @@ class CacheItemTest extends TestCase
             [1],
             [1.1],
             [[[]]],
-            [new Exception('foo')],
+            [new \Exception('foo')],
         ];
     }
 }

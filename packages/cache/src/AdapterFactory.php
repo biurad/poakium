@@ -19,11 +19,6 @@ namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\CacheException;
 use Doctrine\Common\Cache as DoctrineCache;
-use Memcache;
-use Memcached;
-use Redis;
-use SQLite3;
-use TypeError;
 
 /**
  * @codeCoverageIgnore
@@ -40,7 +35,7 @@ class AdapterFactory
     public static function createHandler($connection): DoctrineCache\Cache
     {
         if (!(\is_string($connection) || \is_object($connection))) {
-            throw new TypeError(
+            throw new \TypeError(
                 \sprintf(
                     'Argument 1 passed to %s() must be a string or a connection object, %s given.',
                     __METHOD__,
@@ -53,19 +48,19 @@ class AdapterFactory
             case $connection instanceof DoctrineCache\Cache:
                 return $connection;
 
-            case $connection instanceof Redis:
+            case $connection instanceof \Redis:
                 $adapter = new DoctrineCache\RedisCache();
                 $adapter->setRedis($connection);
 
                 return $adapter;
 
-            case $connection instanceof Memcache:
+            case $connection instanceof \Memcache:
                 $adapter = new DoctrineCache\MemcacheCache();
                 $adapter->setMemcache($connection);
 
                 return $adapter;
 
-            case $connection instanceof Memcached:
+            case $connection instanceof \Memcached:
                 $adapter = new DoctrineCache\MemcachedCache();
                 $adapter->setMemcached($connection);
 
@@ -87,7 +82,7 @@ class AdapterFactory
                 $adapter       = new DoctrineCache\RedisCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 8);
 
-                $redis = new Redis();
+                $redis = new \Redis();
                 $redis->connect($host, (int) $port);
 
                 $adapter->setRedis($redis);
@@ -98,7 +93,7 @@ class AdapterFactory
                 $adapter       = new DoctrineCache\MemcacheCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 11);
 
-                $memcache = new Memcache();
+                $memcache = new \Memcache();
                 $memcache->addServer($host, (int) $port);
 
                 $adapter->setMemcache($memcache);
@@ -109,7 +104,7 @@ class AdapterFactory
                 $adapter       = new DoctrineCache\MemcachedCache();
                 [$host, $port] = self::getPrefixedAdapter($connection, 12);
 
-                $memcached = new Memcached();
+                $memcached = new \Memcached();
                 $memcached->addServer($host, (int) $port);
 
                 $adapter->setMemcached($memcached);
@@ -129,7 +124,7 @@ class AdapterFactory
             case self::isPrefixedAdapter($connection, 'sqlite://'):
                 [$table, $filename] = self::getPrefixedAdapter($connection, 9);
 
-                return new DoctrineCache\SQLite3Cache(new SQLite3($filename), $table);
+                return new DoctrineCache\SQLite3Cache(new \SQLite3($filename), $table);
         }
 
         throw new CacheException(

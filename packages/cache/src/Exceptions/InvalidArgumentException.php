@@ -17,9 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\Cache\Exceptions;
 
-use Exception;
 use Psr\Cache\InvalidArgumentException as Psr6Exception;
 
-class InvalidArgumentException extends Exception implements Psr6Exception
+class InvalidArgumentException extends \InvalidArgumentException implements Psr6Exception
 {
 }

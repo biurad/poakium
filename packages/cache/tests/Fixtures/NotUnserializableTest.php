@@ -17,12 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\Cache\Tests\Fixtures;
 
-use Exception;
-
 class NotUnserializableTest
 {
     public function __wakeup(): void
     {
-        throw new Exception(__CLASS__);
+        throw new \Exception(__CLASS__);
     }
 }

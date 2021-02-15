@@ -17,10 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Cache;
 
-use Biurad\Cache\Exceptions\InvalidArgumentException;
-use DateInterval;
-use DateTime;
-use DateTimeInterface;
+use Biurad\Cache\Exceptions\InvalidArgumentException;;
 use Psr\Cache\CacheItemInterface;
 
 final class CacheItem implements CacheItemInterface
@@ -88,7 +85,7 @@ final class CacheItem implements CacheItemInterface
             return $this->setDefaultExpiration();
         }
 
-        if (!$expiration instanceof DateTimeInterface) {
+        if (!$expiration instanceof \DateTimeInterface) {
             throw new InvalidArgumentException('Expiration date must implement DateTimeInterface or be null.');
         }
 
@@ -106,8 +103,8 @@ final class CacheItem implements CacheItemInterface
             return $this->setDefaultExpiration();
         }
 
-        if ($time instanceof DateInterval) {
-            $interval     = DateTime::createFromFormat('U', '0')->add($time);
+        if ($time instanceof \DateInterval) {
+            $interval     = \DateTime::createFromFormat('U', '0')->add($time);
             $this->expiry = \microtime(true) + (int) $interval->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);

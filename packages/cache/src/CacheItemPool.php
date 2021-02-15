@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\InvalidArgumentException;
-use Closure;
 use Doctrine\Common\Cache\Cache as DoctrineCache;
 use Doctrine\Common\Cache\FlushableCache;
 use Doctrine\Common\Cache\MultiOperationCache;
@@ -31,12 +30,12 @@ class CacheItemPool implements CacheItemPoolInterface
     private $cache;
 
     /**
-     * @var Closure needs to be set by class, signature is function(string <key>, mixed <value>, bool <isHit>)
+     * @var \Closure needs to be set by class, signature is function(string <key>, mixed <value>, bool <isHit>)
      */
     private $createCacheItem;
 
     /**
-     * @var Closure needs to be set by class, signature is function(array <deferred>, array <&expiredIds>)
+     * @var \Closure needs to be set by class, signature is function(array <deferred>, array <&expiredIds>)
      */
     private $mergeByLifetime;
 
@@ -56,7 +55,7 @@ class CacheItemPool implements CacheItemPoolInterface
         $this->cache = $doctrine;
 
         $this->createCacheItem();
-        $this->mergeByLifetime(Closure::fromCallable([$this, 'getId']));
+        $this->mergeByLifetime(\Closure::fromCallable([$this, 'getId']));
     }
 
     /**
@@ -222,7 +221,7 @@ class CacheItemPool implements CacheItemPoolInterface
 
     private function createCacheItem(): void
     {
-        $this->createCacheItem = Closure::bind(
+        $this->createCacheItem = \Closure::bind(
             static function (string $key, $value, bool $isHit): CacheItemInterface {
                 $item = new CacheItem();
                 $item->key   = $key;
@@ -255,7 +254,7 @@ class CacheItemPool implements CacheItemPoolInterface
 
     private function mergeByLifetime(callable $getId): void
     {
-        $this->mergeByLifetime = Closure::bind(
+        $this->mergeByLifetime = \Closure::bind(
             static function ($deferred, &$expiredIds) use ($getId): array {
                 $byLifetime = [];
                 $now = \microtime(true);

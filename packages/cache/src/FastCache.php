@@ -22,13 +22,9 @@ use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Biurad\Cache\Interfaces\FastCacheInterface;
 use Cache\Adapter\Common\CacheItem as PhpCacheItem;
 use Cache\Adapter\Common\PhpCachePool;
-use Closure;
-use Generator;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
-use stdClass;
-use Throwable;
 
 /**
  * Implements the cache for a application.
@@ -118,14 +114,14 @@ class FastCache implements FastCacheInterface
 
         foreach ($keys as $key) {
             if (!\is_scalar($key)) {
-                throw new InvalidArgumentException('Only scalar keys are allowed in bulkLoad()');
+                throw new \InvalidArgumentException('Only scalar keys are allowed in bulkLoad()');
             }
         }
         $storageKeys = \array_map([$this, 'generateKey'], $keys);
         $cacheData   = $this->doFetch($storageKeys);
         $result      = [];
 
-        if ($cacheData instanceof Generator) {
+        if ($cacheData instanceof \Generator) {
             $cacheData = \iterator_to_array($cacheData);
         }
 
@@ -186,7 +182,7 @@ class FastCache implements FastCacheInterface
 
         static $setExpired;
 
-        $setExpired = Closure::bind(
+        $setExpired = \Closure::bind(
             static function (CacheItem $item): ?int {
                 if (null === $item->expiry) {
                     return null;
@@ -217,7 +213,7 @@ class FastCache implements FastCacheInterface
 
             try {
                 return $value = $callback(...[&$item, &$save]);
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 $this->doDelete($key);
 
                 throw $e;
@@ -293,7 +289,7 @@ class FastCache implements FastCacheInterface
      */
     private function generateKey($key): string
     {
-        if (\is_array($key) && \current($key) instanceof Closure) {
+        if (\is_array($key) && \current($key) instanceof \Closure) {
             $key = \spl_object_id($key[0]);
         }
 
@@ -307,13 +303,13 @@ class FastCache implements FastCacheInterface
      * Save cache item.
      *
      * @param string     $key
-     * @param Closure    $callback
-     * @param Closure    $setExpired
+     * @param \Closure   $callback
+     * @param \Closure   $setExpired
      * @param null|float $beta
      *
      * @return mixed The corresponding values found in the cache
      */
-    private function doSave(string $key, Closure $callback, Closure $setExpired, ?float $beta)
+    private function doSave(string $key, \Closure $callback, \Closure $setExpired, ?float $beta)
     {
         $storage = clone $this->storage;
 
@@ -363,7 +359,7 @@ class FastCache implements FastCacheInterface
             return !\is_array($ids) ? $this->storage->getItem($ids) : $this->storage->getItems($ids);
         }
 
-        return !\is_array($ids) ? $this->storage->get($ids) : $this->storage->getMultiple($ids, new stdClass());
+        return !\is_array($ids) ? $this->storage->get($ids) : $this->storage->getMultiple($ids, new \stdClass());
     }
 
     /**
