@@ -103,7 +103,7 @@ interface FastCacheInterface
      *
      * @return callable so arguments can be passed into for final results
      */
-    public function wrap(callable $callback, ?float $beta = null);
+    public function wrap(callable $callback /* ... arguments passed to $callback */);
 
     /**
      * Starts the output cache.

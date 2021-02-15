@@ -236,7 +236,7 @@ class FastCache implements FastCacheInterface
     /**
      * {@inheritdoc}
      */
-    public function call(callable $callback, ?float $beta = null)
+    public function call(callable $callback /* ... arguments passed to $callback */)
     {
         $key = \func_get_args();
 
@@ -250,18 +250,17 @@ class FastCache implements FastCacheInterface
                 $dependencies = \array_merge(\array_slice($key, 1), [&$item, &$save]);
 
                 return $callback(...$dependencies);
-            },
-            $beta
+            }
         );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function wrap(callable $callback, ?float $beta = null): callable
+    public function wrap(callable $callback /* ... arguments passed to $callback */): callable
     {
-        return function () use ($callback, $beta) {
-            return $this->call($callback, $beta);
+        return function () use ($callback) {
+            return $this->call($callback);
         };
     }
 
