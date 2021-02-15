@@ -17,14 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\UI;
 
-use ArrayIterator;
-use IteratorAggregate;
-use Traversable;
-
 /**
  * @author Fabien Potencier <fabien@symfony.com>
  */
-final class Profile implements IteratorAggregate
+final class Profile implements \IteratorAggregate
 {
     public const TEMPLATE = 'template';
 
@@ -151,8 +147,8 @@ final class Profile implements IteratorAggregate
         $this->enter();
     }
 
-    public function getIterator(): Traversable
+    public function getIterator(): \Traversable
     {
-        return new ArrayIterator($this->profiles);
+        return new \ArrayIterator($this->profiles);
     }
 }

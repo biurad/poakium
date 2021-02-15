@@ -17,9 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Helper;
 
-use InvalidArgumentException;
-use LogicException;
-
 /**
  * SlotsHelper manages template slots.
  *
@@ -39,12 +36,12 @@ class SlotsHelper extends Helper
      * This method starts an output buffer that will be
      * closed when the stop() method is called.
      *
-     * @throws InvalidArgumentException if a slot with the same name is already started
+     * @throws \InvalidArgumentException if a slot with the same name is already started
      */
     public function start(string $name): void
     {
         if (\in_array($name, $this->openSlots, true)) {
-            throw new InvalidArgumentException(\sprintf('A slot named "%s" is already started.', $name));
+            throw new \InvalidArgumentException(\sprintf('A slot named "%s" is already started.', $name));
         }
 
         $this->openSlots[]  = $name;
@@ -57,12 +54,12 @@ class SlotsHelper extends Helper
     /**
      * Stops a slot.
      *
-     * @throws LogicException if no slot has been started
+     * @throws \LogicException if no slot has been started
      */
     public function stop(): void
     {
         if (!$this->openSlots) {
-            throw new LogicException('No slot started.');
+            throw new \LogicException('No slot started.');
         }
 
         $name = \array_pop($this->openSlots);

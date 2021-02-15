@@ -19,7 +19,6 @@ namespace Biurad\UI\Storage;
 
 use Biurad\UI\Interfaces\StorageInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * CacheLoader is a loader that caches other loaders responses
@@ -105,11 +104,11 @@ class CacheStorage implements StorageInterface
                 \clearstatcache(true, $dir);
 
                 if (!\is_dir($dir)) {
-                    throw new RuntimeException(\sprintf('Unable to create the cache directory (%s).', $dir));
+                    throw new \RuntimeException(\sprintf('Unable to create the cache directory (%s).', $dir));
                 }
             }
         } elseif (!\is_writable($dir)) {
-            throw new RuntimeException(\sprintf('Unable to write in the cache directory (%s).', $dir));
+            throw new \RuntimeException(\sprintf('Unable to write in the cache directory (%s).', $dir));
         }
 
         $tmpFile = \tempnam($dir, \basename($key));
@@ -127,7 +126,7 @@ class CacheStorage implements StorageInterface
             return;
         }
 
-        throw new RuntimeException(\sprintf('Failed to write cache file "%s".', $key));
+        throw new \RuntimeException(\sprintf('Failed to write cache file "%s".', $key));
     }
 
     /**

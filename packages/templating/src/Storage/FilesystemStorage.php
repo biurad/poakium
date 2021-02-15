@@ -19,7 +19,6 @@ namespace Biurad\UI\Storage;
 
 use Biurad\UI\Interfaces\StorageInterface;
 use Psr\Log\LoggerInterface;
-use SplFileInfo;
 
 /**
  * FilesystemLoader is a loader that read templates from the filesystem.
@@ -96,6 +95,6 @@ class FilesystemStorage implements StorageInterface
      */
     private function resolvePath(string $path): string
     {
-        return (new SplFileInfo($path))->getPathname();
+        return (new \SplFileInfo($path))->getPathname();
     }
 }

@@ -17,15 +17,11 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
-use ArrayAccess;
 use Biurad\UI\Helper\SlotsHelper;
 use Biurad\UI\Interfaces\HelperInterface;
 use Biurad\UI\Source;
-use InvalidArgumentException;
-use LogicException;
-use RuntimeException;
 
-final class PhpNativeRender extends AbstractRender implements ArrayAccess
+final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 {
     protected const EXTENSIONS = ['phtml', 'html', 'php'];
 
@@ -86,7 +82,7 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
 
         // Render
         if (false === $content = $this->evaluate($source, $parameters)) {
-            throw new RuntimeException(\sprintf('The template "%s" cannot be rendered.', $template));
+            throw new \RuntimeException(\sprintf('The template "%s" cannot be rendered.', $template));
         }
 
         // decorator
@@ -146,7 +142,7 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
      */
     public function offsetUnset($offset): void
     {
-        throw new LogicException(\sprintf('You can\'t unset a helper (%s).', $offset));
+        throw new \LogicException(\sprintf('You can\'t unset a helper (%s).', $offset));
     }
 
     /**
@@ -196,14 +192,14 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
     /**
      * Gets a helper value.
      *
-     * @throws InvalidArgumentException if the helper is not defined
+     * @throws \InvalidArgumentException if the helper is not defined
      *
      * @return HelperInterface The helper instance
      */
     public function get(string $name)
     {
         if (!isset($this->helpers[$name])) {
-            throw new InvalidArgumentException(\sprintf('The helper "%s" is not defined.', $name));
+            throw new \InvalidArgumentException(\sprintf('The helper "%s" is not defined.', $name));
         }
 
         return $this->helpers[$name];
@@ -289,14 +285,14 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
      *
      * @param string $context
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      *
      * @return callable A PHP callable
      */
     public function getEscaper(string $context)
     {
         if (!isset($this->escapers[$context])) {
-            throw new InvalidArgumentException(\sprintf('No registered escaper for context "%s".', $context));
+            throw new \InvalidArgumentException(\sprintf('No registered escaper for context "%s".', $context));
         }
 
         return $this->escapers[$context];
@@ -308,7 +304,7 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
      * @param Source              $template
      * @param array<string,mixed> $parameters
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      *
      * @return bool|string The evaluated template,or false if the engine is unable to render the template
      */
@@ -319,11 +315,11 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
         unset($template, $parameters);
 
         if (isset($this->evalParameters['this'])) {
-            throw new InvalidArgumentException('Invalid parameter (this).');
+            throw new \InvalidArgumentException('Invalid parameter (this).');
         }
 
         if (isset($this->evalParameters['view'])) {
-            throw new InvalidArgumentException('Invalid parameter (view).');
+            throw new \InvalidArgumentException('Invalid parameter (view).');
         }
 
         // the view variable is exposed to the require file below
@@ -412,7 +408,7 @@ final class PhpNativeRender extends AbstractRender implements ArrayAccess
                     };
 
                     if (null === $value = \preg_replace_callback('#[^\p{L}\p{N} ]#u', $callback, $value)) {
-                        throw new InvalidArgumentException('The string to escape is not a valid UTF-8 string.');
+                        throw new \InvalidArgumentException('The string to escape is not a valid UTF-8 string.');
                     }
 
                     if ('UTF-8' != $this->getCharset()) {

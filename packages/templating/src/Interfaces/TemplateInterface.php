@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
-use RuntimeException;
-
 interface TemplateInterface
 {
     /**
@@ -53,7 +51,7 @@ interface TemplateInterface
      * @param string              $template   A template name or a namepace name to path
      * @param array<string,mixed> $parameters An array of parameters to pass to the template
      *
-     * @throws RuntimeException if the template cannot be rendered
+     * @throws \RuntimeException if the template cannot be rendered
      *
      * @return string The evaluated template as a string
      */

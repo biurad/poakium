@@ -21,7 +21,6 @@ use Biurad\UI\Exceptions\LoaderException;
 use Biurad\UI\Interfaces\LoaderInterface;
 use Biurad\UI\Interfaces\StorageInterface;
 use Biurad\UI\Storage\CacheStorage;
-use InvalidArgumentException;
 
 /**
  * Loads and locates view files associated with specific extensions.
@@ -195,7 +194,7 @@ final class Loader implements LoaderInterface
      *
      * @param string $name
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      *
      * @return string[]
      */
@@ -205,11 +204,11 @@ final class Loader implements LoaderInterface
         $segments[0] = \str_replace(['@', '#'], '', $segments[0]);
 
         if (\count($segments) !== 2) {
-            throw new InvalidArgumentException("View [{$name}] has an invalid name.");
+            throw new \InvalidArgumentException("View [{$name}] has an invalid name.");
         }
 
         if (!isset($this->namespaces[$segments[0]])) {
-            throw new InvalidArgumentException("No hint path defined for [{$segments[0]}].");
+            throw new \InvalidArgumentException("No hint path defined for [{$segments[0]}].");
         }
 
         return $segments;

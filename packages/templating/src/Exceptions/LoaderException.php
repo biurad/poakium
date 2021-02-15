@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Exceptions;
 
-use RuntimeException;
-
-class LoaderException extends RuntimeException
+class LoaderException extends \RuntimeException
 {
 }
