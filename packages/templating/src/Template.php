@@ -99,4 +99,27 @@ final class Template implements TemplateInterface
             \sprintf('No render engine is able to work with the template "%s".', $template)
         );
     }
+
+    /**
+     * Find the template file that exist, then render it contents.
+     *
+     * @param string              $templates
+     * @param array<string,mixed> $parameters
+     *
+     * @return null|string
+     */
+    public function renderTemplates(array $templates, array $parameters): ?string
+    {
+        $this->addGlobal('template', $this);
+
+        foreach ($this->renders as $engine) {
+            foreach ($templates as $template) {
+                if ($engine->getLoader()->exists($template)) {
+                    return $engine->render($template, \array_replace($parameters, $this->globals));
+                }
+            }
+        }
+
+        return null;
+    }
 }
