@@ -8,11 +8,11 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-templating.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-templating)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-templating** is server side template ui for [PHP] 7.1+ created by [Divine Niiquaye][@divineniiquaye]. This library provides all the tools needed in working with any kind of template system and offers a structured solution to implement server side renderable template engines (Twig, Stempler, Latte, Blade, or native PHP templates) segregation.
+**biurad/php-templating** is server side template ui for [PHP] 7.2+ created by [Divine Niiquaye][@divineniiquaye]. This library provides all the tools needed in working with any kind of template system and offers a structured solution to implement server side renderable template engines (Twig, Stempler, Latte, Blade, or native PHP templates) segregation.
 
 ## 📦 Installation & Basic Usage
 
-This project requires [PHP] 7.1 or higher. The recommended way to install, is via [Composer]. Simply run:
+This project requires [PHP] 7.2 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
 $ composer require biurad/templating
@@ -34,8 +34,14 @@ $phpRenderEngine  = new PhpNativeRender();
 $phpRenderEngine->set(new SlotsHelper());
 
 $templating = new Template($filesystemLoader);
+
+// Before adding a template renderer, you can add a namespace path
+// $templating->addNamepace('MyBundle', __DIR__ . '/vendor/company/package/Resources');
+
+// Add a template compiler renderer to Template.
 $templating->addRender($phpRenderEngine);
 
+// You can also render an absolute path except for the fact that, it is not cacheable.
 echo $templating->render('hello', ['firstname' => 'Divine']);
 
 // hello.phtml or hello.php or hello.html
