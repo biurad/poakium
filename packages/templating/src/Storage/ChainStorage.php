@@ -45,6 +45,12 @@ class ChainStorage implements StorageInterface
      */
     public function addLocation(string $location): void
     {
+        foreach ($this->loaders as $storage) {
+            if (\is_dir($location) && $storage instanceof FilesystemStorage) {
+                $storage->addLocation($location);
+            }
+        }
+
         throw new LoaderException(\sprintf('Cannot use [%s] for views loading', $location));
     }
 
