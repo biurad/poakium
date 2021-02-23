@@ -39,11 +39,11 @@ interface TemplateInterface
     public function addGlobal(string $name, $value): void;
 
     /**
-     * Attach new view render.
+     * Attach the view render(s).
      *
-     * @param RenderInterface $render
+     * @param RenderInterface $renders
      */
-    public function addRender(RenderInterface $render): void;
+    public function addRender(RenderInterface ...$renders): void;
 
     /**
      * Renders a template.
