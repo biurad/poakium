@@ -19,22 +19,20 @@ namespace Biurad\UI;
 
 /**
  * Carries information about a rendered view.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class Source
+final class Source implements \Stringable
 {
     /** @var string */
     private $template;
-
-    /** @var bool */
-    private $cached;
 
     /**
      * @param string $template The template name
      * @param bool   $cached   If the template is cached
      */
-    public function __construct(string $template, bool $cached = false)
+    public function __construct(string $template)
     {
-        $this->cached   = $cached;
         $this->template = $template;
     }
 
@@ -46,16 +44,6 @@ final class Source
     public function __toString()
     {
         return $this->template;
-    }
-
-    /**
-     * Returns true if contents are cached to avoid recompile.
-     *
-     * @return bool
-     */
-    public function isCached(): bool
-    {
-        return $this->cached;
     }
 
     /**

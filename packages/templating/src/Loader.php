@@ -20,7 +20,6 @@ namespace Biurad\UI;
 use Biurad\UI\Exceptions\LoaderException;
 use Biurad\UI\Interfaces\LoaderInterface;
 use Biurad\UI\Interfaces\StorageInterface;
-use Biurad\UI\Storage\CacheStorage;
 
 /**
  * Loads and locates view files associated with specific extensions.
@@ -114,7 +113,7 @@ final class Loader implements LoaderInterface
         }
 
         try {
-            return new Source($template, $this->storage instanceof CacheStorage);
+            return new Source($template);
         } finally {
             if (null !== $this->profiler) {
                 $this->profiler->addProfile($profile->leave());

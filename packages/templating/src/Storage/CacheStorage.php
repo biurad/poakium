@@ -145,6 +145,6 @@ class CacheStorage implements StorageInterface
             return false;
         }
 
-        return \filemtime($path) < $time;
+        return file_exists($path) && \filemtime($path) < $time;
     }
 }
