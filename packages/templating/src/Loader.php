@@ -23,6 +23,8 @@ use Biurad\UI\Interfaces\StorageInterface;
 
 /**
  * Loads and locates view files associated with specific extensions.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 final class Loader implements LoaderInterface
 {
@@ -141,7 +143,9 @@ final class Loader implements LoaderInterface
         [$namespace, $view] = $this->parseNamespaceSegments($name);
 
         try {
-            $this->storage->addLocation($this->namespaces[$namespace]);
+            foreach ($this->namespaces[$namespace] ?? [] as $viewPath) {
+                $this->storage->addLocation($viewPath);
+            }
         } catch (LoaderException $e) {
             // Do nothing ...
         }
@@ -164,6 +168,14 @@ final class Loader implements LoaderInterface
             if (null !== $found = $this->storage->load($file)) {
                 return $found;
             }
+        }
+
+        // If template is a full file path.
+        if (
+            $this->isAbsolutePath($template) &&
+            \in_array(pathinfo($template, PATHINFO_EXTENSION), $this->extensions, true)
+        ) {
+            return $template;
         }
 
         throw new LoaderException("File [{$template}] not found.");
@@ -207,7 +219,7 @@ final class Loader implements LoaderInterface
         }
 
         if (!isset($this->namespaces[$segments[0]])) {
-            throw new \InvalidArgumentException("No hint path defined for [{$segments[0]}].");
+            throw new \InvalidArgumentException("No hint path defined for [{$segments[0]}] namespace.");
         }
 
         return $segments;
@@ -245,5 +257,16 @@ final class Loader implements LoaderInterface
                 throw new LoaderException(\sprintf('Looks like you try to load a view outside configured directories (%s)', $path));
             }
         }
+    }
+
+    private function isAbsolutePath(string $file): bool
+    {
+        return strspn($file, '/\\', 0, 1)
+            || (\strlen($file) > 3 && ctype_alpha($file[0])
+                && ':' === $file[1]
+                && strspn($file, '/\\', 2, 1)
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME)
+        ;
     }
 }
