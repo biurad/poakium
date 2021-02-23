@@ -24,8 +24,6 @@ use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
-use Twig\TwigFilter;
-use Twig\TwigFunction;
 
 final class TwigRender extends AbstractRender
 {
@@ -51,15 +49,34 @@ final class TwigRender extends AbstractRender
      */
     public function render(string $template, array $parameters): string
     {
-        $parameters = \array_merge($parameters, ['view' => $this]);
-        $source     = $this->getLoader()->find($template);
+        $this->addFunction(
+            new Twig\TwigFunction(
+                'view',
+                fn (string $template, array $parameters = []) => $this->render($template, $parameters),
+                ['is_safe' => ['all']]
+            )
+        );
 
-        $this->environment->setLoader(new ChainLoader([
-            new ArrayLoader([
-                $template => $source->isFile() ? \file_get_contents($source) : $source->getContent(),
-            ]),
-            $this->environment->getLoader(),
-        ]));
+        if (isset($parameters['template'])) {
+            /** @var \Biurad\UI\Template $global */
+            $global = $parameters['template'];
+
+            $this->addFunction(
+                new Twig\TwigFunction(
+                    'template',
+                    fn (string $template, array $parameters = []) => $global->render($template, $parameters),
+                    ['is_safe' => ['all']]
+                )
+            );
+        }
+        $source = $this->getLoader()->find($template);
+
+        if ($source->isFile()) {
+            $source   = \file_get_contents((string) $source);
+        }
+        $this->environment->setLoader(new ChainLoader(
+            [new ArrayLoader([$template => (string) $source]), $this->environment->getLoader()]
+        ));
 
         return $this->environment->render($template, $parameters);
     }
@@ -117,9 +134,9 @@ final class TwigRender extends AbstractRender
     }
 
     /**
-     * @param TwigFilter $filter
+     * @param Twig\TwigFilter $filter
      */
-    public function addFilter(TwigFilter $filter): void
+    public function addFilter(Twig\TwigFilter $filter): void
     {
         $this->environment->addFilter($filter);
     }
@@ -133,9 +150,9 @@ final class TwigRender extends AbstractRender
     }
 
     /**
-     * @param TwigFunction $function
+     * @param Twig\TwigFunction $function
      */
-    public function addFunction(TwigFunction $function): void
+    public function addFunction(Twig\TwigFunction $function): void
     {
         $this->environment->addFunction($function);
     }

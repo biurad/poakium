@@ -45,12 +45,24 @@ final class LatteRender extends AbstractRender
      */
     public function render(string $template, array $parameters): string
     {
-        $parameters = \array_merge($parameters, ['view' => $this]);
-        $source     = $this->getLoader()->find($template);
+        $this->addFunction('view', fn (string $template, array $parameters = []) => $this->render($template, $parameters));
 
-        $this->latte->setLoader(new StringLoader([
-            $template => $source->isFile() ? \file_get_contents($source) : $source->getContent(),
-        ]));
+        if (isset($parameters['template'])) {
+            /** @var \Biurad\UI\Template $global */
+            $global = $parameters['template'];
+
+            $this->addFunction(
+                'template',
+                fn (string $template, array $parameters = []) => $global->render($template, $parameters)
+            );
+        }
+        $source = $this->getLoader()->find($template);
+
+        if ($source->isFile()) {
+            $source = \file_get_contents((string) $source);
+        }
+
+        $this->latte->setLoader(new StringLoader([$template => (string) $source]));
 
         return $this->latte->renderToString($template, $parameters);
     }

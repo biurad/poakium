@@ -109,7 +109,7 @@ final class Loader implements LoaderInterface
         }
 
         if (null !== $this->profiler) {
-            $profile = new Profile(Profile::TEMPLATE, $view);
+            $profile = new Profile(Profile::TEMPLATE, $template);
         }
 
         try {

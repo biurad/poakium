@@ -68,7 +68,7 @@ class FilesystemStorage implements StorageInterface
                     $this->logger->debug('Loaded template file.', ['file' => $template]);
                 }
 
-                return \file_get_contents($found);
+                return $found;
             }
 
             if (null !== $this->logger) {

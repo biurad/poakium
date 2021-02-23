@@ -330,7 +330,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 
         \ob_start();
 
-        if ($this->evalTemplate->isCached() || !$this->evalTemplate->isFile()) {
+        if (!$this->evalTemplate->isFile()) {
             eval('; ?>' . $this->evalTemplate . '<?php ;');
             $this->evalTemplate = null;
 

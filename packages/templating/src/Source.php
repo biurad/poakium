@@ -29,7 +29,6 @@ final class Source implements \Stringable
 
     /**
      * @param string $template The template name
-     * @param bool   $cached   If the template is cached
      */
     public function __construct(string $template)
     {
@@ -37,9 +36,9 @@ final class Source implements \Stringable
     }
 
     /**
-     * Returns the object string representation.
+     * Returns the content of the template or it's file.
      *
-     * @return string The template name
+     * @return string The template file or content
      */
     public function __toString()
     {
@@ -52,15 +51,5 @@ final class Source implements \Stringable
     public function isFile(): bool
     {
         return \file_exists($this->template);
-    }
-
-    /**
-     * Returns the content of the template.
-     *
-     * @return string The template content
-     */
-    public function getContent(): string
-    {
-        return $this->template;
     }
 }
