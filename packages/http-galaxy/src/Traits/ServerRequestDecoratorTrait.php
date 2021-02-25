@@ -20,7 +20,6 @@ namespace Biurad\Http\Traits;
 use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use stdClass;
 
 trait ServerRequestDecoratorTrait
 {
@@ -267,7 +266,7 @@ trait ServerRequestDecoratorTrait
 
         if (\is_array($postParams) && isset($postParams[$key])) {
             $result = $postParams[$key];
-        } elseif (\is_object($postParams) && $postParams instanceof stdClass) {
+        } elseif (\is_object($postParams) && $postParams instanceof \stdClass) {
             $result = $postParams->{$key};
         }
 
