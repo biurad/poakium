@@ -37,7 +37,6 @@ use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
-use ReflectionClass;
 
 /**
  * @final
@@ -204,7 +203,7 @@ abstract class Psr17Factory implements Psr17Interface
     public function createServerRequest(string $method, $uri, array $serverParams = []): ServerRequestInterface
     {
         /** @var ServerRequestFactoryInterface $factory */
-        $factory  = self::isFactoryDecoratorAvailable($this->streamFactoryClass, ServerRequestFactoryInterface::class);
+        $factory  = self::isFactoryDecoratorAvailable($this->serverRequestFactoryClass, ServerRequestFactoryInterface::class);
         $response = $factory->createServerRequest($method, $uri, $serverParams);
 
         if (!$response instanceof ServerRequest) {
@@ -244,7 +243,7 @@ abstract class Psr17Factory implements Psr17Interface
             );
         }
 
-        $reflection = new ReflectionClass($httpFactoryClass);
+        $reflection = new \ReflectionClass($httpFactoryClass);
 
         if (!$reflection->implementsInterface($implements)) {
             throw new Exceptions\InvalidPsr17FactoryException(
