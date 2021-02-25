@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
-use ArrayIterator;
 use Biurad\Http\Interfaces\SessionBagInterface;
 use Biurad\Http\Interfaces\SessionInterface;
 use Biurad\Http\Interfaces\SessionStorageInterface;
@@ -28,9 +27,7 @@ use Biurad\Http\Sessions\MetadataBag;
 use Biurad\Http\Sessions\Proxy\AbstractProxy;
 use Biurad\Http\Sessions\Proxy\SessionBagProxy;
 use Biurad\Http\Sessions\Storage\NativeSessionStorage;
-use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
-use SessionHandlerInterface;
 
 /**
  * Direct api to php session functionality with segmentation support. Automatically provides access
@@ -45,7 +42,7 @@ class Session implements SessionInterface
     /**
      * The session handler implementation.
      *
-     * @var SessionHandlerInterface
+     * @var \SessionHandlerInterface
      */
     protected $saveHandler;
 
@@ -267,9 +264,9 @@ class Session implements SessionInterface
     /**
      * Get the underlying session handler implementation.
      *
-     * @return SessionHandlerInterface
+     * @return \SessionHandlerInterface
      */
-    public function getHandler(): SessionHandlerInterface
+    public function getHandler(): \SessionHandlerInterface
     {
         return $this->saveHandler;
     }
@@ -290,14 +287,14 @@ class Session implements SessionInterface
      * @see https://php.net/sessionhandlerinterface
      * @see https://php.net/sessionhandler
      *
-     * @param null|AbstractProxy|SessionHandlerInterface $saveHandler
+     * @param null|AbstractProxy|\SessionHandlerInterface $saveHandler
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
-    public function setHandler(?SessionHandlerInterface $handler): void
+    public function setHandler(?\SessionHandlerInterface $handler): void
     {
-        if (!$handler instanceof SessionHandlerInterface && null !== $handler) {
-            throw new InvalidArgumentException('Must implement \SessionHandlerInterface; and not null.');
+        if (!$handler instanceof \SessionHandlerInterface && null !== $handler) {
+            throw new \InvalidArgumentException('Must implement \SessionHandlerInterface; and not null.');
         }
         $this->saveHandler = $handler;
 
@@ -305,7 +302,7 @@ class Session implements SessionInterface
             return;
         }
 
-        if ($this->saveHandler instanceof SessionHandlerInterface) {
+        if ($this->saveHandler instanceof \SessionHandlerInterface) {
             \session_set_save_handler($this->saveHandler, false);
         }
     }

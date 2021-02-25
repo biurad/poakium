@@ -17,9 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Proxy;
 
-use LogicException;
-use SessionHandlerInterface;
-
 /**
  * @author Drak <drak@zikula.org>
  */
@@ -54,7 +51,7 @@ abstract class AbstractProxy
      */
     public function isSessionHandlerInterface()
     {
-        return $this instanceof SessionHandlerInterface;
+        return $this instanceof \SessionHandlerInterface;
     }
 
     /**
@@ -90,12 +87,12 @@ abstract class AbstractProxy
     /**
      * Sets the session ID.
      *
-     * @throws LogicException
+     * @throws \LogicException
      */
     public function setId(string $id): void
     {
         if ($this->isActive()) {
-            throw new LogicException('Cannot change the ID of an active session.');
+            throw new \LogicException('Cannot change the ID of an active session.');
         }
 
         \session_id($id);
@@ -114,12 +111,12 @@ abstract class AbstractProxy
     /**
      * Sets the session name.
      *
-     * @throws LogicException
+     * @throws \LogicException
      */
     public function setName(string $name): void
     {
         if ($this->isActive()) {
-            throw new LogicException('Cannot change the name of an active session.');
+            throw new \LogicException('Cannot change the name of an active session.');
         }
 
         \session_name($name);

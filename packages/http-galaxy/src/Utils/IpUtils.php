@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Utils;
 
-use RuntimeException;
-
 /**
  * Http utility functions.
  *
@@ -113,7 +111,7 @@ class IpUtils
      *
      * @param string $ip IPv6 address or subnet in CIDR notation
      *
-     * @throws RuntimeException When IPV6 support is not enabled
+     * @throws \RuntimeException When IPV6 support is not enabled
      *
      * @return bool Whether the IP is valid
      */
@@ -126,7 +124,7 @@ class IpUtils
         }
 
         if (!((\extension_loaded('sockets') && \defined('AF_INET6')) || @\inet_pton('::1'))) {
-            throw new RuntimeException('Unable to check Ipv6. Check that PHP was not compiled with option "disable-ipv6".');
+            throw new \RuntimeException('Unable to check Ipv6. Check that PHP was not compiled with option "disable-ipv6".');
         }
 
         if (false !== \strpos($ip, '/')) {

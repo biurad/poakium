@@ -19,16 +19,11 @@ namespace Biurad\Http\Traits;
 
 use Biurad\Http\Interfaces\CookieInterface;
 use Biurad\Http\Response;
-use DateTime;
-use DateTimeImmutable;
-use DateTimeInterface;
-use DateTimeZone;
 use Fig\Http\Message\StatusCodeInterface;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use RuntimeException;
 
 /**
  * @author Márk Sági-Kazár <mark.sagikazar@gmail.com>
@@ -133,13 +128,13 @@ trait ResponseDecoratorTrait
      *
      * @final
      */
-    public function getExpires(): ?DateTimeInterface
+    public function getExpires(): ?\DateTimeInterface
     {
         try {
             return $this->getDate('Expires');
-        } catch (RuntimeException $e) {
+        } catch (\RuntimeException $e) {
             // according to RFC 2616 invalid date formats (e.g. "0" and "-1") must be treated as in the past
-            return DateTime::createFromFormat('U', \sprintf('%s', \time() - 172800));
+            return \DateTime::createFromFormat('U', \sprintf('%s', \time() - 172800));
         }
     }
 
@@ -165,12 +160,12 @@ trait ResponseDecoratorTrait
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @param DateTimeInterface $lastModified
-     * @param string            $etag
+     * @param \DateTimeInterface $lastModified
+     * @param string             $etag
      *
      * @return Response
      */
-    public function withModified(DateTimeInterface $lastModified = null, string $etag = null): self
+    public function withModified(\DateTimeInterface $lastModified = null, string $etag = null): self
     {
         $response = $this->getResponse();
 
@@ -179,11 +174,11 @@ trait ResponseDecoratorTrait
         }
 
         if (null !== $lastModified) {
-            if ($lastModified instanceof DateTime) {
-                $lastModified = DateTimeImmutable::createFromMutable($lastModified);
+            if ($lastModified instanceof \DateTime) {
+                $lastModified = \DateTimeImmutable::createFromMutable($lastModified);
             }
 
-            $lastModified->setTimezone(new DateTimeZone('UTC'));
+            $lastModified->setTimezone(new \DateTimeZone('UTC'));
             $response = $response->withHeader('Last-Modified', $lastModified->format('D, d M Y H:i:s') . ' GMT');
         }
 
@@ -487,18 +482,18 @@ trait ResponseDecoratorTrait
     /**
      * Returns the HTTP header value converted to a date.
      *
-     * @throws RuntimeException When the HTTP header is not parseable
+     * @throws \RuntimeException When the HTTP header is not parseable
      *
      * @return null|DateTimeInterface The parsed DateTime or the default value if the header does not exist
      */
-    private function getDate(string $key, DateTime $default = null)
+    private function getDate(string $key, \DateTime $default = null)
     {
         if (null === $value = $this->getHeaderLine($key)) {
             return $default;
         }
 
-        if (false === $date = DateTime::createFromFormat(\DATE_RFC2822, $value)) {
-            throw new RuntimeException(\sprintf('The "%s" HTTP header is not parseable (%s).', $key, $value));
+        if (false === $date = \DateTime::createFromFormat(\DATE_RFC2822, $value)) {
+            throw new \RuntimeException(\sprintf('The "%s" HTTP header is not parseable (%s).', $key, $value));
         }
 
         return $date;

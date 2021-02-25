@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use ArrayObject;
 use Biurad\Http\Strategies\RequestMatcher;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\RequestInterface;
@@ -39,7 +38,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  */
 class AccessControlMiddleware implements MiddlewareInterface
 {
-    /** @var ArrayObject */
+    /** @var \ArrayObject */
     protected $options;
 
     /**
@@ -54,7 +53,7 @@ class AccessControlMiddleware implements MiddlewareInterface
 
     public function __construct(array $options = [])
     {
-        $this->options = new ArrayObject($this->normalizeOptions($options));
+        $this->options = new \ArrayObject($this->normalizeOptions($options));
     }
 
     /**

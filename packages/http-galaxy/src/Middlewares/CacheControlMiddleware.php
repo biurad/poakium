@@ -17,14 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use ArrayObject;
 use Biurad\Http\Cache\CacheControl;
 use Biurad\Http\Cache\Generator\SimpleGenerator;
 use Biurad\Http\Interfaces\CacheKeyGeneratorInterface;
 use Biurad\Http\Interfaces\CacheListenerInterface;
-use DateTime;
-use DateTimeZone;
-use Exception;
 use GuzzleHttp\Exception\TransferException;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
@@ -34,7 +30,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use TypeError;
 
 /**
  * Allow for caching a response with a PSR-6 compatible caching engine.
@@ -51,7 +46,7 @@ class CacheControlMiddleware implements MiddlewareInterface
     /** @var StreamFactoryInterface */
     private $streamFactory;
 
-    /** @var ArrayObject */
+    /** @var \ArrayObject */
     private $config;
 
     /**
@@ -83,7 +78,7 @@ class CacheControlMiddleware implements MiddlewareInterface
     public function __construct(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory, array $config = [])
     {
         if (!$streamFactory instanceof StreamFactoryInterface) {
-            throw new TypeError(\sprintf('Argument 2 passed to %s::__construct() must be of type %s, %s given.', self::class, StreamFactoryInterface::class, \is_object($streamFactory) ? \get_class($streamFactory) : \gettype($streamFactory)));
+            throw new \TypeError(\sprintf('Argument 2 passed to %s::__construct() must be of type %s, %s given.', self::class, StreamFactoryInterface::class, \is_object($streamFactory) ? \get_class($streamFactory) : \gettype($streamFactory)));
         }
 
         $this->pool          = $pool;
@@ -344,7 +339,7 @@ class CacheControlMiddleware implements MiddlewareInterface
         $headers = $response->getHeader('Expires');
 
         foreach ($headers as $header) {
-            return (new DateTime($header))->getTimestamp() - (new DateTime())->getTimestamp();
+            return (new \DateTime($header))->getTimestamp() - (new \DateTime())->getTimestamp();
         }
 
         return $this->config['default_ttl'];
@@ -355,11 +350,11 @@ class CacheControlMiddleware implements MiddlewareInterface
      *
      * @param array<string,mixed> $options
      *
-     * @return ArrayObject
+     * @return \ArrayObject
      */
-    private function configureOptions(array $options): ArrayObject
+    private function configureOptions(array $options): \ArrayObject
     {
-        return new ArrayObject(
+        return new \ArrayObject(
             \array_replace([
                 'cache_lifetime'                    => 86400 * 30, // 30 days
                 'default_ttl'                       => 0,
@@ -388,7 +383,7 @@ class CacheControlMiddleware implements MiddlewareInterface
 
         try {
             $stream->rewind();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new TransferException('Cannot rewind stream.', 0, $e);
         }
 
@@ -412,8 +407,8 @@ class CacheControlMiddleware implements MiddlewareInterface
             return;
         }
 
-        $modified = new DateTime('@' . $data['createdAt']);
-        $modified->setTimezone(new DateTimeZone('GMT'));
+        $modified = new \DateTime('@' . $data['createdAt']);
+        $modified->setTimezone(new \DateTimeZone('GMT'));
 
         return \sprintf('%s GMT', $modified->format('l, d-M-y H:i:s'));
     }

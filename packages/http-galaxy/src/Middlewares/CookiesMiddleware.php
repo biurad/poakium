@@ -23,7 +23,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Throwable;
 
 /**
  * Handle request cookies.
@@ -134,7 +133,7 @@ final class CookiesMiddleware implements MiddlewareInterface
         foreach ($request->getCookieParams() as $key => $cookie) {
             try {
                 $cookies[$key] = $this->decryptCookie($cookie);
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 // If cookie failed to decrypt, which means the cookie
                 // wasn't encrypted. Hence, we will pass the cookie values
                 // in raw state.

@@ -20,11 +20,6 @@ namespace Biurad\Http\Factory;
 use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Biurad\Http\Interfaces\CookieInterface;
-use Countable;
-use DateTimeInterface;
-use IteratorAggregate;
-use SplObjectStorage;
-use UnexpectedValueException;
 
 /**
  * This class is designed to hold a set of Cookies,
@@ -41,7 +36,7 @@ use UnexpectedValueException;
  *
  * @see http://wp.netscape.com/newsref/std/cookie_spec.html for some specs.
  */
-class CookieFactory implements Countable, IteratorAggregate, CookieFactoryInterface
+class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInterface
 {
     /**
      * The default path (if specified).
@@ -67,13 +62,13 @@ class CookieFactory implements Countable, IteratorAggregate, CookieFactoryInterf
     /**
      * All of the cookies queued for sending.
      *
-     * @var SplObjectStorage
+     * @var \SplObjectStorage
      */
     protected $cookies;
 
     public function __construct()
     {
-        $this->cookies = new SplObjectStorage();
+        $this->cookies = new \SplObjectStorage();
     }
 
     /**
@@ -92,7 +87,7 @@ class CookieFactory implements Countable, IteratorAggregate, CookieFactoryInterf
         $cookie = $this->resolveCookie($parameters);
 
         if (!$cookie instanceof CookieInterface) {
-            throw new UnexpectedValueException(
+            throw new \UnexpectedValueException(
                 \sprintf('Expected cookie to be instance of %s', CookieInterface::class)
             );
         }
@@ -213,7 +208,7 @@ class CookieFactory implements Countable, IteratorAggregate, CookieFactoryInterf
      */
     public function clear(): void
     {
-        $this->cookies = new SplObjectStorage();
+        $this->cookies = new \SplObjectStorage();
     }
 
     /**

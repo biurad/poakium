@@ -17,26 +17,22 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Proxy;
 
-use SessionHandler;
-use SessionHandlerInterface;
-use SessionUpdateTimestampHandlerInterface;
-
 /**
  * @author Drak <drak@zikula.org>
  */
-class SessionHandlerProxy extends AbstractProxy implements SessionHandlerInterface, SessionUpdateTimestampHandlerInterface
+class SessionHandlerProxy extends AbstractProxy implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface
 {
     protected $handler;
 
-    public function __construct(SessionHandlerInterface $handler)
+    public function __construct(\SessionHandlerInterface $handler)
     {
         $this->handler         = $handler;
-        $this->wrapper         = ($handler instanceof SessionHandler);
+        $this->wrapper         = ($handler instanceof \SessionHandler);
         $this->saveHandlerName = $this->wrapper ? \ini_get('session.save_handler') : 'user';
     }
 
     /**
-     * @return SessionHandlerInterface
+     * @return \SessionHandlerInterface
      */
     public function getHandler()
     {
@@ -98,7 +94,7 @@ class SessionHandlerProxy extends AbstractProxy implements SessionHandlerInterfa
      */
     public function validateId($sessionId)
     {
-        return !$this->handler instanceof SessionUpdateTimestampHandlerInterface || $this->handler->validateId($sessionId);
+        return !$this->handler instanceof \SessionUpdateTimestampHandlerInterface || $this->handler->validateId($sessionId);
     }
 
     /**
@@ -106,6 +102,6 @@ class SessionHandlerProxy extends AbstractProxy implements SessionHandlerInterfa
      */
     public function updateTimestamp($sessionId, $data)
     {
-        return $this->handler instanceof SessionUpdateTimestampHandlerInterface ? $this->handler->updateTimestamp($sessionId, $data) : $this->write($sessionId, $data);
+        return $this->handler instanceof \SessionUpdateTimestampHandlerInterface ? $this->handler->updateTimestamp($sessionId, $data) : $this->write($sessionId, $data);
     }
 }

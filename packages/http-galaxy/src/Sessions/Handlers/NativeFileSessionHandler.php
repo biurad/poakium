@@ -17,16 +17,12 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Handlers;
 
-use InvalidArgumentException;
-use RuntimeException;
-use SessionHandler;
-
 /**
  * Native session handler using PHP's built in file storage.
  *
  * @author Drak <drak@zikula.org>
  */
-class NativeFileSessionHandler extends SessionHandler
+class NativeFileSessionHandler extends \SessionHandler
 {
     /**
      * @param string $savePath Path of directory to save session files
@@ -35,8 +31,8 @@ class NativeFileSessionHandler extends SessionHandler
      *
      * @see https://php.net/session.configuration#ini.session.save-path for further details.
      *
-     * @throws InvalidArgumentException On invalid $savePath
-     * @throws RuntimeException         When failing to create the save directory
+     * @throws \InvalidArgumentException On invalid $savePath
+     * @throws \RuntimeException         When failing to create the save directory
      */
     public function __construct(string $savePath = null)
     {
@@ -48,7 +44,7 @@ class NativeFileSessionHandler extends SessionHandler
 
         if ($count = \substr_count($savePath, ';')) {
             if ($count > 2) {
-                throw new InvalidArgumentException(\sprintf('Invalid argument $savePath \'%s\'', $savePath));
+                throw new \InvalidArgumentException(\sprintf('Invalid argument $savePath \'%s\'', $savePath));
             }
 
             // characters after last ';' are the path
@@ -56,7 +52,7 @@ class NativeFileSessionHandler extends SessionHandler
         }
 
         if ($baseDir && !\is_dir($baseDir) && !@\mkdir($baseDir, 0777, true) && !\is_dir($baseDir)) {
-            throw new RuntimeException(\sprintf('Session Storage was not able to create directory "%s"', $baseDir));
+            throw new \RuntimeException(\sprintf('Session Storage was not able to create directory "%s"', $baseDir));
         }
 
         \ini_set('session.save_path', $savePath);

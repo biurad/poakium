@@ -19,9 +19,6 @@ namespace Biurad\Http\Sessions\Handlers;
 
 use Biurad\Http\Utils\CookieUtil;
 use Biurad\Http\Utils\SessionUtils;
-use LogicException;
-use SessionHandlerInterface;
-use SessionUpdateTimestampHandlerInterface;
 
 /**
  * This abstract session handler provides a generic implementation
@@ -30,7 +27,7 @@ use SessionUpdateTimestampHandlerInterface;
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-abstract class AbstractSessionHandler implements SessionHandlerInterface, SessionUpdateTimestampHandlerInterface
+abstract class AbstractSessionHandler implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface
 {
     private $sessionName;
 
@@ -128,7 +125,7 @@ abstract class AbstractSessionHandler implements SessionHandlerInterface, Sessio
     {
         if (!\headers_sent() && \filter_var(\ini_get('session.use_cookies'), \FILTER_VALIDATE_BOOLEAN)) {
             if (!$this->sessionName) {
-                throw new LogicException(\sprintf('Session name cannot be empty, did you forget to call "parent::open()" in "%s"?.', static::class));
+                throw new \LogicException(\sprintf('Session name cannot be empty, did you forget to call "parent::open()" in "%s"?.', static::class));
             }
             $cookie = SessionUtils::popSessionCookie($this->sessionName, $sessionId);
 

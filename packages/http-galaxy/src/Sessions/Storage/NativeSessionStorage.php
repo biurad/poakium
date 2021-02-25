@@ -24,11 +24,6 @@ use Biurad\Http\Sessions\MetadataBag;
 use Biurad\Http\Sessions\Proxy\AbstractProxy;
 use Biurad\Http\Sessions\Proxy\SessionHandlerProxy;
 use Biurad\Http\Utils\SessionUtils;
-use InvalidArgumentException;
-use LogicException;
-use RuntimeException;
-use SessionHandler;
-use SessionHandlerInterface;
 
 /**
  * This provides a base class for session attribute storage.
@@ -115,7 +110,7 @@ class NativeSessionStorage implements SessionStorageInterface
     public function __construct(array $options = [], $handler = null, MetadataBag $metaBag = null)
     {
         if (!\extension_loaded('session')) {
-            throw new LogicException('PHP extension "session" is required.');
+            throw new \LogicException('PHP extension "session" is required.');
         }
 
         $options += [
@@ -153,16 +148,16 @@ class NativeSessionStorage implements SessionStorageInterface
         }
 
         if (\PHP_SESSION_ACTIVE === \session_status()) {
-            throw new RuntimeException('Failed to start the session: already started by PHP.');
+            throw new \RuntimeException('Failed to start the session: already started by PHP.');
         }
 
         if (\filter_var(\ini_get('session.use_cookies'), \FILTER_VALIDATE_BOOLEAN) && \headers_sent($file, $line)) {
-            throw new RuntimeException(\sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
+            throw new \RuntimeException(\sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
 
         // ok to try and start the session
         if (!\session_start()) {
-            throw new RuntimeException('Failed to start the session.');
+            throw new \RuntimeException('Failed to start the session.');
         }
 
         if (null !== $this->emulateSameSite) {
@@ -313,7 +308,7 @@ class NativeSessionStorage implements SessionStorageInterface
     public function registerBag(SessionBagInterface $bag): void
     {
         if ($this->started) {
-            throw new LogicException('Cannot register a bag when the session is already started.');
+            throw new \LogicException('Cannot register a bag when the session is already started.');
         }
 
         $this->bags[$bag->getName()] = $bag;
@@ -325,7 +320,7 @@ class NativeSessionStorage implements SessionStorageInterface
     public function getBag(string $name): SessionBagInterface
     {
         if (!isset($this->bags[$name])) {
-            throw new InvalidArgumentException(\sprintf('The SessionBagInterface "%s" is not registered.', $name));
+            throw new \InvalidArgumentException(\sprintf('The SessionBagInterface "%s" is not registered.', $name));
         }
 
         if (!$this->started && $this->saveHandler->isActive()) {
@@ -422,7 +417,7 @@ class NativeSessionStorage implements SessionStorageInterface
      * @see https://php.net/sessionhandlerinterface
      * @see https://php.net/sessionhandler
      *
-     * @param null|AbstractProxy|SessionHandlerInterface $saveHandler
+     * @param null|AbstractProxy|\SessionHandlerInterface $saveHandler
      *
      * @throws InvalidArgumentException
      */
@@ -430,17 +425,17 @@ class NativeSessionStorage implements SessionStorageInterface
     {
         if (
             !$saveHandler instanceof AbstractProxy &&
-            !$saveHandler instanceof SessionHandlerInterface &&
+            !$saveHandler instanceof \SessionHandlerInterface &&
             null !== $saveHandler
         ) {
-            throw new InvalidArgumentException('Must be instance of AbstractProxy; implement \SessionHandlerInterface; or be null.');
+            throw new \InvalidArgumentException('Must be instance of AbstractProxy; implement \SessionHandlerInterface; or be null.');
         }
 
         // Wrap $saveHandler in proxy and prevent double wrapping of proxy
-        if (!$saveHandler instanceof AbstractProxy && $saveHandler instanceof SessionHandlerInterface) {
+        if (!$saveHandler instanceof AbstractProxy && $saveHandler instanceof \SessionHandlerInterface) {
             $saveHandler = new SessionHandlerProxy($saveHandler);
         } elseif (!$saveHandler instanceof AbstractProxy) {
-            $saveHandler = new SessionHandlerProxy(new StrictSessionHandler(new SessionHandler()));
+            $saveHandler = new SessionHandlerProxy(new StrictSessionHandler(new \SessionHandler()));
         }
         $this->saveHandler = $saveHandler;
 

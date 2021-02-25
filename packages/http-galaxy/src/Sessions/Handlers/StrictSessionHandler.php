@@ -17,11 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Handlers;
 
-use LogicException;
-use SessionHandler;
-use SessionHandlerInterface;
-use SessionUpdateTimestampHandlerInterface;
-
 /**
  * Adds basic `SessionUpdateTimestampHandlerInterface` behaviors to another `SessionHandlerInterface`.
  *
@@ -29,15 +24,15 @@ use SessionUpdateTimestampHandlerInterface;
  */
 class StrictSessionHandler extends AbstractSessionHandler
 {
-    /** @var SessionHandlerInterface */
+    /** @var \SessionHandlerInterface */
     private $handler;
 
     private $doDestroy;
 
-    public function __construct(SessionHandlerInterface $handler)
+    public function __construct(\SessionHandlerInterface $handler)
     {
-        if ($handler instanceof SessionUpdateTimestampHandlerInterface) {
-            throw new LogicException(
+        if ($handler instanceof \SessionUpdateTimestampHandlerInterface) {
+            throw new \LogicException(
                 \sprintf(
                     '"%s" is already an instance of "SessionUpdateTimestampHandlerInterface", ' .
                     'you cannot wrap it with "%s".',
@@ -49,7 +44,7 @@ class StrictSessionHandler extends AbstractSessionHandler
 
         $this->handler = $handler;
 
-        $this->wrapper         = ($handler instanceof SessionHandler);
+        $this->wrapper         = ($handler instanceof \SessionHandler);
         $this->saveHandlerName = $this->wrapper ? \ini_get('session.save_handler') : 'user';
     }
 

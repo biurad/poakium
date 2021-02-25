@@ -18,10 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Http\Sessions;
 
 use Biurad\Http\Interfaces\CookieFactoryInterface;
-use InvalidArgumentException;
-use PDO;
 use Psr\Cache\CacheItemPoolInterface;
-use TypeError;
 
 /**
  * @author Nicolas Grekas <p@tchwork.com>
@@ -60,7 +57,7 @@ class HandlerFactory
     public function createHandler($connection): Handlers\AbstractSessionHandler
     {
         if (!\is_string($connection) && !\is_object($connection)) {
-            throw new TypeError(
+            throw new \TypeError(
                 \sprintf(
                     'Argument 1 passed to %s() must be a string or a connection object, %s given.',
                     __METHOD__,
@@ -70,11 +67,11 @@ class HandlerFactory
         }
 
         switch (true) {
-            case $connection instanceof PDO:
+            case $connection instanceof \PDO:
                 return new Handlers\PdoSessionHandler($connection);
 
             case !\is_string($connection):
-                throw new InvalidArgumentException(\sprintf('Unsupported Connection: %s.', \get_class($connection)));
+                throw new \InvalidArgumentException(\sprintf('Unsupported Connection: %s.', \get_class($connection)));
 
             case 0 === \strpos($connection, 'array'):
                 return new Handlers\NullSessionHandler();
@@ -102,6 +99,6 @@ class HandlerFactory
                 return new Handlers\PdoSessionHandler($connection);
         }
 
-        throw new InvalidArgumentException(\sprintf('Unsupported Connection: %s.', $connection));
+        throw new \InvalidArgumentException(\sprintf('Unsupported Connection: %s.', $connection));
     }
 }

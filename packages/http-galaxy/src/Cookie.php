@@ -20,7 +20,6 @@ namespace Biurad\Http;
 use Biurad\Http\Interfaces\CookieInterface;
 use Biurad\Http\Utils\CookieUtil;
 use GuzzleHttp\Cookie\SetCookie;
-use InvalidArgumentException;
 
 /**
  * Represent singular cookie header value with packing abilities.
@@ -61,7 +60,7 @@ final class Cookie extends SetCookie implements CookieInterface
     {
         /** @var null|array $replaced will be null in case of replace error */
         if (null === $replaced = \array_replace(self::$defaults, $data)) {
-            throw new InvalidArgumentException('Unable to replace the default values for the Cookie.');
+            throw new \InvalidArgumentException('Unable to replace the default values for the Cookie.');
         }
 
         // Set HttpOnly to opposite if Secure exists
@@ -70,7 +69,7 @@ final class Cookie extends SetCookie implements CookieInterface
         }
 
         if (!\in_array($replaced['SameSite'], self::SAMESITE_COLLECTION, true)) {
-            throw new InvalidArgumentException('The "sameSite" parameter value is not valid.');
+            throw new \InvalidArgumentException('The "sameSite" parameter value is not valid.');
         }
         $this->setSameSite($replaced['SameSite']);
 

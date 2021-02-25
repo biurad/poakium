@@ -20,9 +20,6 @@ namespace Biurad\Http\Sessions\Storage;
 use Biurad\Http\Interfaces\SessionBagInterface;
 use Biurad\Http\Interfaces\SessionStorageInterface;
 use Biurad\Http\Sessions\MetadataBag;
-use InvalidArgumentException;
-use LogicException;
-use RuntimeException;
 
 /**
  * MockArraySessionStorage mocks the session for unit tests.
@@ -131,7 +128,7 @@ class MockArraySessionStorage implements SessionStorageInterface
     public function setId(string $id): void
     {
         if ($this->started) {
-            throw new LogicException('Cannot set session ID after the session has started.');
+            throw new \LogicException('Cannot set session ID after the session has started.');
         }
 
         $this->id = $id;
@@ -159,7 +156,7 @@ class MockArraySessionStorage implements SessionStorageInterface
     public function save(): void
     {
         if (!$this->started || $this->closed) {
-            throw new RuntimeException('Trying to save a session that was not started yet or was already closed.');
+            throw new \RuntimeException('Trying to save a session that was not started yet or was already closed.');
         }
         // nothing to do since we don't persist the session data
         $this->closed  = false;
@@ -197,7 +194,7 @@ class MockArraySessionStorage implements SessionStorageInterface
     public function getBag(string $name): SessionBagInterface
     {
         if (!isset($this->bags[$name])) {
-            throw new InvalidArgumentException(\sprintf('The SessionBagInterface "%s" is not registered.', $name));
+            throw new \InvalidArgumentException(\sprintf('The SessionBagInterface "%s" is not registered.', $name));
         }
 
         if (!$this->started) {

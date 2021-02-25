@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Sessions\Bags;
 
-use ArrayIterator;
 use Biurad\Http\Interfaces\SessionDataInterface;
 
 /**
@@ -179,11 +178,11 @@ class FlashBag implements SessionDataInterface
     /**
      * Returns an iterator for flashes.
      *
-     * @return ArrayIterator An \ArrayIterator instance
+     * @return \ArrayIterator An \ArrayIterator instance
      */
     public function getIterator()
     {
-        return new ArrayIterator($this->flashes);
+        return new \ArrayIterator($this->flashes);
     }
 
     /**

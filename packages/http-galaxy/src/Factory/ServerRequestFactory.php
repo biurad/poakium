@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Http\Factory;
 
 use Biurad\Http\ServerRequest;
-use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -30,7 +29,7 @@ class ServerRequestFactory implements ServerRequestFactoryInterface
             if (!empty($serverParams['REQUEST_METHOD'])) {
                 $method = $serverParams['REQUEST_METHOD'];
             } else {
-                throw new InvalidArgumentException('Cannot determine HTTP method');
+                throw new \InvalidArgumentException('Cannot determine HTTP method');
             }
         }
 

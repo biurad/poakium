@@ -17,12 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Utils;
 
-use DateTime;
-use DateTimeInterface;
-use DateTimeZone;
-use InvalidArgumentException;
-use UnexpectedValueException;
-
 final class CookieUtil
 {
     protected const DATE_FORMAT = 'D, d-M-Y H:i:s T';
@@ -91,24 +85,24 @@ final class CookieUtil
      *
      * @param string $dateValue
      *
-     * @throws UnexpectedValueException if we cannot parse the cookie date string
+     * @throws \UnexpectedValueException if we cannot parse the cookie date string
      *
-     * @return DateTimeInterface
+     * @return \DateTimeInterface
      */
-    public static function parseDate($dateValue): DateTimeInterface
+    public static function parseDate($dateValue): \DateTimeInterface
     {
         foreach (self::$dateFormats as $dateFormat) {
-            if (false !== $date = DateTime::createFromFormat($dateFormat, $dateValue, new DateTimeZone('GMT'))) {
+            if (false !== $date = \DateTime::createFromFormat($dateFormat, $dateValue, new \DateTimeZone('GMT'))) {
                 return $date;
             }
         }
 
         // attempt a fallback for unusual formatting
-        if (false !== $date = \date_create($dateValue, new DateTimeZone('GMT'))) {
+        if (false !== $date = \date_create($dateValue, new \DateTimeZone('GMT'))) {
             return $date;
         }
 
-        throw new UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
+        throw new \UnexpectedValueException(\sprintf('Unparseable cookie date string "%s"', $dateValue));
     }
 
     /**
@@ -118,23 +112,23 @@ final class CookieUtil
      *
      * @param string $name
      *
-     * @throws InvalidArgumentException if the name is empty or contains invalid characters
+     * @throws \InvalidArgumentException if the name is empty or contains invalid characters
      */
     public static function validateName($name): void
     {
         if (\strlen($name) < 1) {
-            throw new InvalidArgumentException('The name cannot be empty');
+            throw new \InvalidArgumentException('The name cannot be empty');
         }
 
         if (\preg_match("/[=,; \t\r\n\013\014]/", $name)) {
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 "Cookie name cannot contain these characters: =,; \\t\\r\\n\\013\\014 ({$name})"
             );
         }
 
         // Name attribute is a token as per spec in RFC 2616
         if (\preg_match('/[\x00-\x20\x22\x28-\x29\x2C\x2F\x3A-\x40\x5B-\x5D\x7B\x7D\x7F]/', $name)) {
-            throw new InvalidArgumentException(\sprintf('The cookie name "%s" contains invalid characters.', $name));
+            throw new \InvalidArgumentException(\sprintf('The cookie name "%s" contains invalid characters.', $name));
         }
     }
 
@@ -149,7 +143,7 @@ final class CookieUtil
      *
      * @param null|string $value
      *
-     * @throws InvalidArgumentException if the value contains invalid characters
+     * @throws \InvalidArgumentException if the value contains invalid characters
      */
     public static function validateValue($value): void
     {
@@ -159,13 +153,13 @@ final class CookieUtil
             // \r not followed by \n, OR
             // \r\n not followed by space or horizontal tab; these are all CRLF attacks
             if (\preg_match("#(?:(?:(?<!\r)\n)|(?:\r(?!\n))|(?:\r\n(?![ \t])))#", $value)) {
-                throw new InvalidArgumentException(
+                throw new \InvalidArgumentException(
                     \sprintf('The cookie value "%s" contains invalid characters.', $value)
                 );
             }
 
             if (\preg_match('/[^\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]/', $value)) {
-                throw new InvalidArgumentException(
+                throw new \InvalidArgumentException(
                     \sprintf('The cookie value "%s" contains invalid characters.', $value)
                 );
             }
@@ -214,7 +208,7 @@ final class CookieUtil
     }
 
     /**
-     * @param null|DateTimeInterface|int|string $expires
+     * @param null|\DateTimeInterface|int|string $expires
      *
      * @return int
      */
@@ -225,7 +219,7 @@ final class CookieUtil
         }
 
         // convert expiration time to a Unix timestamp
-        if ($expires instanceof DateTimeInterface) {
+        if ($expires instanceof \DateTimeInterface) {
             return (int) $expires->format('U');
         }
 
@@ -236,7 +230,7 @@ final class CookieUtil
         $time = \strtotime($expires);
 
         if (!\is_int($time)) {
-            throw new InvalidArgumentException(\sprintf('Invalid expires "%s" provided', $expires));
+            throw new \InvalidArgumentException(\sprintf('Invalid expires "%s" provided', $expires));
         }
 
         return $time;

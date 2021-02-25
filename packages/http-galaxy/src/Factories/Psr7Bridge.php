@@ -26,8 +26,6 @@ use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Throwable;
-use UnexpectedValueException;
 
 /**
  * @final
@@ -57,7 +55,7 @@ class Psr7Bridge
     /**
      * Deserialize a response array to a response instance.
      *
-     * @throws UnexpectedValueException when cannot deserialize response
+     * @throws \UnexpectedValueException when cannot deserialize response
      */
     public static function responseFromArray(array $serializedResponse): Response
     {
@@ -71,8 +69,8 @@ class Psr7Bridge
             $reasonPhrase    = self::getValueFromKey($serializedResponse, 'reason_phrase');
 
             return new Response($statusCode, $headers, $body, $protocolVersion, $reasonPhrase);
-        } catch (Throwable $exception) {
-            throw new UnexpectedValueException('Cannot deserialize response', $exception->getCode(), $exception);
+        } catch (\Throwable $exception) {
+            throw new \UnexpectedValueException('Cannot deserialize response', $exception->getCode(), $exception);
         }
     }
 
@@ -80,7 +78,7 @@ class Psr7Bridge
      * Parse a response from a stream.
      *
      * @throws Exception\InvalidArgumentException when the stream is not readable
-     * @throws UnexpectedValueException           when errors occur parsing the message
+     * @throws \UnexpectedValueException          when errors occur parsing the message
      */
     public static function fromStreamToResponse(StreamInterface $stream): Response
     {
@@ -114,7 +112,7 @@ class Psr7Bridge
     /**
      * Deserialize a request array to a request instance.
      *
-     * @throws UnexpectedValueException when cannot deserialize response
+     * @throws \UnexpectedValueException when cannot deserialize response
      */
     public static function requestFromArray(array $serializedRequest): Request
     {
@@ -129,8 +127,8 @@ class Psr7Bridge
 
             return (new Request($method, $uri, $headers, $body, $protocolVersion))
                 ->withRequestTarget($requestTarget);
-        } catch (Throwable $exception) {
-            throw new UnexpectedValueException('Cannot deserialize request', $exception->getCode(), $exception);
+        } catch (\Throwable $exception) {
+            throw new \UnexpectedValueException('Cannot deserialize request', $exception->getCode(), $exception);
         }
     }
 
@@ -139,7 +137,7 @@ class Psr7Bridge
      *
      * @throws Exception\InvalidArgumentException if the message stream is not
      *                                            readable or seekable
-     * @throws UnexpectedValueException           if an invalid request line is detected
+     * @throws \UnexpectedValueException          if an invalid request line is detected
      */
     public static function fromStreamToRequest(StreamInterface $stream): Request
     {
@@ -164,7 +162,7 @@ class Psr7Bridge
      * Retrieves a line from the stream; a line is defined as a sequence of
      * characters ending in a CRLF sequence.
      *
-     * @throws UnexpectedValueException if the sequence contains a CR
+     * @throws \UnexpectedValueException if the sequence contains a CR
      *                                  or LF in isolation, or ends in a CR
      */
     protected static function getLine(StreamInterface $stream): string
@@ -183,12 +181,12 @@ class Psr7Bridge
 
             // CR NOT followed by LF
             if ($crFound && $char !== self::LF) {
-                throw new UnexpectedValueException('Unexpected carriage return detected');
+                throw new \UnexpectedValueException('Unexpected carriage return detected');
             }
 
             // LF in isolation
             if (!$crFound && $char === self::LF) {
-                throw new UnexpectedValueException('Unexpected line feed detected');
+                throw new \UnexpectedValueException('Unexpected line feed detected');
             }
 
             // CR found; do not append
@@ -204,7 +202,7 @@ class Psr7Bridge
 
         // CR found at end of stream
         if ($crFound) {
-            throw new UnexpectedValueException('Unexpected end of headers');
+            throw new \UnexpectedValueException('Unexpected end of headers');
         }
 
         return $line;
@@ -218,7 +216,7 @@ class Psr7Bridge
      * - The first is an array of headers
      * - The second is a StreamInterface containing the body content
      *
-     * @throws UnexpectedValueException for invalid headers
+     * @throws \UnexpectedValueException for invalid headers
      */
     protected static function splitStream(StreamInterface $stream): array
     {
@@ -238,11 +236,11 @@ class Psr7Bridge
             }
 
             if (!$currentHeader) {
-                throw new UnexpectedValueException('Invalid header detected');
+                throw new \UnexpectedValueException('Invalid header detected');
             }
 
             if (!\preg_match('#^[ \t]#', $line)) {
-                throw new UnexpectedValueException('Invalid header continuation');
+                throw new \UnexpectedValueException('Invalid header continuation');
             }
 
             // Append continuation to last header value found
@@ -261,7 +259,7 @@ class Psr7Bridge
      * exception if it does not follow specifications; if valid, returns a list
      * with the method, target, and version, in that order.
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      */
     private static function getRequestLine(StreamInterface $stream): array
     {
@@ -274,7 +272,7 @@ class Psr7Bridge
         );
 
         if (empty($matches)) {
-            throw new UnexpectedValueException('Invalid request line detected');
+            throw new \UnexpectedValueException('Invalid request line detected');
         }
 
         return [$matches['method'], $matches['target'], $matches['version']];
@@ -305,7 +303,7 @@ class Psr7Bridge
      * @param string $key
      * @param string $message
      *
-     * @throws UnexpectedValueException
+     * @throws \UnexpectedValueException
      *
      * @return mixed
      */
@@ -319,13 +317,13 @@ class Psr7Bridge
             $message = \sprintf('Missing "%s" key in serialized response', $key);
         }
 
-        throw new UnexpectedValueException($message);
+        throw new \UnexpectedValueException($message);
     }
 
     /**
      * Retrieve the status line for the message.
      *
-     * @throws UnexpectedValueException if line is malformed
+     * @throws \UnexpectedValueException if line is malformed
      *
      * @return array Array with three elements: 0 => version, 1 => status, 2 => reason
      */
@@ -340,7 +338,7 @@ class Psr7Bridge
         );
 
         if (empty($matches)) {
-            throw new UnexpectedValueException('No status line detected');
+            throw new \UnexpectedValueException('No status line detected');
         }
 
         return [$matches['version'], (int) $matches['status'], $matches['reason'] ?? ''];
