@@ -27,12 +27,11 @@
     },
     "require-dev": {
         "latte/latte": "^2.8",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
-        "phpunit/phpunit": "^8.5 || ^9.0",
+        "phpstan/phpstan": "^0.12 || ^1.0",
+        "phpunit/phpunit": "^8.5 || ^9.5",
         "squizlabs/php_codesniffer": "^3.5",
         "twig/twig": "^3.1",
-        "vimeo/psalm": "^3.11 || ^4.0"
+        "vimeo/psalm": "^4.7"
     },
     "suggest": {
         "latte/latte": "For a intuitive and fast template engine",
