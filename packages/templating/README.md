@@ -1,12 +1,17 @@
+<div align="center">
+
 # The Biurad PHP Template UI
 
+[![PHP Version](https://img.shields.io/packagist/php-v/biurad/templating.svg?style=flat-square&colorB=%238892BF)](http://php.net)
 [![Latest Version](https://img.shields.io/packagist/v/biurad/templating.svg?style=flat-square)](https://packagist.org/packages/biurad/templating)
-[![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-templating/Tests?style=flat-square)](https://github.com/biurad/php-templating/actions?query=workflow%3ATests)
+[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-templating/build?style=flat-square)](https://github.com/biurad/php-templating/actions?query=workflow%3Abuild)
 [![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-templating?style=flat-square)](https://codeclimate.com/github/biurad/php-templating)
 [![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-templating?style=flat-square)](https://codecov.io/gh/biurad/php-templating)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-templating.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-templating)
-[![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
+
+</div>
+
+---
 
 **biurad/php-templating** is server side template ui for [PHP] 7.2+ created by [Divine Niiquaye][@divineniiquaye]. This library provides all the tools needed in working with any kind of template system and offers a structured solution to implement server side renderable template engines (Twig, Stempler, Latte, Blade, or native PHP templates) segregation.
 
@@ -18,9 +23,9 @@ This project requires [PHP] 7.2 or higher. The recommended way to install, is vi
 $ composer require biurad/templating
 ```
 
-This library is a collection of user interfaces of template files which include static (HTML) and dynamic parts. This library is not a compiler, but a hub to allow multiple rendering of server side template engines.
+This library is shipped out of the box with three high performance and dynamic renders for fast server side templating. It also support multiple rendering (can render templates declared for different renderers all at once).
 
-To render view in controller or other service simply invoke `render` method of `Biurad\UI\Template`. The view name does not need to include extension (default to be used) but can include namespace. Template UI returns compiled template (ultimate HTML).
+Again you don't have to worry about declaring absolute path to every single template file. Set the storage to where paths can be found, enter the name of the template file. The rest will be taken care of return the rendered result (ultimate HTML).
 
 ```php
 use Biurad\UI\Renders\PhpNativeRender;
@@ -36,7 +41,7 @@ $phpRenderEngine->set(new SlotsHelper());
 $templating = new Template($filesystemLoader);
 
 // Before adding a template renderer, you can add a namespace path
-// $templating->addNamepace('MyBundle', __DIR__ . '/vendor/company/package/Resources');
+// $templating->addNamespace('MyBundle', __DIR__ . '/vendor/company/package/Resources');
 
 // Add a template compiler renderer to Template.
 $templating->addRender($phpRenderEngine);
@@ -50,7 +55,7 @@ Hello, <?= $view->escape($firstname) ?>!
 
 ## 📓 Documentation
 
-For in-depth documentation before using this library. Full documentation on advanced usage, configuration, and customization can be found at [docs.biurad.com][docs].
+For in-depth documentation before using this library.. Full documentation on advanced usage, configuration, and customization can be found at [docs.divinenii.com][docs].
 
 ## ⏫ Upgrading
 
@@ -64,60 +69,47 @@ Any classes or methods marked `@internal` are not intended for use outside of th
 
 ## 🛠️ Maintenance & Support
 
-When a new **major** version is released (`1.0`, `2.0`, etc), the previous one (`0.19.x`) will receive bug fixes for _at least_ 3 months and security updates for 6 months after that new release comes out.
-
 (This policy may change in the future and exceptions may be made on a case-by-case basis.)
 
-**Professional support, including notification of new releases and security updates, is available at [Biurad Commits][commit].**
+- A new **patch version released** (e.g. `1.0.10`, `1.1.6`) comes out roughly every month. It only contains bug fixes, so you can safely upgrade your applications.
+- A new **minor version released** (e.g. `1.1`, `1.2`) comes out every six months: one in June and one in December. It contains bug fixes and new features, but it doesn’t include any breaking change, so you can safely upgrade your applications;
+- A new **major version released** (e.g. `1.0`, `2.0`, `3.0`) comes out every two years. It can contain breaking changes, so you may need to do some changes in your applications before upgrading.
 
-## 👷‍♀️ Contributing
+When a **major** version is released, the number of minor versions is limited to five per branch (X.0, X.1, X.2, X.3 and X.4). The last minor version of a branch (e.g. 1.4, 2.4) is considered a **long-term support (LTS) version** with lasts for more that 2 years and the other ones cam last up to 8 months:
 
-To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
-
-Contributions to this library are **welcome**, especially ones that:
-
-- Improve usability or flexibility without compromising our ability to adhere to ???.
-- Optimize performance
-- Fix issues with adhering to ???.
-- ???.
-
-Please see [CONTRIBUTING] for additional details.
+**Get a professional support from [Biurad Lap][] after the active maintenance of a released version has ended**.
 
 ## 🧪 Testing
 
 ```bash
-$ composer test
+$ ./vendor/bin/phpunit
 ```
 
-This will tests biurad/php-templating will run against PHP 7.2 version or higher.
+This will tests divineniiquaye/php-rade will run against PHP 7.4 version or higher.
+
+## 🏛️ Governance
+
+This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Contributions are welcome 👷‍♀️! To contribute, please familiarize yourself with our [CONTRIBUTING] guidelines.
+
+To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
+
+## 🙌 Sponsors
+
+Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
 
 ## 👥 Credits & Acknowledgements
 
 - [Divine Niiquaye Ibok][@divineniiquaye]
 - [All Contributors][]
 
-## 🙌 Sponsors
-
-Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
-
 ## 📄 License
 
-**biurad/php-templating** is licensed under the BSD-3 license. See the [`LICENSE`](LICENSE) file for more details.
-
-## 🏛️ Governance
-
-This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Members of the [Biurad Lap][] Leadership Team may occasionally assist with some of these duties.
-
-## 🗺️ Who Uses It?
-
-You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us an [email] or [message] mentioning this library. We publish all received request's at <https://patreons.biurad.com>.
-
-Check out the other cool things people are doing with `biurad/php-templating`: <https://packagist.org/packages/biurad/templating/dependents>
+The **divineniiquaye/php-rade** library is copyright © [Divine Niiquaye Ibok](https://divinenii.com) and licensed for use under the [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE).
 
 [PHP]: https://php.net
 [Composer]: https://getcomposer.org
 [@divineniiquaye]: https://github.com/divineniiquaye
-[docs]: https://docs.biurad.com/php-templating
+[docs]: https://docs.biurad.com/php/templating
 [commit]: https://commits.biurad.com/php-templating.git
 [UPGRADE]: UPGRADE-1.x.md
 [CHANGELOG]: CHANGELOG-0.x.md
