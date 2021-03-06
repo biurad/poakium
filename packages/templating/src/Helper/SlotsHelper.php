@@ -44,11 +44,11 @@ class SlotsHelper extends Helper
             throw new \InvalidArgumentException(\sprintf('A slot named "%s" is already started.', $name));
         }
 
-        $this->openSlots[]  = $name;
+        $this->openSlots[] = $name;
         $this->slots[$name] = '';
 
         \ob_start();
-        \ob_implicit_flush(0);
+        \ob_implicit_flush(false);
     }
 
     /**
@@ -86,7 +86,7 @@ class SlotsHelper extends Helper
      */
     public function get(string $name, $default = false)
     {
-        return isset($this->slots[$name]) ? $this->slots[$name] : $default;
+        return $this->slots[$name] ?? $default;
     }
 
     /**

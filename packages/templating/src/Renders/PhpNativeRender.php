@@ -17,10 +17,16 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
+use Biurad\UI\Exceptions\RenderException;
 use Biurad\UI\Helper\SlotsHelper;
 use Biurad\UI\Interfaces\HelperInterface;
-use Biurad\UI\Source;
+use Biurad\UI\Interfaces\TemplateInterface;
 
+/**
+ * Render for php native ui.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
 final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 {
     protected const EXTENSIONS = ['phtml', 'html', 'php'];
@@ -31,7 +37,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /** @var HelperInterface[] */
     protected $helpers = [];
 
-    /** @var array<string,null|string> */
+    /** @var array<string,string|null> */
     protected $parents = [];
 
     /** @var string[] */
@@ -46,10 +52,10 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /** @var array<string,callable> */
     protected static $escaperCache = [];
 
-    /** @var null|Source */
+    /** @var string|null */
     private $evalTemplate;
 
-    /** @var null|array<string,mixed> */
+    /** @var array<string,mixed>|null */
     private $evalParameters;
 
     /**
@@ -61,13 +67,9 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     public function __construct(array $extensions = self::EXTENSIONS, array $helpers = [])
     {
         $this->extensions = $extensions;
+
         $this->addHelpers($helpers);
-
         $this->initializeEscapers();
-
-        foreach ($this->escapers as $context => $escaper) {
-            $this->setEscaper($context, $escaper);
-        }
     }
 
     /**
@@ -75,17 +77,13 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      */
     public function render(string $template, array $parameters): string
     {
-        $source              = $this->getLoader()->find($template);
-        $key                 = \hash('sha256', \serialize($source));
-        $this->current       = $key;
+        $this->current = $key = \hash('sha256', $template);
         $this->parents[$key] = null;
 
-        // Render
-        if (false === $content = $this->evaluate($source, $parameters)) {
+        if (false === $content = $this->evaluate($template, $parameters)) {
             throw new \RuntimeException(\sprintf('The template "%s" cannot be rendered.', $template));
         }
 
-        // decorator
         if ($this->parents[$key]) {
             /** @var SlotsHelper */
             $slots = $this->get('slots');
@@ -93,7 +91,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
             $this->stack[] = $slots->get('_content');
             $slots->set('_content', $content);
 
-            $content = $this->render($this->parents[$key], $parameters);
+            $content = $this->parents[$key]($parameters);
 
             $slots->set('_content', (string) \array_pop($this->stack));
         }
@@ -212,7 +210,15 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      */
     public function extend(string $template): void
     {
-        $this->parents[$this->current] = $template;
+        $this->parents[$this->current] = function (array $parameters) use ($template): string {
+            $templateRender = $this->loader;
+
+            if (!$templateRender instanceof TemplateInterface) {
+                throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template));
+            }
+
+            return $templateRender->render($template, $parameters);
+        };
     }
 
     /**
@@ -243,8 +249,6 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 
     /**
      * Sets the charset to use.
-     *
-     * @param string $charset
      */
     public function setCharset(string $charset): void
     {
@@ -270,20 +274,15 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 
     /**
      * Adds an escaper for the given context.
-     *
-     * @param string   $context
-     * @param callable $escaper
      */
     public function setEscaper(string $context, callable $escaper): void
     {
-        $this->escapers[$context]     = $escaper;
+        $this->escapers[$context] = $escaper;
         self::$escaperCache[$context] = [];
     }
 
     /**
      * Gets an escaper for a given context.
-     *
-     * @param string $context
      *
      * @throws \InvalidArgumentException
      *
@@ -301,16 +300,15 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /**
      * Evaluates a template.
      *
-     * @param Source              $template
      * @param array<string,mixed> $parameters
      *
      * @throws \InvalidArgumentException
      *
      * @return bool|string The evaluated template,or false if the engine is unable to render the template
      */
-    protected function evaluate(Source $template, array $parameters = [])
+    protected function evaluate(string $template, array $parameters = [])
     {
-        $this->evalTemplate   = $template;
+        $this->evalTemplate = $template;
         $this->evalParameters = $parameters;
         unset($template, $parameters);
 
@@ -324,13 +322,14 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 
         // the view variable is exposed to the require file below
         $view = $this;
+        $template = $this->loader;
 
         \extract($this->evalParameters, \EXTR_SKIP);
         $this->evalParameters = null;
 
         \ob_start();
 
-        if (!$this->evalTemplate->isFile()) {
+        if (!\file_exists($this->evalTemplate)) {
             eval('; ?>' . $this->evalTemplate . '<?php ;');
             $this->evalTemplate = null;
 

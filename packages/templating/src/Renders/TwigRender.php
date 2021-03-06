@@ -17,15 +17,24 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
+use Biurad\UI\Exceptions\LoaderException;
+use Biurad\UI\Interfaces\CacheInterface as RenderCacheInterface;
+use Biurad\UI\Interfaces\TemplateInterface;
+use Biurad\UI\Interfaces\RenderInterface;
 use Twig;
-use Twig\Cache\CacheInterface;
+use Twig\Cache\FilesystemCache;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
-final class TwigRender extends AbstractRender
+/**
+ * Render for Twig templating.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+final class TwigRender extends AbstractRender implements RenderCacheInterface
 {
     protected const EXTENSIONS = ['twig'];
 
@@ -35,13 +44,54 @@ final class TwigRender extends AbstractRender
     /**
      * TwigEngine constructor.
      *
-     * @param Twig\Environment $engine
-     * @param string[]         $extensions
+     * @param string[] $extensions
      */
-    public function __construct(Twig\Environment $environment, array $extensions = self::EXTENSIONS)
+    public function __construct(Twig\Environment $environment = null, array $extensions = self::EXTENSIONS)
     {
-        $this->environment = $environment;
-        $this->extensions  = $extensions;
+        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader());
+        $this->extensions = $extensions;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withCache(?string $cacheDir): void
+    {
+        if (null !== $cacheDir) {
+            if (false !== $this->environment->getCache()) {
+                throw new LoaderException('The Twig render has an existing cache implementation which must be removed.');
+            }
+
+            $this->environment->setCache(new FilesystemCache($cacheDir));
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withLoader(TemplateInterface $loader): RenderInterface
+    {
+        $this->environment->addFunction(
+            new Twig\TwigFunction(
+                'view',
+                function (string $template, array $parameters = []): string {
+                    return $this->render($template, $parameters);
+                },
+                ['is_safe' => ['all']]
+            )
+        );
+
+        $this->environment->addFunction(
+            new Twig\TwigFunction(
+                'template',
+                static function (string $template, array $parameters = []) use ($loader): string {
+                    return $loader->render($template, $parameters);
+                },
+                ['is_safe' => ['all']]
+            )
+        );
+
+        return parent::withLoader($loader);
     }
 
     /**
@@ -49,69 +99,27 @@ final class TwigRender extends AbstractRender
      */
     public function render(string $template, array $parameters): string
     {
-        $this->addFunction(
-            new Twig\TwigFunction(
-                'view',
-                fn (string $template, array $parameters = []) => $this->render($template, $parameters),
-                ['is_safe' => ['all']]
-            )
-        );
-
-        if (isset($parameters['template'])) {
-            /** @var \Biurad\UI\Template $global */
-            $global = $parameters['template'];
-
-            $this->addFunction(
-                new Twig\TwigFunction(
-                    'template',
-                    fn (string $template, array $parameters = []) => $global->render($template, $parameters),
-                    ['is_safe' => ['all']]
-                )
-            );
+        if (\file_exists($template)) {
+            $source = \file_get_contents($template);
+        } else {
+            [$template, $source] = ['hello.twig', $template];
         }
-        $source = $this->getLoader()->find($template);
 
-        if ($source->isFile()) {
-            $source   = \file_get_contents((string) $source);
-        }
-        $this->environment->setLoader(new ChainLoader(
-            [new ArrayLoader([$template => (string) $source]), $this->environment->getLoader()]
-        ));
+        $this->environment->setLoader(new ChainLoader([new ArrayLoader([$template => $source]), $this->environment->getLoader()]));
 
         return $this->environment->render($template, $parameters);
     }
 
-    /**
-     * @param string $charset
-     */
     public function setCharset(string $charset): void
     {
         $this->environment->setCharset($charset);
     }
 
-    /**
-     * Sets the current cache implementation.
-     *
-     * @param CacheInterface|false|string $cache A Twig\Cache\CacheInterface implementation,
-     *                                           an absolute path to the compiled templates,
-     *                                           or false to disable cache
-     */
-    public function setCache($cache): void
-    {
-        $this->environment->setCache($cache);
-    }
-
-    /**
-     * @param RuntimeLoaderInterface $loader
-     */
     public function addRuntimeLoader(RuntimeLoaderInterface $loader): void
     {
         $this->environment->addRuntimeLoader($loader);
     }
 
-    /**
-     * @param ExtensionInterface $extension
-     */
     public function addExtension(ExtensionInterface $extension): void
     {
         $this->environment->addExtension($extension);
@@ -125,33 +133,21 @@ final class TwigRender extends AbstractRender
         $this->environment->setExtensions($extensions);
     }
 
-    /**
-     * @param NodeVisitorInterface $visitor
-     */
     public function addNodeVisitor(NodeVisitorInterface $visitor): void
     {
         $this->environment->addNodeVisitor($visitor);
     }
 
-    /**
-     * @param Twig\TwigFilter $filter
-     */
     public function addFilter(Twig\TwigFilter $filter): void
     {
         $this->environment->addFilter($filter);
     }
 
-    /**
-     * @param callable $callable
-     */
     public function registerUndefinedFilterCallback(callable $callable): void
     {
         $this->environment->registerUndefinedFilterCallback($callable);
     }
 
-    /**
-     * @param Twig\TwigFunction $function
-     */
     public function addFunction(Twig\TwigFunction $function): void
     {
         $this->environment->addFunction($function);

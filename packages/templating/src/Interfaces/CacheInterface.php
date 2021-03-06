@@ -17,21 +17,15 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
-use Biurad\UI\Exceptions\LoaderException;
-
-interface StorageInterface
+/**
+ * Interface implies that render is file cacheable.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+interface CacheInterface
 {
     /**
-     * Add a location to stored views.
-     *
-     * @throws LoaderException if add location is not allowed
+     * Sets the cache for the render.
      */
-    public function addLocation(string $location): void;
-
-    /**
-     * Loads the fully qualified template from storage provided.
-     *
-     * @return string|null null if the template cannot be loaded, a string of file or content otherwise
-     */
-    public function load(string $template): ?string;
+    public function withCache(?string $cacheDir): void;
 }

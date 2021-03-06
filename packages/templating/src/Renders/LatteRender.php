@@ -17,13 +17,23 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
+use Biurad\UI\Interfaces\CacheInterface;
+use Biurad\UI\Interfaces\TemplateInterface;
+use Biurad\UI\Interfaces\RenderInterface;
 use Latte;
+use Latte\Loaders\FileLoader;
 use Latte\Loaders\StringLoader;
-use Nette;
 
-final class LatteRender extends AbstractRender
+/**
+ * Render for Latte templating.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+final class LatteRender extends AbstractRender implements CacheInterface
 {
     protected const EXTENSIONS = ['latte'];
+
+    protected const DEFAULT_TEMPLATE = 'hello.latte';
 
     /** @var Latte\Engine */
     protected $latte;
@@ -31,13 +41,38 @@ final class LatteRender extends AbstractRender
     /**
      * LatteEngine constructor.
      *
-     * @param Latte\Engine $engine
-     * @param string[]     $extensions
+     * @param string[] $extensions
      */
-    public function __construct(Latte\Engine $engine, array $extensions = self::EXTENSIONS)
+    public function __construct(Latte\Engine $engine = null, array $extensions = self::EXTENSIONS)
     {
-        $this->latte      = $engine;
+        $this->latte = $engine ?? new Latte\Engine();
         $this->extensions = $extensions;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withCache(?string $cacheDir): void
+    {
+        if (null !== $cacheDir) {
+            $this->latte->setTempDirectory($cacheDir); // Replace regardless ...
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withLoader(TemplateInterface $loader): RenderInterface
+    {
+        $this->latte->addFunction('view', function (string $template, array $parameters = []): string {
+            return $this->render($template, $parameters);
+        });
+
+        $this->latte->addFunction('template', static function (string $template, array $parameters = []) use ($loader): string {
+            return $loader->render($template, $parameters);
+        });
+
+        return parent::withLoader($loader);
     }
 
     /**
@@ -45,24 +80,12 @@ final class LatteRender extends AbstractRender
      */
     public function render(string $template, array $parameters): string
     {
-        $this->addFunction('view', fn (string $template, array $parameters = []) => $this->render($template, $parameters));
-
-        if (isset($parameters['template'])) {
-            /** @var \Biurad\UI\Template $global */
-            $global = $parameters['template'];
-
-            $this->addFunction(
-                'template',
-                fn (string $template, array $parameters = []) => $global->render($template, $parameters)
-            );
-        }
-        $source = $this->getLoader()->find($template);
-
-        if ($source->isFile()) {
-            $source = \file_get_contents((string) $source);
+        if (!\file_exists($template)) {
+            $templateLoader = new StringLoader([self::DEFAULT_TEMPLATE => $template]);
+            $template = self::DEFAULT_TEMPLATE;
         }
 
-        $this->latte->setLoader(new StringLoader([$template => (string) $source]));
+        $this->latte->setLoader($templateLoader ?? new FileLoader());
 
         return $this->latte->renderToString($template, $parameters);
     }
@@ -70,10 +93,7 @@ final class LatteRender extends AbstractRender
     /**
      * Registers run-time filter.
      *
-     * @param null|string $name
-     * @param callable    $callback
-     *
-     * @return static
+     * @return $this
      */
     public function addFilter(?string $name, callable $callback)
     {
@@ -85,10 +105,7 @@ final class LatteRender extends AbstractRender
     /**
      * Adds new macro.
      *
-     * @param string      $name
-     * @param Latte\Macro $macro
-     *
-     * @return static
+     * @return $this
      */
     public function addMacro(string $name, Latte\Macro $macro)
     {
@@ -100,10 +117,7 @@ final class LatteRender extends AbstractRender
     /**
      * Registers run-time function.
      *
-     * @param string   $name
-     * @param callable $callback
-     *
-     * @return static
+     * @return $this
      */
     public function addFunction(string $name, callable $callback)
     {
@@ -113,28 +127,11 @@ final class LatteRender extends AbstractRender
     }
 
     /**
-     * Sets translate adapter.
-     *
-     * @param null|Nette\Localization\ITranslator $translator
-     *
-     * @return static
-     */
-    public function setTranslator(?Nette\Localization\ITranslator $translator)
-    {
-        $this->latte->addFilter('translate', function (Latte\Runtime\FilterInfo $fi, ...$args) use ($translator): string {
-            return $translator === null ? $args[0] : $translator->translate(...$args);
-        });
-
-        return $this;
-    }
-
-    /**
      * Adds new provider.
      *
-     * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      *
-     * @return static
+     * @return $this
      */
     public function addProvider(string $name, $value)
     {
@@ -144,9 +141,7 @@ final class LatteRender extends AbstractRender
     }
 
     /**
-     * @param null|Latte\Policy $policy
-     *
-     * @return static
+     * @return $this
      */
     public function setPolicy(?Latte\Policy $policy)
     {
@@ -156,9 +151,7 @@ final class LatteRender extends AbstractRender
     }
 
     /**
-     * @param callable $callback
-     *
-     * @return static
+     * @return $this
      */
     public function setExceptionHandler(callable $callback)
     {

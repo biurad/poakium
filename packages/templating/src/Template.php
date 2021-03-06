@@ -17,30 +17,44 @@ declare(strict_types=1);
 
 namespace Biurad\UI;
 
-use Biurad\UI\Exceptions\RenderException;
-use Biurad\UI\Interfaces\LoaderInterface;
+use Biurad\UI\Exceptions\LoaderException;
+use Biurad\UI\Interfaces\CacheInterface;
 use Biurad\UI\Interfaces\RenderInterface;
 use Biurad\UI\Interfaces\StorageInterface;
 use Biurad\UI\Interfaces\TemplateInterface;
 
+/**
+ * The template render resolver.
+ *
+ @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
 final class Template implements TemplateInterface
 {
-    /** @var LoaderInterface */
-    private $loader;
+    /** @var StorageInterface */
+    private $storage;
+
+    /** @var string|null */
+    private $cacheDir;
 
     /** @var RenderInterface[] */
-    private $renders;
+    private $renders = [];
 
     /** @var array<string,mixed> */
     private $globals = [];
 
-    /**
-     * @param StorageInterface  $storage
-     * @param bool              $profile
-     */
-    public function __construct(StorageInterface $storage, bool $profile = false)
+    /** @var array<string,mixed> */
+    private $namespaces = [];
+
+    /** @var array<string,int> */
+    private $loadedTemplates = [];
+
+    /** @var array<string,bool> */
+    private $loadedNamespaces = [];
+
+    public function __construct(StorageInterface $storage, string $cacheDir = null)
     {
-        $this->loader = new Loader($storage, $profile ? new Profile() : null);
+        $this->storage = $storage;
+        $this->cacheDir = $cacheDir;
     }
 
     /**
@@ -56,7 +70,8 @@ final class Template implements TemplateInterface
      */
     public function addNamespace(string $namespace, $hints): void
     {
-        $this->loader->addNamespace($namespace, $hints);
+        $hints = \is_array($hints) ? $hints : [$hints];
+        $this->namespaces[$namespace] = \array_merge($this->namespaces[$namespace] ?? [], $hints);
     }
 
     /**
@@ -65,14 +80,18 @@ final class Template implements TemplateInterface
     public function addRender(RenderInterface ...$renders): void
     {
         foreach ($renders as $render) {
-            $this->renders[] = $render->withLoader($this->loader);
+            if ($render instanceof CacheInterface) {
+                $render->withCache($this->cacheDir);
+            }
+
+            $this->renders[] = $render->withLoader($this);
         }
     }
 
     /**
      * Get all associated view engines.
      *
-     * @return RenderInterface[]
+     * @return array<int,RenderInterface>
      */
     public function getRenders(): array
     {
@@ -80,43 +99,141 @@ final class Template implements TemplateInterface
     }
 
     /**
+     * Get a template render by its supported file extension.
+     */
+    public function &getRender(string $byFileExtension): RenderInterface
+    {
+        foreach ($this->renders as &$renderLoader) {
+            if (\in_array($byFileExtension, $renderLoader->getExtensions(), true)) {
+                return $renderLoader;
+            }
+        }
+
+        throw new LoaderException(\sprintf('Could not find a render for file extension "%s".', $byFileExtension));
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function render(string $template, array $parameters = []): string
     {
-        $this->addGlobal('template', $this);
+        $renderLoader = null;
+        $loadedTemplate = $this->find($template, $renderLoader);
 
-        foreach ($this->renders as $engine) {
-            if ($engine->getLoader()->exists($template)) {
-                return $engine->render($template, \array_replace($parameters, $this->globals));
-            }
+        if (null === $loadedTemplate) {
+            throw new LoaderException(\sprintf('Unable to load template for "%s", file does not exist.', $template));
         }
 
-        throw new RenderException(
-            \sprintf('No render engine is able to work with the template "%s".', $template)
-        );
+        return $renderLoader->render($loadedTemplate, \array_merge($this->globals, $parameters));
     }
 
     /**
      * Find the template file that exist, then render it contents.
      *
-     * @param string              $templates
      * @param array<string,mixed> $parameters
      *
-     * @return null|string
+     * @throws LoaderException — if the template cannot be rendered
      */
     public function renderTemplates(array $templates, array $parameters): ?string
     {
-        $this->addGlobal('template', $this);
+        foreach ($templates as $template) {
+            try {
+                $this->render($template, $parameters);
+            } catch (LoaderException $e) {
+                continue;
+            }
+        }
 
-        foreach ($this->renders as $engine) {
-            foreach ($templates as $template) {
-                if ($engine->getLoader()->exists($template)) {
-                    return $engine->render($template, \array_replace($parameters, $this->globals));
+        throw new LoaderException(\sprintf('Unable to load template for "%s", file does not exist.', $template));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function find(string $template, RenderInterface &$render = null): ?string
+    {
+        $requestRender = 2 === \func_num_args();
+
+        if (isset($this->loadedTemplates[$template])) {
+            [$loadedTemplate, $renderOffset] = $this->loadedTemplates[$template];
+
+            if ($requestRender) {
+                $render = $this->renders[$renderOffset];
+            }
+
+            return $loadedTemplate;
+        }
+
+        if (\str_contains($template, static::NS_SEPARATOR)) {
+            [$namespace, $template] = $this->findInNameSpace($template);
+        }
+
+        foreach ($this->renders as $offset => $renderLoader) {
+            $loadedTemplate = $this->findInStorage($template, $renderLoader);
+
+            if (null !== $loadedTemplate) {
+                $this->loadedTemplates[$namespace ?? $template] = [$loadedTemplate, $offset];
+
+                if ($requestRender) {
+                    $render = $renderLoader;
+                }
+
+                return $loadedTemplate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find the given view from storage.
+     */
+    private function findInStorage(string $template, RenderInterface $renderLoader): ?string
+    {
+        if (\file_exists($template)) {
+            $templateExt = \pathinfo($template, \PATHINFO_EXTENSION);
+
+            if (\in_array($templateExt, $renderLoader->getExtensions(), true)) {
+                return $template;
+            }
+        } else {
+            $template = \str_replace(['\\', '.'], '/', $template);
+
+            foreach ($renderLoader->getExtensions() as $extension) {
+                $loadedTemplate = $this->storage->load($template . '.' . $extension);
+
+                if (null !== $loadedTemplate) {
+                    return $loadedTemplate;
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Find the given template from namespaced storages.
+     *
+     * @throws LoaderException if template not found
+     *
+     * @return array<int,string>
+     */
+    private function findInNameSpace(string $template): array
+    {
+        [$namespace, $template] = \explode(static::NS_SEPARATOR, \ltrim($key = $template, '@#'), 2);
+
+        if (!isset($this->loadedNamespaces[$namespace])) {
+            if (!isset($this->namespaces[$namespace])) {
+                throw new LoaderException(\sprintf('No hint path(s) defined for [%s] namespace.', $namespace));
+            }
+
+            foreach ($this->namespaces[$namespace] as $viewPath) {
+                $this->storage->addLocation($viewPath);
+            }
+
+            $this->loadedNamespaces[$namespace] = true;
+        }
+
+        return [$key, $template];
     }
 }

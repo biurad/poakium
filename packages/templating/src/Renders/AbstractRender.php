@@ -17,12 +17,13 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
-use Biurad\UI\Exceptions\RenderException;
-use Biurad\UI\Interfaces\LoaderInterface;
 use Biurad\UI\Interfaces\RenderInterface;
+use Biurad\UI\Interfaces\TemplateInterface;
 
 /**
  * Render engine with ability to switch environment and loader.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 abstract class AbstractRender implements RenderInterface
 {
@@ -31,29 +32,34 @@ abstract class AbstractRender implements RenderInterface
     /** @var string[] */
     protected $extensions;
 
-    /** @var LoaderInterface */
+    /** @var TemplateInterface|null */
     protected $loader;
 
     /**
      * {@inheritdoc}
      */
-    public function withLoader(LoaderInterface $loader): RenderInterface
+    public function withLoader(TemplateInterface $loader): RenderInterface
     {
-        $render         = clone $this;
-        $render->loader = $loader->withExtensions($this->extensions ?? static::EXTENSIONS);
+        $this->loader = $loader;
 
-        return $render;
+        return $this;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getLoader(): LoaderInterface
+    public function withExtensions(string ...$extensions): void
     {
-        if (null === $this->loader) {
-            throw new RenderException('No associated loader found');
+        foreach ($extensions as $extension) {
+            $this->extensions[] = $extension;
         }
+    }
 
-        return $this->loader;
+    /**
+     * {@inheritdoc}
+     */
+    public function getExtensions(): array
+    {
+        return \array_unique($this->extensions);
     }
 }

@@ -27,7 +27,7 @@ use Psr\Log\LoggerInterface;
  */
 class FilesystemStorage implements StorageInterface
 {
-    /** @var null|LoggerInterface */
+    /** @var LoggerInterface|null */
     protected $logger;
 
     /**
@@ -38,13 +38,12 @@ class FilesystemStorage implements StorageInterface
     protected $paths;
 
     /**
-     * @param string|string[]      $templatePaths An array of paths to look for templates
-     * @param null|LoggerInterface $logger
+     * @param string|string[] $templatePaths An array of paths to look for templates
      */
-    public function __construct($templatePaths, ?LoggerInterface $logger = null)
+    public function __construct($templatePaths, LoggerInterface $logger = null)
     {
         $this->logger = $logger;
-        $this->paths  = \array_map([$this, 'resolvePath'], (array) $templatePaths);
+        $this->paths = \is_array($templatePaths) ? $templatePaths : [$templatePaths];
     }
 
     /**
@@ -52,7 +51,7 @@ class FilesystemStorage implements StorageInterface
      */
     public function addLocation(string $location): void
     {
-        $this->paths[] = $this->resolvePath($location);
+        $this->paths[] = $location;
     }
 
     /**
@@ -84,17 +83,5 @@ class FilesystemStorage implements StorageInterface
         }
 
         return null;
-    }
-
-    /**
-     * Resolve the path.
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    private function resolvePath(string $path): string
-    {
-        return (new \SplFileInfo($path))->getPathname();
     }
 }

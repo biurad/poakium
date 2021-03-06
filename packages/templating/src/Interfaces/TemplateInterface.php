@@ -17,13 +17,22 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
+/**
+ * An interface for the template engine.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
 interface TemplateInterface
 {
     /**
+     * Namespace/viewName separator.
+     */
+    public const NS_SEPARATOR = '::';
+
+    /**
      * Add a namespace hint to the finder.
      *
-     * @param string          $namespace
-     * @param string|string[] $hints     of paths
+     * @param string|string[] $hints list of directories to look into
      */
     public function addNamespace(string $namespace, $hints): void;
 
@@ -40,20 +49,29 @@ interface TemplateInterface
 
     /**
      * Attach the view render(s).
-     *
-     * @param RenderInterface $renders
      */
     public function addRender(RenderInterface ...$renders): void;
 
     /**
      * Renders a template.
      *
-     * @param string              $template   A template name or a namepace name to path
+     * @param string              $template   A template name or a namespace name to path
      * @param array<string,mixed> $parameters An array of parameters to pass to the template
      *
-     * @throws \RuntimeException if the template cannot be rendered
+     * @throws LoaderException if the template cannot be rendered
      *
      * @return string The evaluated template as a string
      */
     public function render(string $template, array $parameters = []): string;
+
+    /**
+     * Get source for given template. Path might include namespace prefix or extension.
+     *
+     * @param string $template A template name or a namespace name to path
+     *
+     * @throws LoaderException if unable to load template from namespace
+     *
+     * @return string|null Expects the template absolute file or null
+     */
+    public function find(string $template): ?string;
 }

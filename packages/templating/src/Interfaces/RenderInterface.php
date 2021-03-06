@@ -17,29 +17,34 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
+/**
+ * A fluent interface for building renders.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
 interface RenderInterface
 {
     /**
-     * Configure view engine with new loader.
-     *
-     * @param LoaderInterface $loader
-     *
-     * @return RenderInterface
+     * Includes the template resolver into render.
      */
-    public function withLoader(LoaderInterface $loader): RenderInterface;
+    public function withLoader(TemplateInterface $loader): RenderInterface;
 
     /**
-     * Get currently associated engine loader.
-     *
-     * @return LoaderInterface
+     * Set the render's file extension(s).
      */
-    public function getLoader(): LoaderInterface;
+    public function withExtensions(string ...$extensions): void;
+
+    /**
+     * Gets the file extensions associated render.
+     *
+     * @return array<int,string>
+     */
+    public function getExtensions(): array;
 
     /**
      * Get the template type o content associated with a Render.
-     * This must attempt to use existed cache if such presented
      *
-     * @param string              $template   A template name or a namepace name to path
+     * @param string              $template   A template name or a namespace name to path
      * @param array<string,mixed> $parameters An array of parameters to pass to the template
      *
      * @return string of rendered template

@@ -27,17 +27,15 @@ use Biurad\UI\Interfaces\StorageInterface;
  */
 class ChainStorage implements StorageInterface
 {
-    /** @var StorageInterface[] */
+    /** @var array<int,StorageInterface> */
     protected $loaders = [];
 
     /**
-     * @param StorageInterface[] $storages An array of storage instances
+     * @param array<int,StorageInterface> $storages An array of storage instances
      */
     public function __construct(array $storages = [])
     {
-        foreach ($storages as $loader) {
-            $this->addStorage($loader);
-        }
+        $this->loaders = $storages;
     }
 
     /**
@@ -46,18 +44,20 @@ class ChainStorage implements StorageInterface
     public function addLocation(string $location): void
     {
         foreach ($this->loaders as $storage) {
-            if (\is_dir($location) && $storage instanceof FilesystemStorage) {
+            try {
                 $storage->addLocation($location);
+
+                return;
+            } catch (LoaderException $e) {
+                continue;
             }
         }
 
-        throw new LoaderException(\sprintf('Cannot use [%s] for views loading', $location));
+        throw new LoaderException(\sprintf('Failed to use [%s] for views loading', $location));
     }
 
     /**
      * Adds a storage loader instance.
-     *
-     * @param StorageInterface $storage
      */
     public function addStorage(StorageInterface $storage): void
     {

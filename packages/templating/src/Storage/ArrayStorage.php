@@ -43,7 +43,7 @@ class ArrayStorage implements StorageInterface
      */
     public function addLocation(string $location): void
     {
-        throw new LoaderException(\sprintf('Cannot use [%s] for views loading', $location));
+        throw new LoaderException(\sprintf('Cannot use [%s] for templates loading.', $location));
     }
 
     /**
@@ -51,6 +51,16 @@ class ArrayStorage implements StorageInterface
      */
     public function load(string $template): ?string
     {
-        return $this->templates[$template] ?? null;
+        $loadedTemplate = $this->templates[$template] ?? null;
+
+        if ($loadedTemplate instanceof \Stringable || \is_string($loadedTemplate)) {
+            return (string) $loadedTemplate;
+        }
+
+        if (null !== $loadedTemplate) {
+            throw new LoaderException(\sprintf('Failed to load "%s" as it\'s source isn\'t stringable.', $template));
+        }
+
+        return $loadedTemplate;
     }
 }

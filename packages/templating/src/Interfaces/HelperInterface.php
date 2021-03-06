@@ -33,8 +33,6 @@ interface HelperInterface
 
     /**
      * Sets the default charset.
-     *
-     * @param string $charset
      */
     public function setCharset(string $charset): void;
 
