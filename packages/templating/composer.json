@@ -2,7 +2,7 @@
     "name": "biurad/templating",
     "description": "A library that provides all the tools needed in working with any kind of template system",
     "type": "library",
-    "keywords": ["biurad","biuradphp","php7"],
+    "keywords": ["biurad","templating","template", "php"],
     "homepage": "https://www.biurad.com",
     "license": "BSD-3-Clause",
     "authors": [
@@ -22,11 +22,10 @@
         "source": "https://github.com/biurad/php-templating"
     },
     "require": {
-        "php": "^7.1 || ^8.0",
-        "symfony/polyfill-php80": "^1.20"
+        "php": "^7.2 || ^8.0",
+        "symfony/polyfill-php80": "^1.23"
     },
     "require-dev": {
-        "composer/package-versions-deprecated": "^1.8",
         "latte/latte": "^2.8",
         "phpstan/phpstan": "^0.12",
         "phpstan/phpstan-strict-rules": "^0.12",
