@@ -1,0 +1,4 @@
+Hello, Divine!
+
+<p>I ♥ Biurad PHP Templating and Hello, I'm Divine.</p>
+

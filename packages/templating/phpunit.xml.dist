@@ -11,6 +11,9 @@
          colors="true"
          verbose="true"
          executionOrder="default"
+         processIsolation="false"
+         stopOnFailure="false"
+         stopOnError="false"
 >
     <testsuites>
         <testsuite name="PHP Template UI Test Suite">
@@ -18,9 +21,9 @@
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">src</directory>
-        </whitelist>
-    </filter>
+    <coverage>
+        <include>
+            <directory>src</directory>
+        </include>
+    </coverage>
 </phpunit>
