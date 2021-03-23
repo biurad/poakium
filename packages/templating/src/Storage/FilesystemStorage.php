@@ -40,7 +40,7 @@ class FilesystemStorage implements StorageInterface
     /**
      * @param string|string[] $templatePaths An array of paths to look for templates
      */
-    public function __construct($templatePaths, LoggerInterface $logger = null)
+    public function __construct($templatePaths = [], LoggerInterface $logger = null)
     {
         $this->logger = $logger;
         $this->paths = \is_array($templatePaths) ? $templatePaths : [$templatePaths];
@@ -60,6 +60,14 @@ class FilesystemStorage implements StorageInterface
     public function load(string $template): ?string
     {
         $fileFailures = [];
+
+        if (\file_exists($template)) {
+            if (null !== $this->logger) {
+                $this->logger->debug('Loaded template file.', ['file' => $template]);
+            }
+
+            return $template;
+        }
 
         foreach ($this->paths as $path) {
             if (\file_exists($found = $path . '/' . $template)) {
