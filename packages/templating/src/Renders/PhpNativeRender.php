@@ -37,10 +37,10 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /** @var HelperInterface[] */
     protected $helpers = [];
 
-    /** @var array<string,string|null> */
+    /** @var array<string,callable> */
     protected $parents = [];
 
-    /** @var string[] */
+    /** @var array<int,mixed> */
     protected $stack = [];
 
     /** @var string */
@@ -49,7 +49,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /** @var array<string,callable> */
     protected $escapers = [];
 
-    /** @var array<string,callable> */
+    /** @var array<string,array<int|bool|string,mixed>> */
     protected static $escaperCache = [];
 
     /** @var string|null */
@@ -78,13 +78,12 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     public function render(string $template, array $parameters): string
     {
         $this->current = $key = \hash('sha256', $template);
-        $this->parents[$key] = null;
 
         if (false === $content = $this->evaluate($template, $parameters)) {
             throw new \RuntimeException(\sprintf('The template "%s" cannot be rendered.', $template));
         }
 
-        if ($this->parents[$key]) {
+        if (isset($this->parents[$key])) {
             /** @var SlotsHelper */
             $slots = $this->get('slots');
 
@@ -104,7 +103,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      *
      * @param string $offset The helper name
      *
-     * @throws InvalidArgumentException if the helper is not defined
+     * @throws \InvalidArgumentException if the helper is not defined
      *
      * @return HelperInterface The helper value
      */
@@ -127,6 +126,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      * {@inheritdoc}
      *
      * @param HelperInterface $offset The helper name
+     * @param string|null $value
      */
     public function offsetSet($offset, $value): void
     {
@@ -214,7 +214,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
             $templateRender = $this->loader;
 
             if (!$templateRender instanceof TemplateInterface) {
-                throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template));
+                throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template, TemplateInterface::class));
             }
 
             return $templateRender->render($template, $parameters);

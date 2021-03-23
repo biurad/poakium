@@ -21,23 +21,17 @@
     </projectFiles>
 
     <issueHandlers>
-        <PossiblyNullArgument>
-            <errorLevel type="suppress">
-                <referencedFunction name="Biurad\UI\Source::__construct" />
-            </errorLevel>
-        </PossiblyNullArgument>
-
         <PossiblyInvalidArgument>
             <errorLevel type="suppress">
                 <referencedFunction name="Biurad\UI\Helper\SlotsHelper::set" />
             </errorLevel>
         </PossiblyInvalidArgument>
 
-        <InvalidReturnType>
+        <PossiblyNullReference>
             <errorLevel type="suppress">
-                <file name="src/Renders/PhpNativeRender.php" />
+                <file name="src/Template.php" />
             </errorLevel>
-        </InvalidReturnType>
+        </PossiblyNullReference>
 
         <InvalidReturnStatement>
             <errorLevel type="suppress">
@@ -45,28 +39,17 @@
             </errorLevel>
         </InvalidReturnStatement>
 
-        <InvalidArrayAccess>
+        <InvalidArrayOffset>
             <errorLevel type="suppress">
                 <file name="src/Renders/PhpNativeRender.php" />
             </errorLevel>
-        </InvalidArrayAccess>
+        </InvalidArrayOffset>
 
-        <InvalidArrayAssignment>
+        <InvalidArgument>
             <errorLevel type="suppress">
-                <file name="src/Renders/PhpNativeRender.php" />
+                <file name="src/Helper/SlotsHelper.php" />
             </errorLevel>
-        </InvalidArrayAssignment>
+        </InvalidArgument>
 
-        <InvalidPropertyAssignmentValue>
-            <errorLevel type="suppress">
-                <file name="src/Renders/PhpNativeRender.php" />
-            </errorLevel>
-        </InvalidPropertyAssignmentValue>
-
-        <TypeDoesNotContainType>
-            <errorLevel type="suppress">
-                <file name="src/Renders/PhpNativeRender.php" />
-            </errorLevel>
-        </TypeDoesNotContainType>
     </issueHandlers>
 </psalm>

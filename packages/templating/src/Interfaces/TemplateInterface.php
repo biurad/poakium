@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
+use Biurad\UI\Exceptions\LoaderException;
+
 /**
  * An interface for the template engine.
  *

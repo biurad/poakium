@@ -1,20 +1,12 @@
-includes:
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
-
 parameters:
-    level: max
+    level: 5
     paths: [src]
     checkGenericClassInNonGenericObjectType: false
 
     ignoreErrors:
-        - "#^Cannot access offset bool\\|string on callable\\(\\): mixed.$#"
-        - "#^Only booleans are allowed in (a negated boolean|an if condition), (array<string>|string\\|null) given.$#"
         -
-           message: "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
-           path: "src/Loader.php"
+           message: "#^Instanceof between string\\|null and Stringable will always evaluate to false.$#"
+           path: "src/Storage/ArrayStorage.php"
         -
-           message: "#^Method Biurad\\\\UI\\\\Storage\\\\CacheStorage\\:\\:load\\(\\) should return string\\|null but returns string\\|false.$#"
-           path: "src/Storage/CacheStorage.php"
-        -
-           message: "#^Method Biurad\\\\UI\\\\Storage\\\\FilesystemStorage\\:\\:load\\(\\) should return string\\|null but returns string\\|false.$#"
-           path: "src/Storage/FilesystemStorage.php"
+           message: "#^Strict comparison using !== between null and null will always evaluate to false.$#"
+           path: "src/Storage/ArrayStorage.php"

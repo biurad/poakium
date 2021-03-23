@@ -21,13 +21,14 @@ namespace Biurad\UI\Helper;
  * SlotsHelper manages template slots.
  *
  * @author Fabien Potencier <fabien@symfony.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class SlotsHelper extends Helper
 {
     /** @var array<string,mixed> */
     protected $slots = [];
 
-    /** @var string[] */
+    /** @var array<int,string> */
     protected $openSlots = [];
 
     /**
@@ -82,7 +83,7 @@ class SlotsHelper extends Helper
      *
      * @param bool|string $default The default slot content
      *
-     * @return string The slot content
+     * @return string|false The slot content
      */
     public function get(string $name, $default = false)
     {
@@ -104,7 +105,7 @@ class SlotsHelper extends Helper
      *
      * @return bool true if the slot is defined or if a default content has been provided, false otherwise
      */
-    public function output(string $name, $default = false)
+    public function output(string $name, $default = false): bool
     {
         if (!isset($this->slots[$name])) {
             if (false !== $default) {

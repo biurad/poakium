@@ -42,10 +42,10 @@ final class Template implements TemplateInterface
     /** @var array<string,mixed> */
     private $globals = [];
 
-    /** @var array<string,mixed> */
+    /** @var array<string,array<int,string>> */
     private $namespaces = [];
 
-    /** @var array<string,int> */
+    /** @var array<string,array<int,string>> */
     private $loadedTemplates = [];
 
     /** @var array<string,bool> */
@@ -130,6 +130,7 @@ final class Template implements TemplateInterface
     /**
      * Find the template file that exist, then render it contents.
      *
+     * @param array<int,string> $templates
      * @param array<string,mixed> $parameters
      */
     public function renderTemplates(array $templates, array $parameters): ?string
