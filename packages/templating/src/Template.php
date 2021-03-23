@@ -131,20 +131,18 @@ final class Template implements TemplateInterface
      * Find the template file that exist, then render it contents.
      *
      * @param array<string,mixed> $parameters
-     *
-     * @throws LoaderException — if the template cannot be rendered
      */
     public function renderTemplates(array $templates, array $parameters): ?string
     {
         foreach ($templates as $template) {
             try {
-                $this->render($template, $parameters);
+                return $this->render($template, $parameters);
             } catch (LoaderException $e) {
                 continue;
             }
         }
 
-        throw new LoaderException(\sprintf('Unable to load template for "%s", file does not exist.', $template));
+        return null;
     }
 
     /**
