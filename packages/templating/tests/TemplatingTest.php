@@ -63,7 +63,7 @@ class TemplatingTest extends TestCase
         $template->addNamespace('Extended', $dir . '/Bundles');
         $template->addRender(new PhpNativeRender(), new TwigRender(), new LatteRender());
 
-        $template->getRender('phtml')->setHelpers([new SlotsHelper()]);
+        $template->getRender('phtml')->set(new SlotsHelper());
 
         $this->assertStringEqualsFile(
             $dir . '/template1.txt',
@@ -75,7 +75,7 @@ class TemplatingTest extends TestCase
     {
         $fileStorage = new FilesystemStorage([__DIR__ . '/Fixtures/templates'], new NullLogger());
         $template = new Template($fileStorage);
-        $phpRender = new PhpNativeRender(['php', 'phtml'], [new SlotsHelper()]);
+        $phpRender = new PhpNativeRender(['php', 'phtml']);
 
         $template->addGlobal('firstname', 'Divine');
         $template->addNamespace('Extended', __DIR__ . '/Fixtures/Bundles');
