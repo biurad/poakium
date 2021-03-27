@@ -197,11 +197,17 @@ final class Template implements TemplateInterface
      */
     private function findInStorage(string $template, RenderInterface $renderLoader): ?string
     {
+        $requestHtml = null;
+
+        if (\str_starts_with($template, 'html:')) {
+            [$requestHtml, $template] = ['html:', \substr($template, 5)];
+        }
+
         if (\file_exists($template)) {
             $templateExt = \pathinfo($template, \PATHINFO_EXTENSION);
 
             if (\in_array($templateExt, $renderLoader->getExtensions(), true)) {
-                return $template;
+                return $requestHtml . $template;
             }
         } else {
             $template = \str_replace(['\\', '.'], '/', $template);
@@ -210,7 +216,7 @@ final class Template implements TemplateInterface
                 $loadedTemplate = $this->storage->load($template . '.' . $extension);
 
                 if (null !== $loadedTemplate) {
-                    return $loadedTemplate;
+                    return $requestHtml . $loadedTemplate;
                 }
             }
         }

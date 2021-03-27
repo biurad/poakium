@@ -86,6 +86,20 @@ class TemplatingTest extends TestCase
         $this->assertStringEqualsFile(__DIR__ . '/Fixtures/template2.txt', $template->renderTemplates(['hello_twig'], []));
     }
 
+    public function testViewHtmlRendering(): void
+    {
+        $fileStorage = new FilesystemStorage([$dir = __DIR__ . '/Fixtures']);
+        $template = new Template($fileStorage);
+
+        $template->addRender(new PhpNativeRender());
+        $this->assertStringEqualsFile($dir . '/template3.txt', $template->render('html:ViewElement', ['firstname' => 'Divine']) . "\n");
+
+        $this->expectExceptionMessage(\sprintf('Could not render template file "%s" as it does not return a "%s" instance.', $dir . '/ViewString.php', HtmlInterface::class));
+        $this->expectException(RenderException::class);
+
+        $template->render('html:ViewString');
+    }
+
     public function testGetRenderError(): void
     {
         $fileStorage = new FilesystemStorage([__DIR__ . '/Fixtures/templates']);

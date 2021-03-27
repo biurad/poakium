@@ -266,7 +266,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      */
     protected function evaluate(string $template, array $parameters = [])
     {
-        $this->evalTemplate = $template;
+        $this->evalTemplate = self::loadHtml($template) ?? $template;
         $this->evalParameters = $parameters;
 
         unset($template, $parameters);

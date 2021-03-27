@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Renders;
 
+use Biurad\UI\Exceptions\RenderException;
+use Biurad\UI\Interfaces\HtmlInterface;
 use Biurad\UI\Interfaces\RenderInterface;
 use Biurad\UI\Interfaces\TemplateInterface;
 
@@ -61,5 +63,39 @@ abstract class AbstractRender implements RenderInterface
     public function getExtensions(): array
     {
         return \array_unique($this->extensions);
+    }
+
+    /**
+     * Load a php html template file.
+     */
+    protected static function loadHtml(string $file): ?string
+    {
+        if (!\str_starts_with($file, 'html:')) {
+            return null;
+        }
+
+        $level = \ob_get_level();
+        \ob_start(function () {
+            return '';
+        });
+
+        try {
+            $templateContent = require($file = \substr($file, 5));
+            \ob_end_clean();
+
+            if (!$templateContent instanceof HtmlInterface) {
+                throw new RenderException(\sprintf('Could not render template file "%s" as it does not return a "%s" instance.', $file, HtmlInterface::class));
+            }
+
+            $content = (string) $templateContent;
+        } catch (\Throwable $e) {
+            while (\ob_get_level() > $level) {
+                \ob_end_clean();
+            }
+
+            throw $e;
+        }
+
+        return $content;
     }
 }

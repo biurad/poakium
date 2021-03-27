@@ -22,7 +22,6 @@ use Biurad\UI\Interfaces\TemplateInterface;
 use Biurad\UI\Interfaces\RenderInterface;
 use Latte;
 use Latte\Loaders\FileLoader;
-use Latte\Loaders\StringLoader;
 
 /**
  * Render for Latte templating.
@@ -76,12 +75,16 @@ final class LatteRender extends AbstractRender implements CacheInterface
      */
     public function render(string $template, array $parameters): string
     {
-        if (!\file_exists($template)) {
-            $templateLoader = new StringLoader([self::DEFAULT_TEMPLATE => $template]);
-            $template = self::DEFAULT_TEMPLATE;
+        if (\file_exists($template)) {
+            $templateLoader = new FileLoader();
+        } else {
+            $templateId = \substr(\md5($template), 0, 7);
+            $templateLoader = new StringLoader([$templateId => (\file_exists($this->latte->getCacheFile($templateId)) ? '' : self::loadHtml($template) ?? $template)]);
+
+            $template = $templateId;
         }
 
-        $this->latte->setLoader($templateLoader ?? new FileLoader());
+        $this->latte->setLoader($templateLoader);
 
         return $this->latte->renderToString($template, $parameters);
     }
@@ -154,5 +157,21 @@ final class LatteRender extends AbstractRender implements CacheInterface
         $this->latte->setExceptionHandler($callback);
 
         return $this;
+    }
+}
+
+/**
+ * Latte Template loader.
+ */
+class StringLoader extends \Latte\Loaders\StringLoader
+{
+    /**
+     * {@inheritdoc}
+     *
+     * @param string $name
+     */
+    public function getUniqueId($name): string
+    {
+        return $name;
     }
 }

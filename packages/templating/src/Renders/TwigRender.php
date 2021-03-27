@@ -24,8 +24,8 @@ use Biurad\UI\Interfaces\RenderInterface;
 use Twig;
 use Twig\Cache\FilesystemCache;
 use Twig\Extension\ExtensionInterface;
-use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
+use Twig\Loader\LoaderInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
@@ -48,7 +48,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
      */
     public function __construct(Twig\Environment $environment = null, array $extensions = self::EXTENSIONS)
     {
-        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader());
+        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader([], true));
         $this->extensions = $extensions;
     }
 
@@ -90,12 +90,23 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     public function render(string $template, array $parameters): string
     {
         if (\file_exists($template)) {
-            $source = \file_get_contents($template);
+            if (false !== $cache = $this->environment->getCache()) {
+                $mainClass = $this->environment->getTemplateClass($template);
+
+                if (\file_exists($cacheKey = $cache->generateKey($template, $mainClass))) {
+                    if (!$this->environment->isAutoReload() || $this->environment->isTemplateFresh($template, $cache->getTimestamp($template))) {
+                        $cache->load($cacheKey);
+                    }
+
+                    return $this->environment->load($template)->render($parameters);
+                }
+            }
         } else {
-            [$template, $source] = ['hello.twig', $template];
+            $source = self::loadHtml($template) ?? $template;
+            $template = \substr(\md5($template), 0, 7);
         }
 
-        $this->environment->setLoader(new ChainLoader([new ArrayLoader([$template => $source]), $this->environment->getLoader()]));
+        $this->addLoader(new ArrayLoader([$template => $source ?? \file_get_contents($template)]));
 
         return $this->environment->render($template, $parameters);
     }
@@ -103,6 +114,25 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     public function setCharset(string $charset): void
     {
         $this->environment->setCharset($charset);
+    }
+
+    public function addLoader(LoaderInterface $loader): void
+    {
+        $templateLoader = $this->environment->getLoader();
+
+        if ($templateLoader instanceof ChainLoader) {
+            $templateLoader->addLoader($loader);
+
+            return;
+        }
+
+        if ($loader instanceof ChainLoader) {
+            $loader->addLoader($templateLoader);
+        } elseif (!$loader instanceof ArrayLoader || $loader->isEmpty()) {
+            $loader = new ChainLoader([$loader, $templateLoader]);
+        }
+
+        $this->environment->setLoader($loader);
     }
 
     public function addRuntimeLoader(RuntimeLoaderInterface $loader): void
@@ -141,5 +171,85 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     public function addFunction(Twig\TwigFunction $function): void
     {
         $this->environment->addFunction($function);
+    }
+}
+
+/**
+ * Twig Template loader.
+ */
+class ArrayLoader implements Twig\Loader\LoaderInterface
+{
+    /** @var bool */
+    private $ignoreKey;
+
+    /** @var array<string,string> */
+    private $templates = [];
+
+    /**
+     * @param array $templates An array of templates (keys are the names, and values are the source code)
+     */
+    public function __construct(array $templates = [], bool $ignoreKey = false)
+    {
+        $this->ignoreKey = $ignoreKey;
+        $this->templates = $templates;
+    }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->templates);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setTemplate(string $name, string $template): void
+    {
+        $this->templates[$name] = $template;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSourceContext(string $name): Twig\Source
+    {
+        if (!isset($this->templates[$name])) {
+            throw new Twig\Error\LoaderError(sprintf('Template "%s" is not defined.', $name));
+        }
+
+        return new Twig\Source($this->templates[$name], $name);
+    }
+
+    public function exists(string $name): bool
+    {
+        return isset($this->templates[$name]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCacheKey(string $name): string
+    {
+        if (!isset($this->templates[$name])) {
+            if ($this->ignoreKey) {
+                return $name;
+            }
+
+            throw new Twig\Error\LoaderError(sprintf('Template "%s" is not defined.', $name));
+        }
+
+        return \file_exists($name) ? $name : $name . ':' . $this->templates[$name];
+    }
+
+    public function isFresh(string $name, int $time): bool
+    {
+        if (\file_exists($name)) {
+            return \filemtime($name) < $time;
+        }
+
+        if (!isset($this->templates[$name])) {
+            throw new Twig\Error\LoaderError(sprintf('Template "%s" is not defined.', $name));
+        }
+
+        return true;
     }
 }
