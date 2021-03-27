@@ -64,10 +64,6 @@ final class LatteRender extends AbstractRender implements CacheInterface
      */
     public function withLoader(TemplateInterface $loader): RenderInterface
     {
-        $this->latte->addFunction('view', function (string $template, array $parameters = []): string {
-            return $this->render($template, $parameters);
-        });
-
         $this->latte->addFunction('template', static function (string $template, array $parameters = []) use ($loader): string {
             return $loader->render($template, $parameters);
         });

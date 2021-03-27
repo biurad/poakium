@@ -73,16 +73,6 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     {
         $this->environment->addFunction(
             new Twig\TwigFunction(
-                'view',
-                function (string $template, array $parameters = []): string {
-                    return $this->render($template, $parameters);
-                },
-                ['is_safe' => ['all']]
-            )
-        );
-
-        $this->environment->addFunction(
-            new Twig\TwigFunction(
                 'template',
                 static function (string $template, array $parameters = []) use ($loader): string {
                     return $loader->render($template, $parameters);

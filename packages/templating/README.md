@@ -47,7 +47,7 @@ $templating->addRender($phpRenderEngine);
 echo $templating->render('hello', ['firstname' => 'Divine']);
 
 // hello.phtml or hello.php or hello.html
-Hello, <?= $view->escape($firstname) ?>!
+Hello, <?= $this->escape($firstname) ?>!
 ```
 
 ## 📓 Documentation

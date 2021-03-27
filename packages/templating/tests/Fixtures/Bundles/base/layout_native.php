@@ -1,1 +1,1 @@
-Hello, <?php echo $view['slots']->get("_content"); ?>
+Hello, <?php echo $this['slots']->get("_content"); ?>

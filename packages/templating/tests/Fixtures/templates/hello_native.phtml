@@ -1,2 +1,2 @@
-<?php $this->extend("@Extended::base.layout_native"); echo $view->escape($firstname); ?>!
+<?php $this->extend("@Extended::base.layout_native"); echo $this->escape($firstname); ?>!
 <?php echo $template->render('hello_latte', \compact('firstname')); ?>

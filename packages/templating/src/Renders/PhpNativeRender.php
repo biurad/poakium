@@ -275,12 +275,6 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
             throw new \InvalidArgumentException('Invalid parameter (this).');
         }
 
-        if (isset($this->evalParameters['view'])) {
-            throw new \InvalidArgumentException('Invalid parameter (view).');
-        }
-
-        // the view variable is exposed to the require file below
-        $view = $this;
         // the template variable is exposed to the require file below
         $template = $this->loader;
 
