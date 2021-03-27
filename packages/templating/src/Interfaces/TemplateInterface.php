@@ -39,10 +39,9 @@ interface TemplateInterface
     public function addNamespace(string $namespace, $hints): void;
 
     /**
-     * Registers a Global.
+     * Registers a Global parameter.
      *
-     * New globals can be added before compiling or rendering a template;
-     * but after, you can only update existing globals.
+     * This must be added before including template render(s), else it may not exist in template file.
      *
      * @param string $name  The global name
      * @param mixed  $value The global value
@@ -75,5 +74,19 @@ interface TemplateInterface
      *
      * @return string|null Expects the template absolute file or null
      */
-    public function find(string $template): ?string;
+    public function find(string $template, RenderInterface &$render = null): ?string;
+
+    /**
+     * Get all associated view engines.
+     *
+     * @return array<int,RenderInterface>
+     */
+    public function getRenders(): array;
+
+    /**
+     * Get the global parameters.
+     *
+     * @return array<string,mixed>
+     */
+    public function getGlobal(): array;
 }
