@@ -40,7 +40,10 @@
     "autoload": {
         "psr-4": {
             "Biurad\\UI\\": "src/"
-        }
+        },
+        "files": [
+            "src/Html/elements.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

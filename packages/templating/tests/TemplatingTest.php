@@ -18,7 +18,10 @@ declare(strict_types=1);
 namespace Biurad\UI\Tests;
 
 use Biurad\UI\Exceptions\LoaderException;
+use Biurad\UI\Exceptions\RenderException;
 use Biurad\UI\Helper\SlotsHelper;
+use Biurad\UI\Html\HtmlElement;
+use Biurad\UI\Interfaces\HtmlInterface;
 use Biurad\UI\Interfaces\TemplateInterface;
 use Biurad\UI\Renders\LatteRender;
 use Biurad\UI\Renders\PhpNativeRender;
@@ -121,6 +124,21 @@ class TemplatingTest extends TestCase
             $template->render('namespaced');
         } catch (LoaderException $e) {
             $this->assertEquals('No hint path(s) defined for [Extended] namespace.', $e->getMessage());
+        }
+    }
+
+    public function testFormattedHtmlTemplateWithLevel4Indent(): void
+    {
+        $content = \file_get_contents(($dir = __DIR__ . '/Fixtures') . '/template3.txt');
+        $nodes = HtmlElement::generateNodes($content);
+
+        $this->assertCount(2, $nodes);
+        $this->assertStringEqualsFile($dir . '/template4.txt', HtmlElement::generateHtml($nodes, null, ['indentLevel' => 4]) . "\n");
+
+        try {
+            HtmlElement::generateNodes($dir);
+        } catch (RenderException $e) {
+            $this->assertEquals('Unable to render provided html into element nodes.', $e->getMessage());
         }
     }
 
