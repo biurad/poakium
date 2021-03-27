@@ -18,12 +18,13 @@ declare(strict_types=1);
 namespace Biurad\UI\Renders;
 
 use Biurad\UI\Exceptions\RenderException;
+use Biurad\UI\Helper\EscaperHelper;
 use Biurad\UI\Helper\SlotsHelper;
 use Biurad\UI\Interfaces\HelperInterface;
 use Biurad\UI\Interfaces\TemplateInterface;
 
 /**
- * Render for php native ui.
+ * A PHP native template render based.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
@@ -46,12 +47,6 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /** @var string */
     protected $charset = 'UTF-8';
 
-    /** @var array<string,callable> */
-    protected $escapers = [];
-
-    /** @var array<string,array<int|bool|string,mixed>> */
-    protected static $escaperCache = [];
-
     /** @var string|null */
     private $evalTemplate;
 
@@ -67,9 +62,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     public function __construct(array $extensions = self::EXTENSIONS, array $helpers = [])
     {
         $this->extensions = $extensions;
-
-        $this->addHelpers($helpers);
-        $this->initializeEscapers();
+        $this->addHelpers(\array_merge([new SlotsHelper(), new EscaperHelper()], $helpers));
     }
 
     /**
@@ -107,6 +100,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      *
      * @return HelperInterface The helper value
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->get($offset);
@@ -117,7 +111,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      *
      * @param string $offset The helper name
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->helpers[$offset]);
     }
@@ -126,7 +120,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      * {@inheritdoc}
      *
      * @param HelperInterface $offset The helper name
-     * @param string|null $value
+     * @param string|null     $value
      */
     public function offsetSet($offset, $value): void
     {
@@ -158,7 +152,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     /**
      * Sets the helpers.
      *
-     * @param HelperInterface[] $helpers An array of helper
+     * @param array<int,HelperInterface> $helpers An array of helper
      */
     public function setHelpers(array $helpers): void
     {
@@ -166,6 +160,9 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
         $this->addHelpers($helpers);
     }
 
+    /**
+     * Sets a new helper resolve.
+     */
     public function set(HelperInterface $helper, string $alias = null): void
     {
         $this->helpers[$helper->getName()] = $helper;
@@ -230,21 +227,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      */
     public function escape($value, string $context = 'html')
     {
-        if (\is_numeric($value)) {
-            return $value;
-        }
-
-        // If we deal with a scalar value, we can cache the result to increase
-        // the performance when the same value is escaped multiple times (e.g. loops)
-        if (\is_scalar($value)) {
-            if (!isset(self::$escaperCache[$context][$value])) {
-                self::$escaperCache[$context][$value] = $this->getEscaper($context)($value);
-            }
-
-            return self::$escaperCache[$context][$value];
-        }
-
-        return $this->getEscaper($context)($value);
+        return $this->get(__FUNCTION__)->{$context}($value);
     }
 
     /**
@@ -273,31 +256,6 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     }
 
     /**
-     * Adds an escaper for the given context.
-     */
-    public function setEscaper(string $context, callable $escaper): void
-    {
-        $this->escapers[$context] = $escaper;
-        self::$escaperCache[$context] = [];
-    }
-
-    /**
-     * Gets an escaper for a given context.
-     *
-     * @throws \InvalidArgumentException
-     *
-     * @return callable A PHP callable
-     */
-    public function getEscaper(string $context)
-    {
-        if (!isset($this->escapers[$context])) {
-            throw new \InvalidArgumentException(\sprintf('No registered escaper for context "%s".', $context));
-        }
-
-        return $this->escapers[$context];
-    }
-
-    /**
      * Evaluates a template.
      *
      * @param array<string,mixed> $parameters
@@ -310,6 +268,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
     {
         $this->evalTemplate = $template;
         $this->evalParameters = $parameters;
+
         unset($template, $parameters);
 
         if (isset($this->evalParameters['this'])) {
@@ -322,6 +281,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
 
         // the view variable is exposed to the require file below
         $view = $this;
+        // the template variable is exposed to the require file below
         $template = $this->loader;
 
         \extract($this->evalParameters, \EXTR_SKIP);
@@ -340,84 +300,5 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
         $this->evalTemplate = null;
 
         return \ob_get_clean();
-    }
-
-    /**
-     * Initializes the built-in escapers.
-     *
-     * Each function specifies a way for applying a transformation to a string
-     * passed to it. The purpose is for the string to be "escaped" so it is
-     * suitable for the format it is being displayed in.
-     *
-     * For example, the string: "It's required that you enter a username & password.\n"
-     * If this were to be displayed as HTML it would be sensible to turn the
-     * ampersand into '&amp;' and the apostrophe into '&aps;'. However if it were
-     * going to be used as a string in JavaScript to be displayed in an alert box
-     * it would be right to leave the string as-is, but c-escape the apostrophe and
-     * the new line.
-     *
-     * For each function there is a define to avoid problems with strings being
-     * incorrectly specified.
-     */
-    protected function initializeEscapers(): void
-    {
-        $flags = \ENT_QUOTES | \ENT_SUBSTITUTE;
-
-        $this->escapers = [
-            'html' =>
-                /**
-                 * Runs the PHP function htmlspecialchars on the value passed.
-                 *
-                 * @param string $value The value to escape
-                 *
-                 * @return string the escaped value
-                 */
-                function ($value) use ($flags) {
-                    // Numbers and Boolean values get turned into strings which can cause problems
-                    // with type comparisons (e.g. === or is_int() etc).
-                    return \is_string($value) ? \htmlspecialchars($value, $flags, $this->getCharset(), false) : $value;
-                },
-
-            'js' =>
-                /**
-                 * A function that escape all non-alphanumeric characters
-                 * into their \xHH or \uHHHH representations.
-                 *
-                 * @param string $value The value to escape
-                 *
-                 * @return string the escaped value
-                 */
-                function ($value) {
-                    if ('UTF-8' != $this->getCharset()) {
-                        $value = \iconv($this->getCharset(), 'UTF-8', $value);
-                    }
-
-                    $callback = function ($matches): string {
-                        $char = $matches[0];
-
-                        // \xHH
-                        if (!isset($char[1])) {
-                            return '\\x' . \substr('00' . \bin2hex($char), -2);
-                        }
-
-                        // \uHHHH
-                        $char = \iconv('UTF-8', 'UTF-16BE', $char);
-
-                        return '\\u' . \substr('0000' . \bin2hex($char), -4);
-                    };
-
-                    if (null === $value = \preg_replace_callback('#[^\p{L}\p{N} ]#u', $callback, $value)) {
-                        throw new \InvalidArgumentException('The string to escape is not a valid UTF-8 string.');
-                    }
-
-                    if ('UTF-8' != $this->getCharset()) {
-                        $value = \iconv('UTF-8', $this->getCharset(), $value);
-                    }
-
-                    return $value;
-                },
-        ];
-
-        self::$escaperCache = [];
     }
 }

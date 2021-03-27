@@ -23,7 +23,7 @@ namespace Biurad\UI\Helper;
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class SlotsHelper extends Helper
+class SlotsHelper extends AbstractHelper
 {
     /** @var array<string,mixed> */
     protected $slots = [];

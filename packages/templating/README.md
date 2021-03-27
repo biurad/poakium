@@ -34,16 +34,13 @@ use Biurad\UI\FilesystemStorage;
 use Biurad\UI\Template;
 
 $filesystemLoader = new FilesystemStorage(__DIR__.'/views');
-
-$phpRenderEngine  = new PhpNativeRender();
-$phpRenderEngine->set(new SlotsHelper());
-
 $templating = new Template($filesystemLoader);
 
 // Before adding a template renderer, you can add a namespace path
 // $templating->addNamespace('MyBundle', __DIR__ . '/vendor/company/package/Resources');
 
 // Add a template compiler renderer to Template.
+$phpRenderEngine = new PhpNativeRender();
 $templating->addRender($phpRenderEngine);
 
 // You can also render an absolute path except for the fact that, it is not cacheable.
