@@ -68,6 +68,14 @@ final class Template implements TemplateInterface
     /**
      * {@inheritdoc}
      */
+    public function getGlobal(): array
+    {
+        return $this->globals;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function addNamespace(string $namespace, $hints): void
     {
         $hints = \is_array($hints) ? $hints : [$hints];

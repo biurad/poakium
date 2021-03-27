@@ -80,6 +80,7 @@ class TemplatingTest extends TestCase
         $template->addGlobal('firstname', 'Divine');
         $template->addNamespace('Extended', __DIR__ . '/Fixtures/Bundles');
         $template->addRender($phpRender, new TwigRender(), new LatteRender());
+        $this->assertEquals(['firstname' => 'Divine'], $template->getGlobal());
 
         $this->assertNull($template->renderTemplates(['hello_array'], []));
         $this->assertStringEqualsFile(__DIR__ . '/Fixtures/template2.txt', $template->renderTemplates(['hello_twig'], []));
