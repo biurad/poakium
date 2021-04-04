@@ -2,8 +2,15 @@ parameters:
     level: 5
     paths: [src]
     checkGenericClassInNonGenericObjectType: false
+    treatPhpDocTypesAsCertain: false
 
     ignoreErrors:
+        -
+           message: "#^Variable \\$value in empty\\(\\) always exists and is always falsy.$#"
+           path: "src/Html/HtmlElement.php"
+        -
+           message: "#^Array \\(array<string, array<int, string>>\\) does not accept array<int, int\\|string>.$#"
+           path: "src/Template.php"
         -
            message: "#^Instanceof between string\\|null and Stringable will always evaluate to false.$#"
            path: "src/Storage/ArrayStorage.php"

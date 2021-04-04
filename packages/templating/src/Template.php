@@ -26,7 +26,7 @@ use Biurad\UI\Interfaces\TemplateInterface;
 /**
  * The template render resolver.
  *
- @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 final class Template implements TemplateInterface
 {
@@ -36,7 +36,7 @@ final class Template implements TemplateInterface
     /** @var string|null */
     private $cacheDir;
 
-    /** @var RenderInterface[] */
+    /** @var array<int,RenderInterface> */
     private $renders = [];
 
     /** @var array<string,mixed> */
@@ -97,9 +97,7 @@ final class Template implements TemplateInterface
     }
 
     /**
-     * Get all associated view engines.
-     *
-     * @return array<int,RenderInterface>
+     * {@inheritdoc}
      */
     public function getRenders(): array
     {
@@ -125,7 +123,6 @@ final class Template implements TemplateInterface
      */
     public function render(string $template, array $parameters = []): string
     {
-        $renderLoader = null;
         $loadedTemplate = $this->find($template, $renderLoader);
 
         if (null === $loadedTemplate) {
@@ -162,6 +159,7 @@ final class Template implements TemplateInterface
         $requestRender = 2 === \func_num_args();
 
         if (isset($this->loadedTemplates[$template])) {
+            /** @var int $renderOffset */
             [$loadedTemplate, $renderOffset] = $this->loadedTemplates[$template];
 
             if ($requestRender) {

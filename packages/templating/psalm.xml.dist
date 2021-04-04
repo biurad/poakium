@@ -21,17 +21,11 @@
     </projectFiles>
 
     <issueHandlers>
-        <PossiblyInvalidArgument>
-            <errorLevel type="suppress">
-                <referencedFunction name="Biurad\UI\Helper\SlotsHelper::set" />
-            </errorLevel>
-        </PossiblyInvalidArgument>
-
-        <PossiblyNullReference>
+        <InvalidPropertyAssignmentValue>
             <errorLevel type="suppress">
                 <file name="src/Template.php" />
             </errorLevel>
-        </PossiblyNullReference>
+        </InvalidPropertyAssignmentValue>
 
         <InvalidReturnStatement>
             <errorLevel type="suppress">
@@ -41,7 +35,9 @@
 
         <InvalidArrayOffset>
             <errorLevel type="suppress">
-                <file name="src/Renders/PhpNativeRender.php" />
+                <file name="src/Helper/EscaperHelper.php" />
+                <file name="src/Renders/LatteRender.php" />
+                <file name="src/Renders/TwigRender.php" />
             </errorLevel>
         </InvalidArrayOffset>
 
@@ -51,5 +47,53 @@
             </errorLevel>
         </InvalidArgument>
 
+        <InternalMethod>
+            <errorLevel type="suppress">
+                <referencedMethod name="Twig\Environment::getTemplateClass" />
+            </errorLevel>
+        </InternalMethod>
+
+        <UndefinedPropertyAssignment>
+            <errorLevel type="suppress">
+                <file name="src/Html/HtmlElement.php" />
+            </errorLevel>
+        </UndefinedPropertyAssignment>
+
+        <PossiblyNullReference>
+            <errorLevel type="suppress">
+                <file name="src/Template.php" />
+            </errorLevel>
+        </PossiblyNullReference>
+
+        <PossiblyInvalidArgument>
+            <errorLevel type="suppress">
+                <file name="src/Renders/PhpNativeRender.php" />
+            </errorLevel>
+        </PossiblyInvalidArgument>
+
+        <PossiblyInvalidMethodCall>
+            <errorLevel type="suppress">
+                <file name="src/Renders/TwigRender.php" />
+            </errorLevel>
+        </PossiblyInvalidMethodCall>
+
+        <PossiblyNullArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Html/HtmlElement.php" />
+                <file name="src/Template.php" />
+            </errorLevel>
+        </PossiblyNullArrayOffset>
+
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src/Html/HtmlElement.php" />
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+
+        <PossiblyInvalidPropertyAssignmentValue>
+            <errorLevel type="suppress">
+                <file name="src/Html/HtmlElement.php" />
+            </errorLevel>
+        </PossiblyInvalidPropertyAssignmentValue>
     </issueHandlers>
 </psalm>
