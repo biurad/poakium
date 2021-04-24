@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.1 and above required
  *
@@ -19,8 +19,15 @@ namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\CacheException;
 use Doctrine\Common\Cache as DoctrineCache;
+use Doctrine\Common\Cache\Psr6\CacheAdapter;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\DoctrineProvider as SymfonyDoctrineProvider;
 
 /**
+ * Create a doctrine cache wrapped with PSR-6.
+ *
+ * @deprecated Deprecated without replacement since doctrine/cache version 1.11.
+ *
  * @codeCoverageIgnore
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
@@ -29,102 +36,52 @@ class AdapterFactory
 {
     /**
      * @param object|string $connection Connection or DSN
-     *
-     * @return DoctrineCache\Cache
      */
-    public static function createHandler($connection): DoctrineCache\Cache
+    public static function createHandler($connection): CacheItemPoolInterface
     {
-        if (!(\is_string($connection) || \is_object($connection))) {
-            throw new \TypeError(
-                \sprintf(
-                    'Argument 1 passed to %s() must be a string or a connection object, %s given.',
-                    __METHOD__,
-                    \gettype($connection)
-                )
-            );
-        }
+        static $adapter;
 
         switch (true) {
-            case $connection instanceof DoctrineCache\Cache:
-                return $connection;
+            case $connection instanceof DoctrineCache\Cache || $connection instanceof SymfonyDoctrineProvider:
+                return CacheAdapter::wrap($connection);
+
+            case \is_string($connection):
+                if (\in_array($connection, ['array', 'apcu', 'win-cache', 'zend-data'], true)) {
+                    $adapter = \sprintf('Doctrine\Common\Cache\%sCache', \ucwords($connection, '-'));
+
+                    return CacheAdapter::wrap(new $adapter());
+                }
+
+                $connection = self::getPrefixedAdapter($connection, $adapter);
+
+                if ($connection instanceof DoctrineCache\Cache) {
+                    return CacheAdapter::wrap($connection);
+                }
+
+                // no break
 
             case $connection instanceof \Redis:
                 $adapter = new DoctrineCache\RedisCache();
+
                 $adapter->setRedis($connection);
 
-                return $adapter;
+                break;
 
             case $connection instanceof \Memcache:
                 $adapter = new DoctrineCache\MemcacheCache();
                 $adapter->setMemcache($connection);
 
-                return $adapter;
+                break;
 
             case $connection instanceof \Memcached:
                 $adapter = new DoctrineCache\MemcachedCache();
                 $adapter->setMemcached($connection);
 
-                return $adapter;
+                break;
+        }
 
-            case self::isPrefixedAdapter($connection, 'array'):
-                return new DoctrineCache\ArrayCache();
-
-            case self::isPrefixedAdapter($connection, 'apcu'):
-                return new DoctrineCache\ApcuCache();
-
-            case self::isPrefixedAdapter($connection, 'wincache'):
-                return new DoctrineCache\WinCacheCache();
-
-            case self::isPrefixedAdapter($connection, 'zenddata'):
-                return new DoctrineCache\ZendDataCache();
-
-            case self::isPrefixedAdapter($connection, 'redis://'):
-                $adapter       = new DoctrineCache\RedisCache();
-                [$host, $port] = self::getPrefixedAdapter($connection, 8);
-
-                $redis = new \Redis();
-                $redis->connect($host, (int) $port);
-
-                $adapter->setRedis($redis);
-
-                return $adapter;
-
-            case self::isPrefixedAdapter($connection, 'memcache://'):
-                $adapter       = new DoctrineCache\MemcacheCache();
-                [$host, $port] = self::getPrefixedAdapter($connection, 11);
-
-                $memcache = new \Memcache();
-                $memcache->addServer($host, (int) $port);
-
-                $adapter->setMemcache($memcache);
-
-                return $adapter;
-
-            case self::isPrefixedAdapter($connection, 'memcached://'):
-                $adapter       = new DoctrineCache\MemcachedCache();
-                [$host, $port] = self::getPrefixedAdapter($connection, 12);
-
-                $memcached = new \Memcached();
-                $memcached->addServer($host, (int) $port);
-
-                $adapter->setMemcached($memcached);
-
-                return $adapter;
-
-            case self::isPrefixedAdapter($connection, 'file://'):
-                [$tempDir, $extension] = self::getPrefixedAdapter($connection, 7, false);
-
-                return new DoctrineCache\FilesystemCache($tempDir, $extension . 'data');
-
-            case self::isPrefixedAdapter($connection, 'memory://'):
-                [$tempDir, $extension] = self::getPrefixedAdapter($connection, 9, false);
-
-                return new DoctrineCache\PhpFileCache($tempDir, $extension . 'php');
-
-            case self::isPrefixedAdapter($connection, 'sqlite://'):
-                [$table, $filename] = self::getPrefixedAdapter($connection, 9);
-
-                return new DoctrineCache\SQLite3Cache(new \SQLite3($filename), $table);
+        if ($adapter instanceof DoctrineCache\Cache) {
+            return CacheAdapter::wrap($adapter);
         }
 
         throw new CacheException(
@@ -133,33 +90,47 @@ class AdapterFactory
     }
 
     /**
-     * @param mixed $connection
-     * @param int   $limit
-     * @param bool  $host
+     * @param mixed $adapter
      *
-     * @return string[]
+     * @return \Redis|\Memcache|\Memcached|DoctrineCache|null
      */
-    private static function getPrefixedAdapter($connection, int $limit, bool $host = true)
+    private static function getPrefixedAdapter(string $connection, $adapter)
     {
-        if (true === $host) {
-            return \explode(':', \substr((string) $connection, $limit));
+        $connection = \parse_url($connection) ?: \explode('://', $connection, 2) ?: [];
+
+        // Extract parsed connection string.
+        list($scheme, $host, $port) = [
+            $connection['scheme'] ?? $connection[0] ?? null,
+            $connection['host'] ?? $connection[1] ?? null,
+            $connection['port'] ?? null,
+        ];
+
+        if (isset($scheme, $host)) {
+            switch ($connectionServer = \ucfirst($scheme)) {
+                case 'Redis':
+                    ($adapter = new \Redis())->connect($host, $port ?? 6379);
+
+                    break;
+
+                case 'Memcache':
+                case 'Memcache':
+                    /** @var \Memcache|\Memcached */
+                    ($adapter = new $connectionServer())->addServer($host, $port ?? 11211);
+
+                    break;
+
+                case 'Serialize':
+                case 'Serialise':
+                    $adapter = new DoctrineCache\PhpFileCache($host);
+
+                    break;
+
+                case 'Filesystem':
+                case 'File':
+                    $adapter = new DoctrineCache\FilesystemCache($host);
+            }
         }
 
-        if (false !== \strpos(':', $tempDir = \substr((string) $connection, $limit))) {
-            return \explode(':', $tempDir);
-        }
-
-        return [$tempDir, '.cache.'];
-    }
-
-    /**
-     * @param mixed  $connection
-     * @param string $name
-     *
-     * @return bool
-     */
-    private static function isPrefixedAdapter($connection, string $name): bool
-    {
-        return \is_string($connection) && 0 === \strpos($connection, $name);
+        return $adapter;
     }
 }
