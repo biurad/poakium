@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.1 and above required
  *
@@ -19,7 +19,6 @@ namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\CacheException;
 use Biurad\Cache\Exceptions\InvalidArgumentException;
-use Biurad\Cache\Interfaces\FastCacheInterface;
 use Cache\Adapter\Common\CacheItem as PhpCacheItem;
 use Cache\Adapter\Common\PhpCachePool;
 use Psr\Cache\CacheItemInterface;
@@ -27,9 +26,11 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * Implements the cache for a application.
+ * An advanced caching system using PSR-6 or PSR-16.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class FastCache implements FastCacheInterface
+class FastCache
 {
     /** @internal */
     public const NAMESPACE_SEPARATOR = "\x00";
