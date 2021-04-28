@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
  * PHP version 7.1 and above required
  *
@@ -23,11 +23,6 @@ use PHPUnit\Framework\TestCase;
 
 class CacheItemTest extends TestCase
 {
-    public function testValidKey(): void
-    {
-        self::assertSame('foo', CacheItem::validateKey('foo'));
-    }
-
     public function testGetKey(): void
     {
         $item = new CacheItem();
@@ -42,7 +37,7 @@ class CacheItemTest extends TestCase
     public function testSet(): void
     {
         $item = new CacheItem();
-        self::assertEquals(null, $item->get());
+        self::assertNull($item->get());
 
         $item->set('data');
         self::assertEquals('data', $item->get());
@@ -62,7 +57,7 @@ class CacheItemTest extends TestCase
         $item = new CacheItem();
         self::assertFalse($item->isHit());
 
-        $r    = new \ReflectionProperty($item, 'isHit');
+        $r = new \ReflectionProperty($item, 'isHit');
         $r->setAccessible(true);
         $r->setValue($item, true);
 
@@ -110,7 +105,7 @@ class CacheItemTest extends TestCase
 
     public function testExpiresAfter(): void
     {
-        $item      = new CacheItem();
+        $item = new CacheItem();
         $timestamp = \time() + 1;
 
         $r = new \ReflectionProperty($item, 'expiry');
@@ -124,41 +119,5 @@ class CacheItemTest extends TestCase
 
         $item->expiresAfter(null);
         self::assertNull($r->getValue($item));
-    }
-
-    /**
-     * @dataProvider provideInvalidKey
-     *
-     * @param mixed $key
-     */
-    public function testInvalidKey($key): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cache key');
-        CacheItem::validateKey($key);
-    }
-
-    /**
-     * @return string[]
-     */
-    public function provideInvalidKey(): array
-    {
-        return [
-            [''],
-            ['{'],
-            ['}'],
-            ['('],
-            [')'],
-            ['/'],
-            ['\\'],
-            ['@'],
-            [':'],
-            [true],
-            [null],
-            [1],
-            [1.1],
-            [[[]]],
-            [new \Exception('foo')],
-        ];
     }
 }
