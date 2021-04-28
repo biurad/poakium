@@ -92,7 +92,7 @@ class AdapterFactory
     /**
      * @param mixed $adapter
      *
-     * @return \Redis|\Memcache|\Memcached|DoctrineCache|null
+     * @return \Redis|\Memcache|\Memcached|DoctrineCache\Cache|null
      */
     private static function getPrefixedAdapter(string $connection, $adapter)
     {
@@ -119,7 +119,7 @@ class AdapterFactory
 
                 case 'Memcache':
                 case 'Memcache':
-                    /** @var \Memcache|\Memcached */
+                    /** @var \Memcache|\Memcached $adapter */
                     ($adapter = new $connectionServer())->addServer($host, $port ?? 11211);
 
                     break;

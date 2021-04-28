@@ -98,8 +98,6 @@ class FastCache
     /**
      * Reads the specified item from the cache or generate it.
      *
-     * @param mixed $key
-     *
      * @return mixed
      */
     public function load(string $key, callable $fallback = null, ?float $beta = null)
@@ -152,9 +150,6 @@ class FastCache
     /**
      * Writes an item into the cache.
      *
-     * @param mixed         $key
-     * @param callable|null $callback
-     *
      * @return mixed value itself
      */
     public function save(string $key, callable $callback, ?float $beta = null)
@@ -172,8 +167,6 @@ class FastCache
 
     /**
      * Remove an item from the cache.
-     *
-     * @param mixed $key
      */
     public function delete(string $key): bool
     {
@@ -206,8 +199,6 @@ class FastCache
      *
      * @see {@call}
      *
-     * @param float|null $beta
-     *
      * @return callable so arguments can be passed into for final results
      */
     public function wrap(callable $callback /* ... arguments passed to $callback */): callable
@@ -219,10 +210,8 @@ class FastCache
 
     /**
      * Starts the output cache.
-     *
-     * @param mixed $key
      */
-    public function start($key): ?OutputHelper
+    public function start(string $key): ?OutputHelper
     {
         $data = $this->load($key);
 

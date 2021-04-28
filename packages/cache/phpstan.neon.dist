@@ -2,7 +2,7 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
-    level: max
+    level: 4
     paths: [src]
     treatPhpDocTypesAsCertain: false
     checkMissingIterableValueType: false
@@ -10,8 +10,8 @@ parameters:
     ignoreErrors:
         - "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
         -
-            message: "#^Cannot call method add\\(\\) on DateTime\\|false.$#"
-            path: src/CacheItem.php
-        -
-            message: "#^Strict comparison using !== between false and true will always evaluate to true.$#"
+            message: "#^Variable \\$deleteItem might not be defined|Variable method call on Psr\\\\Cache\\\\CacheItemPoolInterface\\|Psr\\\\SimpleCache\\\\CacheInterface.$#"
             path: src/FastCache.php
+        -
+            message: "#^Short ternary operator is not allowed. Use null coalesce operator if applicable or consider using long ternary|Class Symfony\\\\Component\\\\Cache\\\\DoctrineProvider not found.$#"
+            path: src/AdapterFactory.php
