@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Cache;
 
 use Biurad\Cache\Exceptions\InvalidArgumentException;
-use Biurad\Cache\Interfaces\FastCacheInterface;
 use Psr\Cache\CacheItemInterface;
 
 /**
@@ -26,28 +25,27 @@ use Psr\Cache\CacheItemInterface;
  */
 class OutputHelper
 {
-    /** @var null|FastCacheInterface */
+    /** @var FastCache|null */
     private $cache;
 
     /** @var string */
     private $key;
 
     /**
-     * @param FastCache $cache
-     * @param mixed     $key
+     * @param mixed $key
      */
-    public function __construct(FastCacheInterface $cache, $key)
+    public function __construct(FastCache $cache, $key)
     {
         $this->cache = $cache;
-        $this->key   = $key;
+        $this->key = $key;
+
         \ob_start();
     }
 
     /**
      * Stops and saves the cache.
      *
-     * @param callable   $callback
-     * @param null|float $beta
+     * @param callable $callback
      *
      * @throws InvalidArgumentException
      */
@@ -56,11 +54,12 @@ class OutputHelper
         if (null === $this->cache) {
             throw new InvalidArgumentException('Output cache has already been saved.');
         }
+
         $this->cache->save(
             $this->key,
-            function (CacheItemInterface $item, bool $save) use ($callback) {
+            static function (CacheItemInterface $item) use ($callback) {
                 if (null !== $callback) {
-                    $callback(...[&$item, &$save]);
+                    $callback($item);
                 }
 
                 return \ob_get_flush();

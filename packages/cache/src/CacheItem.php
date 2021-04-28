@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Cache;
 
-use Biurad\Cache\Exceptions\InvalidArgumentException;;
+use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Psr\Cache\CacheItemInterface;
 
 final class CacheItem implements CacheItemInterface
@@ -36,7 +36,7 @@ final class CacheItem implements CacheItemInterface
     /** @var bool */
     private $isHit = false;
 
-    /** @var null|float|int */
+    /** @var float|int|null */
     private $expiry;
 
     /** @var int */
@@ -104,7 +104,7 @@ final class CacheItem implements CacheItemInterface
         }
 
         if ($time instanceof \DateInterval) {
-            $interval     = \DateTime::createFromFormat('U', '0')->add($time);
+            $interval = \DateTime::createFromFormat('U', '0')->add($time);
             $this->expiry = \microtime(true) + (int) $interval->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);
@@ -116,31 +116,11 @@ final class CacheItem implements CacheItemInterface
     }
 
     /**
-     * Validates a cache key according to PSR-6 and PSR-16.
-     *
-     * @param string $key The key to validate
-     *
-     * @throws InvalidArgumentException When $key is not valid
-     *
-     * @return string
+     * @internal
      */
-    public static function validateKey($key): string
+    public function getExpiry(): ?float
     {
-        if (!\is_string($key)) {
-            throw new InvalidArgumentException('Cache key must be string.');
-        }
-
-        if ('' === $key) {
-            throw new InvalidArgumentException('Cache key length must be greater than zero.');
-        }
-
-        if (false !== \strpbrk($key, self::RESERVED_CHARACTERS)) {
-            throw new InvalidArgumentException(
-                \sprintf('Cache key "%s" contains reserved characters "%s".', $key, self::RESERVED_CHARACTERS)
-            );
-        }
-
-        return $key;
+        return $this->expiry;
     }
 
     /**
