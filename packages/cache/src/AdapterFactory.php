@@ -112,6 +112,11 @@ class AdapterFactory
 
                     break;
 
+                case 'sqlite':
+                    $adapter = new DoctrineCache\SQLite3Cache(new \SQLite3($host), 'doctrine_cache');
+
+                    break;
+
                 case 'Memcache':
                 case 'Memcache':
                     /** @var \Memcache|\Memcached */
