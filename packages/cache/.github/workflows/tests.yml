@@ -4,14 +4,13 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        php: ['7.2', '7.3', '7.4']
-        coverage: ["true"]
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        php-versions: ['7.3', '7.4', '8.0']
         composer-flags: [""]
         include:
-          - php: "8.0"
-            coverage: "false"
+          - php-versions: "8.1"
             composer-flags: "--ignore-platform-req=php"
     runs-on: ubuntu-latest
 
@@ -22,8 +21,8 @@ jobs:
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
-          extensions: mbstring, curl
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, curl, redis, apcu, memcached, memcache
           coverage: xdebug
           tools: composer:v2
 
@@ -41,26 +40,18 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer update --no-progress --optimize-autoloader ${{ matrix.composer-flags }}
+        run: composer install --no-progress --optimize-autoloader ${{ matrix.composer-flags }}
 
       - name: Check Coding Standard
-        run: |
-          if [ "${{ matrix.coverage }}" == "true" ]; then
-            vendor/bin/phpcs
-          fi
+        run: vendor/bin/phpcs
 
       - name: Test with Phpunit
         run: |
-          if [ "${{ !matrix.coverage }}" == "false" ]; then
-            vendor/bin/phpunit --no-coverage
-          fi
-          if [ "${{ matrix.coverage }}" == "true" ]; then
-            vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
-            bash <(curl -s https://codecov.io/bash) -f coverage.clover
-          fi
+          vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
+          bash <(curl -s https://codecov.io/bash) -f coverage.clover
 
       - name: Test with Phpstan
         run: vendor/bin/phpstan analyse
 
       - name: Test with Psalm
-        run: vendor/bin/psalm
+        run: vendor/bin/psalm --output-format=github
