@@ -8,7 +8,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-cache.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-cache)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-cache** is a php cache library based on [Doctrine Cache][] created by [Doctrine Team][] which supports many different drivers such as redis, memcache, apc, mongodb and others. Implemented in [PSR-6] and [PSR-16] for great interoperability, performance and resiliency.
+**biurad/php-cache** is a php cache library based on [PSR-6] and [PSR-16][] which should supports many different drivers such as redis, memcache, apc, mongodb and others.
 
 ## 📦 Installation & Basic Usage
 
@@ -18,7 +18,7 @@ This project requires [PHP] 7.1 or higher. The recommended way to install, is vi
 $ composer require biurad/cache
 ```
 
-This library is designed in an interoperable manner. Using [PSR-6] caching implementation, requires a [Doctrine Cache][] adapter, while [PSR-16] requires [PSR-6].
+This library comes in handy with support for the soon to be deprecated [Doctrine Cache][], while [PSR-16] requires [PSR-6].
 
 ```php
 // you can use any of doctrine cache adapter
@@ -27,85 +27,7 @@ $storage = new Biurad\Cache\AdapterFactory::createHandler('array');
 $storage = new Doctrine\Common\Cache\ArrayCache();
 ```
 
-The `Doctrine\Common\Cache\Cache` storage is very simple for performance and in the first place, it provides full atomicity of operations.
-
-| Strategy                      | Description                                                 |
-| ----------------------------- | ----------------------------------------------------------- |
-| BiuradPHP\Cache\SimpleCache   | For [PSR-16] caching abilities using doctrine cache adapter |
-| BiuradPHP\Cache\CacheItemPool | For [PSR-6] caching abilities using [PSR-16]                |
-| BiuradPHP\Cache\FastCache     | For advance and optimized [PSR-16]/[PSR-6] caching strategy |
-
-Now you can create, retrieve, update and delete items using the above caching classes:
-
-### For manipulation with cache using [PSR-6], we use the `Biurad\Cache\CacheItemPool`:
-
----
-
-If you want a bit advanced caching strategy above [PSR-16], [PSR-6] is what you need, has a cool way of invalidating a missed cache.
-
-```php
-use BiuradPHP\Cache\CacheItemPool;
-
-$cache = new CacheItemPool($cache); // psr-16 cache in psr-6 cache.
-```
-
-```php
-// create a new item by trying to get it from the cache
-$productsCount = $cache->getItem('stats.products_count');
-
-// assign a value to the item and save it
-$productsCount->set(4711);
-$cache->save($productsCount);
-
-// retrieve the cache item
-$productsCount = $cache->getItem('stats.products_count');
-
-if (!$productsCount->isHit()) {
-    // ... item does not exist in the cache
-}
-
-// retrieve the value stored by the item
-$total = $productsCount->get();
-
-// remove the cache item
-$cache->deleteItem('stats.products_count');
-```
-
-### For manipulation with cache using [PSR-16], we use the `Biurad\Cache\SimpleCache`:
-
----
-
-If you want a quick caching strategy for your application, use [PSR-16] caching strategy. Its so simple and straight forward.
-
-```php
-use Biurad\Cache\SimpleCache;
-
-$cache = new SimpleCache($cache); // psr-16 caching
-```
-
-```php
-// assign a value to the item and save it
-$cache->set('stats.products_count', 4711);
-
-// retrieve the cache item
-$productsCount = $cache->get('stats.products_count');
-
-if (null === $productsCount) {
-    // ... item does not exist in the cache
-}
-
-// retrieve the value stored by the item
-$total = $productsCount;
-
-// remove the cache item
-$cache->delete('stats.products_count');
-```
-
-### For manipulation with cache using an advanced caching system, we use the `BiuradPHP\Cache\FastCache`:
-
----
-
-For each method in `BiuradPHP\Cache\FastCache` class that has a second parameter as `callable`, which is called when there is no such item in the cache. This callback receives 2 arguments at the end by reference. The `Psr\Cache\CacheItemInterface` and a boolean, which you can use for setting expiration rules and saving data into cache.
+Most methods in `BiuradPHP\Cache\FastCache` class that has a second parameter as `callable`, which is called when there is no such item in the cache. This callback receives 1 argument, which is an instance of `Psr\Cache\CacheItemInterface`.
 
 ```php
 use BiuradPHP\Cache\CacheItemPool;
@@ -113,13 +35,9 @@ use BiuradPHP\Cache\SimpleCache;
 use BiuradPHP\Cache\FastCache;
 
 // you can use any of doctrine cache adapter
-$storage = new Doctrine\Common\Cache\ArrayCache();
+$adapter = AdapterFactory::createHandler('redis://localhost');
 
-$psr16 = new SimpleCache($psr6 = new CacheItemPool($storage)); // psr-6 cache in psr-16 cache.
-
-$cache = new FastCache($psr16);
-//or
-$cache = new FastCache($psr6);
+$cache = new FastCache($adapter);
 ```
 
 The first argument of the `load()` method is a key, an arbitrary string that you associate to the cached value so you can retrieve it later. The second argument is a PHP callable which is executed when the key is not found in the cache to generate and return the value:
@@ -128,13 +46,13 @@ The first argument of the `load()` method is a key, an arbitrary string that you
 use Psr\Cache\CacheItemInterface;
 
 // The callable will only be executed on a cache miss.
-$value = $cache->load('my_cache_key', function (CacheItemInterface $item) {
+$value = $cache->load('my_cache_key', static function (CacheItemInterface $item) {
     $item->expiresAfter(3600);
 
     // ... do some HTTP request or heavy computations
-    $computedValue = 'foobar';
+    $item->set('foobar');
 
-    return $computedValue;
+    return $item;
 });
 
 echo $value; // 'foobar'
@@ -185,10 +103,10 @@ This feature works with only PSR-6 cache, By default the beta is 1.0 and higher 
 use Psr\Cache\CacheItemInterface;
 
 $beta = 1.0;
-$value = $cache->save('my_cache_key', function (CacheItemInterface $item) {
+$value = $cache->save('my_cache_key', static function (CacheItemInterface $item) {
     $item->expiresAfter(3600);
 
-    return '...';
+    return $item;
 }, $beta);
 ```
 
@@ -276,5 +194,3 @@ Check out the other cool things people are doing with `biurad/php-cache`: <https
 [email]: support@biurad.com
 [message]: https://projects.biurad.com/message
 [Doctrine Cache]: https://github.com/doctrine/cache
-[Doctrine Team]: https://www.doctrine-project.org
-[Doctrine Documentation]: https://www.doctrine-project.org/projects/doctrine-cache/en/current/index.html
