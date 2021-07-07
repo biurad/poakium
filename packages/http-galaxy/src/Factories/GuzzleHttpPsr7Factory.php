@@ -17,43 +17,119 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Factories;
 
-use Biurad\Http\Factory\RequestFactory;
-use Biurad\Http\Factory\ResponseFactory;
-use Biurad\Http\Factory\ServerRequestFactory;
-use Biurad\Http\Factory\StreamFactory;
-use Biurad\Http\Factory\UploadedFileFactory;
-use Biurad\Http\Factory\UriFactory;
+use Biurad\Http\Interfaces\Psr17Interface;
+use Biurad\Http\Request;
+use Biurad\Http\Response;
 use Biurad\Http\ServerRequest;
+use Biurad\Http\Stream;
+use Biurad\Http\UploadedFile;
+use Biurad\Http\Uri;
+use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
+use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class GuzzleHttpPsr7Factory extends Psr17Factory
+class GuzzleHttpPsr7Factory implements Psr17Interface
 {
     /**
      * {@inheritdoc}
      */
-    public static function fromGlobalRequest(
-        array $server = null,
-        array $query = null,
-        array $body = null,
-        array $cookies = null,
-        array $files = null
-    ): ServerRequestInterface {
-        return ServerRequest::fromGlobals();
+    public function createRequest(string $method, $uri): RequestInterface
+    {
+        return new Request($method, $uri);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function setFactoryCandidates(): void
+    public function createResponse(int $code = 200, string $reasonPhrase = 'Ok'): ResponseInterface
     {
-        $this->responseFactoryClass         = ResponseFactory::class;
-        $this->serverRequestFactoryClass    = ServerRequestFactory::class;
-        $this->requestFactoryClass          = RequestFactory::class;
-        $this->uploadedFilesFactoryClass    = UploadedFileFactory::class;
-        $this->streamFactoryClass           = StreamFactory::class;
-        $this->uriFactoryClass              = UriFactory::class;
+        return new Response($code, [], null, '1.1', $reasonPhrase);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createServerRequest(string $method, $uri, array $serverParams = []): ServerRequestInterface
+    {
+        if (empty($method)) {
+            if (!empty($serverParams['REQUEST_METHOD'])) {
+                $method = $serverParams['REQUEST_METHOD'];
+            } else {
+                throw new \InvalidArgumentException('Cannot determine HTTP method');
+            }
+        }
+
+        return new ServerRequest($method, $uri, [], null, '1.1', $serverParams);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createStream(string $content = ''): StreamInterface
+    {
+        $stream = Utils::streamFor($content);
+
+        return (new Stream())->withStream($stream);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
+    {
+        $resource = Utils::tryFopen($file, $mode);
+        $stream = Utils::streamFor($resource);
+
+        return (new Stream())->withStream($stream);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createStreamFromResource($resource): StreamInterface
+    {
+        $stream = Utils::streamFor($resource);
+
+        return (new Stream())->withStream($stream);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createUploadedFile(
+        StreamInterface $stream,
+        ?int $size = null,
+        int $error = \UPLOAD_ERR_OK,
+        ?string $clientFilename = null,
+        ?string $clientMediaType = null
+    ): UploadedFileInterface {
+        return new UploadedFile($stream, $size ?? $stream->getSize(), $error, $clientFilename, $clientMediaType);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createUri(string $uri = ''): UriInterface
+    {
+        return new Uri($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function fromGlobalRequest(): ServerRequestInterface
+    {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $uri = Psr7ServerRequest::getUriFromGlobals();
+
+        return (new ServerRequest($method, $uri))->withRequest(Psr7ServerRequest::fromGlobals());
     }
 }
