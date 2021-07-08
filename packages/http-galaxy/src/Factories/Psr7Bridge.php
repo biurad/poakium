@@ -34,9 +34,9 @@ use Psr\Http\Message\StreamInterface;
  */
 class Psr7Bridge
 {
-    private const CR  = "\r";
+    private const CR = "\r";
 
-    private const LF  = "\n";
+    private const LF = "\n";
 
     /**
      * Serialize a response message to an array.
@@ -44,11 +44,11 @@ class Psr7Bridge
     public static function responseToArray(ResponseInterface $response): array
     {
         return [
-            'status_code'      => $response->getStatusCode(),
-            'reason_phrase'    => $response->getReasonPhrase(),
+            'status_code' => $response->getStatusCode(),
+            'reason_phrase' => $response->getReasonPhrase(),
             'protocol_version' => $response->getProtocolVersion(),
-            'headers'          => $response->getHeaders(),
-            'body'             => (string) $response->getBody(),
+            'headers' => $response->getHeaders(),
+            'body' => (string) $response->getBody(),
         ];
     }
 
@@ -63,10 +63,10 @@ class Psr7Bridge
             $body = new Stream(\fopen('php://memory', 'wb+'));
             $body->write(self::getValueFromKey($serializedResponse, 'body'));
 
-            $statusCode      = self::getValueFromKey($serializedResponse, 'status_code');
-            $headers         = self::getValueFromKey($serializedResponse, 'headers');
+            $statusCode = self::getValueFromKey($serializedResponse, 'status_code');
+            $headers = self::getValueFromKey($serializedResponse, 'headers');
             $protocolVersion = self::getValueFromKey($serializedResponse, 'protocol_version');
-            $reasonPhrase    = self::getValueFromKey($serializedResponse, 'reason_phrase');
+            $reasonPhrase = self::getValueFromKey($serializedResponse, 'reason_phrase');
 
             return new Response($statusCode, $headers, $body, $protocolVersion, $reasonPhrase);
         } catch (\Throwable $exception) {
@@ -89,7 +89,7 @@ class Psr7Bridge
         $stream->rewind();
 
         [$version, $status, $reasonPhrase] = self::getStatusLine($stream);
-        [$headers, $body]                  = self::splitStream($stream);
+        [$headers, $body] = self::splitStream($stream);
 
         return new Response($body, $status, $headers, $version, $reasonPhrase);
     }
@@ -100,12 +100,12 @@ class Psr7Bridge
     public static function requestToArray(RequestInterface $request): array
     {
         return [
-            'method'           => $request->getMethod(),
-            'request_target'   => $request->getRequestTarget(),
-            'uri'              => (string) $request->getUri(),
+            'method' => $request->getMethod(),
+            'request_target' => $request->getRequestTarget(),
+            'uri' => (string) $request->getUri(),
             'protocol_version' => $request->getProtocolVersion(),
-            'headers'          => $request->getHeaders(),
-            'body'             => (string) $request->getBody(),
+            'headers' => $request->getHeaders(),
+            'body' => (string) $request->getBody(),
         ];
     }
 
@@ -117,12 +117,12 @@ class Psr7Bridge
     public static function requestFromArray(array $serializedRequest): Request
     {
         try {
-            $uri             = self::getValueFromKey($serializedRequest, 'uri');
-            $method          = self::getValueFromKey($serializedRequest, 'method');
-            $body            = new Stream(\fopen('php://memory', 'wb+'));
+            $uri = self::getValueFromKey($serializedRequest, 'uri');
+            $method = self::getValueFromKey($serializedRequest, 'method');
+            $body = new Stream(\fopen('php://memory', 'wb+'));
             $body->write(self::getValueFromKey($serializedRequest, 'body'));
-            $headers         = self::getValueFromKey($serializedRequest, 'headers');
-            $requestTarget   = self::getValueFromKey($serializedRequest, 'request_target');
+            $headers = self::getValueFromKey($serializedRequest, 'headers');
+            $requestTarget = self::getValueFromKey($serializedRequest, 'request_target');
             $protocolVersion = self::getValueFromKey($serializedRequest, 'protocol_version');
 
             return (new Request($method, $uri, $headers, $body, $protocolVersion))
@@ -148,12 +148,11 @@ class Psr7Bridge
         $stream->rewind();
 
         [$method, $requestTarget, $version] = self::getRequestLine($stream);
-        $uri                                = self::createUriFromRequestTarget($requestTarget);
+        $uri = self::createUriFromRequestTarget($requestTarget);
 
         [$headers, $body] = self::splitStream($stream);
 
-        return (new Request($method, $uri, $headers, $body, $version))
-            ->withRequestTarget($requestTarget);
+        return (new Request($method, $uri, $headers, $body, $version))->withRequestTarget($requestTarget);
     }
 
     /**
@@ -163,34 +162,34 @@ class Psr7Bridge
      * characters ending in a CRLF sequence.
      *
      * @throws \UnexpectedValueException if the sequence contains a CR
-     *                                  or LF in isolation, or ends in a CR
+     *                                   or LF in isolation, or ends in a CR
      */
     protected static function getLine(StreamInterface $stream): string
     {
-        $line    = '';
+        $line = '';
         $crFound = false;
 
         while (!$stream->eof()) {
             $char = $stream->read(1);
 
-            if ($crFound && $char === self::LF) {
+            if ($crFound && self::LF === $char) {
                 $crFound = false;
 
                 break;
             }
 
             // CR NOT followed by LF
-            if ($crFound && $char !== self::LF) {
+            if ($crFound && self::LF !== $char) {
                 throw new \UnexpectedValueException('Unexpected carriage return detected');
             }
 
             // LF in isolation
-            if (!$crFound && $char === self::LF) {
+            if (!$crFound && self::LF === $char) {
                 throw new \UnexpectedValueException('Unexpected line feed detected');
             }
 
             // CR found; do not append
-            if ($char === self::CR) {
+            if (self::CR === $char) {
                 $crFound = true;
 
                 continue;
@@ -220,7 +219,7 @@ class Psr7Bridge
      */
     protected static function splitStream(StreamInterface $stream): array
     {
-        $headers       = [];
+        $headers = [];
         $currentHeader = false;
 
         while ($line = self::getLine($stream)) {
@@ -244,7 +243,7 @@ class Psr7Bridge
             }
 
             // Append continuation to last header value found
-            $value                     = \array_pop($headers[$currentHeader]);
+            $value = \array_pop($headers[$currentHeader]);
             $headers[$currentHeader][] = $value . \ltrim($line);
         }
 
@@ -299,8 +298,6 @@ class Psr7Bridge
     }
 
     /**
-     * @param array  $data
-     * @param string $key
      * @param string $message
      *
      * @throws \UnexpectedValueException
@@ -313,11 +310,7 @@ class Psr7Bridge
             return $data[$key];
         }
 
-        if ($message === null) {
-            $message = \sprintf('Missing "%s" key in serialized response', $key);
-        }
-
-        throw new \UnexpectedValueException($message);
+        throw new \UnexpectedValueException($message ?? \sprintf('Missing "%s" key in serialized response', $key));
     }
 
     /**
