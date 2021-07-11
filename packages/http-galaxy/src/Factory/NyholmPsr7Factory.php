@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Factories;
+namespace Biurad\Http\Factory;
 
 use Biurad\Http\Interfaces\Psr17Interface;
 use Biurad\Http\Request;
@@ -24,8 +24,8 @@ use Biurad\Http\ServerRequest;
 use Biurad\Http\Stream;
 use Biurad\Http\UploadedFile;
 use Biurad\Http\Uri;
-use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
-use GuzzleHttp\Psr7\Utils;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7Server\ServerRequestCreator;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,14 +36,22 @@ use Psr\Http\Message\UriInterface;
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class GuzzleHttpPsr7Factory implements Psr17Interface
+class NyholmPsr7Factory implements Psr17Interface
 {
+    /** @var Psr17Factory */
+    private $factory;
+
+    public function __construct()
+    {
+        $this->factory = new Psr17Factory();
+    }
+
     /**
      * {@inheritdoc}
      */
     public function createRequest(string $method, $uri): RequestInterface
     {
-        return new Request($method, $uri);
+        return (new Request($method, $uri))->withRequest($this->factory->createRequest($method, $uri));
     }
 
     /**
@@ -51,7 +59,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createResponse(int $code = 200, string $reasonPhrase = 'Ok'): ResponseInterface
     {
-        return new Response($code, [], null, '1.1', $reasonPhrase);
+        return (new Response())->withResponse($this->factory->createResponse($code, $reasonPhrase));
     }
 
     /**
@@ -67,7 +75,8 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
             }
         }
 
-        return new ServerRequest($method, $uri, [], null, '1.1', $serverParams);
+        return (new ServerRequest($method, $uri, [], null, '1.1', $serverParams))
+            ->withRequest($this->factory->createServerRequest($method, $uri, $serverParams));
     }
 
     /**
@@ -75,9 +84,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        $stream = Utils::streamFor($content);
-
-        return (new Stream())->withStream($stream);
+        return (new Stream())->withStream($this->factory->createStream($content));
     }
 
     /**
@@ -85,10 +92,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        $resource = Utils::tryFopen($file, $mode);
-        $stream = Utils::streamFor($resource);
-
-        return (new Stream())->withStream($stream);
+        return (new Stream())->withStream($this->factory->createStreamFromFile($file, $mode));
     }
 
     /**
@@ -96,9 +100,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        $stream = Utils::streamFor($resource);
-
-        return (new Stream())->withStream($stream);
+        return (new Stream())->withStream($this->factory->createStreamFromResource($resource));
     }
 
     /**
@@ -111,7 +113,12 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
         ?string $clientFilename = null,
         ?string $clientMediaType = null
     ): UploadedFileInterface {
-        return new UploadedFile($stream, $size ?? $stream->getSize(), $error, $clientFilename, $clientMediaType);
+        if (null === $size) {
+            $size = $stream->getSize();
+        }
+
+        return (new UploadedFile('', $size, $error, $clientFilename, $clientMediaType))
+            ->withUploadFile($this->factory->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType));
     }
 
     /**
@@ -119,7 +126,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createUri(string $uri = ''): UriInterface
     {
-        return new Uri($uri);
+        return (new Uri($uri))->withUri($this->factory->createUri($uri));
     }
 
     /**
@@ -128,8 +135,10 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
     public static function fromGlobalRequest(): ServerRequestInterface
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri = Psr7ServerRequest::getUriFromGlobals();
 
-        return (new ServerRequest($method, $uri))->withRequest(Psr7ServerRequest::fromGlobals());
+        $self = new static();
+        $serverRequestCreator = new ServerRequestCreator($self->factory, $self->factory, $self->factory, $self->factory);
+
+        return (new ServerRequest($method, ''))->withRequest($serverRequestCreator->fromGlobals());
     }
 }

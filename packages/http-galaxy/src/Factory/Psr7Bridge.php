@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Factories;
+namespace Biurad\Http\Factory;
 
 use Biurad\Http\Response;
 use Biurad\Http\ServerRequest as Request;

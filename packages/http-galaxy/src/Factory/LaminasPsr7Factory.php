@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Factories;
+namespace Biurad\Http\Factory;
 
 use Biurad\Http\Interfaces\Psr17Interface;
 use Biurad\Http\Request;
@@ -24,8 +24,12 @@ use Biurad\Http\ServerRequest;
 use Biurad\Http\Stream;
 use Biurad\Http\UploadedFile;
 use Biurad\Http\Uri;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7Server\ServerRequestCreator;
+use Laminas\Diactoros\RequestFactory;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequestFactory;
+use Laminas\Diactoros\StreamFactory;
+use Laminas\Diactoros\UploadedFileFactory;
+use Laminas\Diactoros\UriFactory;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,22 +40,14 @@ use Psr\Http\Message\UriInterface;
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class NyholmPsr7Factory implements Psr17Interface
+class LaminasPsr7Factory implements Psr17Interface
 {
-    /** @var Psr17Factory */
-    private $factory;
-
-    public function __construct()
-    {
-        $this->factory = new Psr17Factory();
-    }
-
     /**
      * {@inheritdoc}
      */
     public function createRequest(string $method, $uri): RequestInterface
     {
-        return (new Request($method, $uri))->withRequest($this->factory->createRequest($method, $uri));
+        return (new Request($method, $uri))->withRequest((new RequestFactory())->createRequest($method, $uri));
     }
 
     /**
@@ -59,7 +55,7 @@ class NyholmPsr7Factory implements Psr17Interface
      */
     public function createResponse(int $code = 200, string $reasonPhrase = 'Ok'): ResponseInterface
     {
-        return (new Response())->withResponse($this->factory->createResponse($code, $reasonPhrase));
+        return (new Response())->withResponse((new ResponseFactory())->createResponse($code, $reasonPhrase));
     }
 
     /**
@@ -76,7 +72,7 @@ class NyholmPsr7Factory implements Psr17Interface
         }
 
         return (new ServerRequest($method, $uri, [], null, '1.1', $serverParams))
-            ->withRequest($this->factory->createServerRequest($method, $uri, $serverParams));
+            ->withRequest((new ServerRequestFactory())->createServerRequest($method, $uri, $serverParams));
     }
 
     /**
@@ -84,7 +80,7 @@ class NyholmPsr7Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        return (new Stream())->withStream($this->factory->createStream($content));
+        return (new Stream())->withStream((new StreamFactory)->createStream($content));
     }
 
     /**
@@ -92,7 +88,7 @@ class NyholmPsr7Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        return (new Stream())->withStream($this->factory->createStreamFromFile($file, $mode));
+        return (new Stream())->withStream((new StreamFactory)->createStreamFromFile($file, $mode));
     }
 
     /**
@@ -100,7 +96,7 @@ class NyholmPsr7Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        return (new Stream())->withStream($this->factory->createStreamFromResource($resource));
+        return (new Stream())->withStream((new StreamFactory)->createStreamFromResource($resource));
     }
 
     /**
@@ -118,7 +114,7 @@ class NyholmPsr7Factory implements Psr17Interface
         }
 
         return (new UploadedFile('', $size, $error, $clientFilename, $clientMediaType))
-            ->withUploadFile($this->factory->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType));
+            ->withUploadFile((new UploadedFileFactory())->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType));
     }
 
     /**
@@ -126,7 +122,7 @@ class NyholmPsr7Factory implements Psr17Interface
      */
     public function createUri(string $uri = ''): UriInterface
     {
-        return (new Uri($uri))->withUri($this->factory->createUri($uri));
+        return (new Uri($uri))->withUri((new UriFactory())->createUri($uri));
     }
 
     /**
@@ -136,9 +132,6 @@ class NyholmPsr7Factory implements Psr17Interface
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-        $self = new static();
-        $serverRequestCreator = new ServerRequestCreator($self->factory, $self->factory, $self->factory, $self->factory);
-
-        return (new ServerRequest($method, ''))->withRequest($serverRequestCreator->fromGlobals());
+        return (new ServerRequest($method, ''))->withRequest(ServerRequestFactory::fromGlobals());
     }
 }

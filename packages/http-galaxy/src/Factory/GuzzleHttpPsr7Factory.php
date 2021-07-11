@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Factories;
+namespace Biurad\Http\Factory;
 
 use Biurad\Http\Interfaces\Psr17Interface;
 use Biurad\Http\Request;
@@ -24,12 +24,8 @@ use Biurad\Http\ServerRequest;
 use Biurad\Http\Stream;
 use Biurad\Http\UploadedFile;
 use Biurad\Http\Uri;
-use Laminas\Diactoros\RequestFactory;
-use Laminas\Diactoros\ResponseFactory;
-use Laminas\Diactoros\ServerRequestFactory;
-use Laminas\Diactoros\StreamFactory;
-use Laminas\Diactoros\UploadedFileFactory;
-use Laminas\Diactoros\UriFactory;
+use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,14 +36,14 @@ use Psr\Http\Message\UriInterface;
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class LaminasPsr7Factory implements Psr17Interface
+class GuzzleHttpPsr7Factory implements Psr17Interface
 {
     /**
      * {@inheritdoc}
      */
     public function createRequest(string $method, $uri): RequestInterface
     {
-        return (new Request($method, $uri))->withRequest((new RequestFactory())->createRequest($method, $uri));
+        return new Request($method, $uri);
     }
 
     /**
@@ -55,7 +51,7 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createResponse(int $code = 200, string $reasonPhrase = 'Ok'): ResponseInterface
     {
-        return (new Response())->withResponse((new ResponseFactory())->createResponse($code, $reasonPhrase));
+        return new Response($code, [], null, '1.1', $reasonPhrase);
     }
 
     /**
@@ -71,8 +67,7 @@ class LaminasPsr7Factory implements Psr17Interface
             }
         }
 
-        return (new ServerRequest($method, $uri, [], null, '1.1', $serverParams))
-            ->withRequest((new ServerRequestFactory())->createServerRequest($method, $uri, $serverParams));
+        return new ServerRequest($method, $uri, [], null, '1.1', $serverParams);
     }
 
     /**
@@ -80,7 +75,9 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStream($content));
+        $stream = Utils::streamFor($content);
+
+        return (new Stream())->withStream($stream);
     }
 
     /**
@@ -88,7 +85,10 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStreamFromFile($file, $mode));
+        $resource = Utils::tryFopen($file, $mode);
+        $stream = Utils::streamFor($resource);
+
+        return (new Stream())->withStream($stream);
     }
 
     /**
@@ -96,7 +96,9 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStreamFromResource($resource));
+        $stream = Utils::streamFor($resource);
+
+        return (new Stream())->withStream($stream);
     }
 
     /**
@@ -109,12 +111,7 @@ class LaminasPsr7Factory implements Psr17Interface
         ?string $clientFilename = null,
         ?string $clientMediaType = null
     ): UploadedFileInterface {
-        if (null === $size) {
-            $size = $stream->getSize();
-        }
-
-        return (new UploadedFile('', $size, $error, $clientFilename, $clientMediaType))
-            ->withUploadFile((new UploadedFileFactory())->createUploadedFile($stream, $size, $error, $clientFilename, $clientMediaType));
+        return new UploadedFile($stream, $size ?? $stream->getSize(), $error, $clientFilename, $clientMediaType);
     }
 
     /**
@@ -122,7 +119,7 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createUri(string $uri = ''): UriInterface
     {
-        return (new Uri($uri))->withUri((new UriFactory())->createUri($uri));
+        return new Uri($uri);
     }
 
     /**
@@ -131,7 +128,8 @@ class LaminasPsr7Factory implements Psr17Interface
     public static function fromGlobalRequest(): ServerRequestInterface
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $uri = Psr7ServerRequest::getUriFromGlobals();
 
-        return (new ServerRequest($method, ''))->withRequest(ServerRequestFactory::fromGlobals());
+        return (new ServerRequest($method, $uri))->withRequest(Psr7ServerRequest::fromGlobals());
     }
 }
