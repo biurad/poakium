@@ -17,37 +17,33 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Interfaces;
 
+use Biurad\Http\Cookie;
+
 interface CookieFactoryInterface
 {
     /**
      * Checks if there is a cookie.
-     *
-     * @param CookieInterface $cookie
      */
-    public function hasCookie(CookieInterface $cookie): bool;
+    public function hasCookie(string $CookieName): bool;
 
     /**
      * Queue a cookie to send with the next response.
-     *
-     * @param mixed|CookieInterface $parameters
      */
-    public function addCookie(...$parameters): void;
+    public function addCookie(Cookie ...$cookies): void;
 
     /**
      * Removes a cookie from queue.
-     *
-     * @param CookieInterface $cookie
      */
-    public function removeCookie(CookieInterface $cookie): void;
+    public function removeCookie(string $CookieName): void;
 
     /**
-     * Finds and returns the cookie based on the name
+     * Finds and returns the cookie based on the name.
      *
      * @param string $name cookie name to search for
      *
-     * @return null|CookieInterface cookie that was found or null if not found
+     * @return Cookie|null cookie that was found or null if not found
      */
-    public function getCookieByName(string $name): ?CookieInterface;
+    public function getCookieByName(string $name): ?Cookie;
 
     /**
      * Checks if there are cookies.
@@ -62,27 +58,13 @@ interface CookieFactoryInterface
     public function getCookies(): array;
 
     /**
-     * Determine if a cookie has been queued.
+     * Finds matching cookies based on a callable.
      *
-     * @param string $CookieName The cookie's name
+     * @param callable(Cookie) $match A callable to match cookies
+     *
+     * @return Cookie[]
      */
-    public function hasQueuedCookie(string $CookieName): bool;
-
-    /**
-     * Remove a cookie from the queue.
-     *
-     * @param string $CookieName The cookie's name
-     */
-    public function unqueueCookie(string $CookieName): void;
-
-    /**
-     * Returns all matching cookies.
-     *
-     * @param CookieInterface $cookie
-     *
-     * @return CookieInterface[]
-     */
-    public function getMatchingCookies(CookieInterface $cookie): array;
+    public function getMatchingCookies(callable $match): array;
 
     /**
      * Removes all cookies.

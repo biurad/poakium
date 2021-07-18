@@ -19,7 +19,6 @@ namespace Biurad\Http\Factory;
 
 use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
-use Biurad\Http\Interfaces\CookieInterface;
 
 /**
  * This class is designed to hold a set of Cookies,
@@ -28,7 +27,7 @@ use Biurad\Http\Interfaces\CookieInterface;
  *
  * Implementation of the class, is quite different from other php
  * cookie handlers. This can send cookies only to Http response
- * headers and not have anything doing with Http resquest headers.
+ * headers and not have anything doing with Http request headers.
  *
  * But it can also be implemented to automatically fetch cookies
  * from Http request cookies and return the cookie needed
@@ -38,101 +37,41 @@ use Biurad\Http\Interfaces\CookieInterface;
  */
 class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInterface
 {
-    /**
-     * The default path (if specified).
-     *
-     * @var string
-     */
-    protected $path = '/';
+    /** @var Cookie[] */
+    protected $cookies = [];
 
     /**
-     * The default domain (if specified).
-     *
-     * @var null|string
+     * {@inheritdoc}
      */
-    protected $domain;
-
-    /**
-     * The default secure setting (defaults to false).
-     *
-     * @var bool
-     */
-    protected $secure = false;
-
-    /**
-     * All of the cookies queued for sending.
-     *
-     * @var \SplObjectStorage
-     */
-    protected $cookies;
-
-    public function __construct()
+    public function hasCookie(string $cookieName): bool
     {
-        $this->cookies = new \SplObjectStorage();
+        return isset($this->cookies[$cookieName]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function hasCookie(CookieInterface $cookie): bool
+    public function addCookie(Cookie ...$cookies): void
     {
-        return $this->cookies->contains($cookie);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addCookie(...$parameters): void
-    {
-        $cookie = $this->resolveCookie($parameters);
-
-        if (!$cookie instanceof CookieInterface) {
-            throw new \UnexpectedValueException(
-                \sprintf('Expected cookie to be instance of %s', CookieInterface::class)
-            );
-        }
-
-        if (!$this->hasCookie($cookie)) {
-            $cookies = $this->getMatchingCookies($cookie);
-
-            foreach ($cookies as $matchingCookie) {
-                if (
-                    $cookie->getValue() !== $matchingCookie->getValue() ||
-                    $cookie->getMaxAge() > $matchingCookie->getMaxAge()
-                ) {
-                    $this->removeCookie($matchingCookie);
-
-                    continue;
-                }
-            }
-
-            if (null !== $cookie->getValue()) {
-                $this->cookies->attach($cookie);
-            }
+        foreach ($cookies as $cookie) {
+            $this->cookies[$cookie->getName()] = $cookie;
         }
     }
 
     /**
      * {@inheritdoc}
      */
-    public function removeCookie(CookieInterface $cookie): void
+    public function removeCookie(string $cookieName): void
     {
-        $this->cookies->detach($cookie);
+        unset($this->cookies[$cookieName]);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCookieByName(string $name): ?CookieInterface
+    public function getCookieByName(string $name): ?Cookie
     {
-        /** @var CookieInterface $cookie */
-        foreach ($this->cookies as $cookie) {
-            if ($cookie->getName() !== null && \strcasecmp($cookie->getName(), $name) === 0) {
-                return $cookie;
-            }
-        }
-
-        return null;
+        return $this->cookies[$name] ?? null;
     }
 
     /**
@@ -140,7 +79,7 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
      */
     public function hasCookies(): bool
     {
-        return $this->cookies->count() > 0;
+        return !empty($this->cookies);
     }
 
     /**
@@ -148,59 +87,11 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
      */
     public function getCookies(): array
     {
-        $match = function ($matchCookie) {
+        $match = static function (Cookie $matchCookie): bool {
             return true;
         };
 
-        return $this->findMatchingCookies($match);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function hasQueuedCookie(string $CookieName): bool
-    {
-        return null !== $this->getCookieByName($CookieName);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function unqueueCookie(string $CookieName): void
-    {
-        if (!$this->hasQueuedCookie($CookieName)) {
-            return;
-        }
-
-        $this->removeCookie($this->getCookieByName($CookieName));
-    }
-
-    /**
-     * Set the default path and domain for the jar.
-     *
-     * @param string $path
-     * @param string $domain
-     * @param bool   $secure
-     *
-     * @return $this
-     */
-    public function setDefaultPathAndDomain(string $path, string $domain, bool $secure = false)
-    {
-        [$this->path, $this->domain, $this->secure] = [$path, $domain, $secure];
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMatchingCookies(CookieInterface $cookie): array
-    {
-        $match = function ($matchCookie) use ($cookie) {
-            return $matchCookie->matches($cookie);
-        };
-
-        return $this->findMatchingCookies($match);
+        return $this->getMatchingCookies($match);
     }
 
     /**
@@ -208,75 +99,31 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
      */
     public function clear(): void
     {
-        $this->cookies = new \SplObjectStorage();
+        $this->cookies = [];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function count()
+    public function count(): int
     {
-        return $this->cookies->count();
+        return \count($this->cookies);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return \ArrayIterator<int,Cookie>
+     */
+    public function getIterator(): \ArrayIterator
+    {
+        return new \ArrayIterator(\array_values($this->cookies));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getIterator()
-    {
-        return clone $this->cookies;
-    }
-
-    /**
-     * Create a new cookie instance.
-     *
-     * @param string                            $name
-     * @param string                            $value
-     * @param null|string                       $domain
-     * @param null|string                       $path
-     * @param int                               $maxAge
-     * @param null|DateTimeInterface|int|string $expires
-     * @param bool                              $secure
-     * @param bool                              $discard
-     * @param bool                              $httpOnly
-     * @param string                            $sameSite
-     *
-     * @return CookieInterface
-     */
-    protected function setCookie(
-        $name,
-        $value,
-        $domain = null,
-        $path = null,
-        $maxAge = null,
-        $expires = null,
-        $secure = false,
-        $discard = false,
-        $httpOnly = false,
-        $sameSite = null
-    ): CookieInterface {
-        return new Cookie([
-            'Name'     => $name,
-            'Value'    => $value,
-            'Domain'   => $domain ?? $this->domain,
-            'Path'     => $path ?? $this->path,
-            'Max-Age'  => $maxAge,
-            'Expires'  => $expires,
-            'Secure'   => $secure ?? $this->secure,
-            'Discard'  => $discard,
-            'HttpOnly' => $httpOnly,
-            'SameSite' => $sameSite,
-        ]);
-    }
-
-    /**
-     * Finds matching cookies based on a callable.
-     *
-     * @param callable $match
-     *
-     * @return Cookie[]
-     */
-    protected function findMatchingCookies(callable $match)
+    public function getMatchingCookies(callable $match): array
     {
         $cookies = [];
 
@@ -287,30 +134,5 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
         }
 
         return $cookies;
-    }
-
-    /**
-     * @param CookieInterface|mixed[] $parameters
-     *
-     * @return CookieInterface
-     */
-    protected function resolveCookie($parameters)
-    {
-        $cookie = \reset($parameters);
-
-        if (!$cookie instanceof CookieInterface) {
-            /** @var CookieInterface $cookie */
-            $cookie = \call_user_func_array([$this, 'setCookie'], $parameters);
-        }
-
-        if (null === $cookie->getDomain() && null !== $this->domain) {
-            $cookie->setDomain($this->domain);
-        }
-
-        if (null === $cookie->getSecure()) {
-            $cookie->setSecure($this->secure);
-        }
-
-        return $cookie;
     }
 }
