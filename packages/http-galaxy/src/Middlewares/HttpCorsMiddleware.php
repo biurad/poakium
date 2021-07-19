@@ -37,7 +37,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  *
  * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class AccessControlMiddleware implements MiddlewareInterface
+class HttpCorsMiddleware implements MiddlewareInterface
 {
     /** @var RequestMatcher */
     protected $matcher;
