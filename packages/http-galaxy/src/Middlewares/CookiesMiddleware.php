@@ -21,6 +21,7 @@ use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
@@ -29,160 +30,119 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-final class CookiesMiddleware implements MiddlewareInterface
+class CookiesMiddleware implements MiddlewareInterface
 {
     // request attribute
     public const ATTRIBUTE = Cookie::class;
 
     /**
-     * Queued Cookie storage.
+     * The names of the cookies that should be deciphered.
      *
-     * @var CookieFactoryInterface
+     * @var string[]
      */
+    protected $excludeCookies = [];
+
+    /** @var string */
+    private $prefix;
+
+    /** @var CookieFactoryInterface */
     private $cookieJar;
 
-    /**
-     * A callable encrypter
-     *
-     * @var null|callable(string|null,bool)
-     */
-    private $encrypter;
+    /** @var callable(string|null,string,bool) */
+    private $encipher;
 
     /**
-     * @param CookieFactoryInterface $cookieJar
-     * @param null|callable          $encrypter
+     * @param callable(string|null,string,bool)|null $encipher A callable encipher, default is base64 encoder
      */
-    public function __construct(CookieFactoryInterface $cookieJar, ?callable $encrypter = null)
+    public function __construct(CookieFactoryInterface $cookieJar, string $prefix = 'bf_cookie_', callable $encipher = null)
     {
+        $this->prefix = $prefix;
         $this->cookieJar = $cookieJar;
-        $this->encrypter = $encrypter;
+
+        $this->encipher = $encipher ?? static function (string $value, string $key, bool $encode): string {
+            if ($encode) {
+                return \base64_encode($value);
+            }
+
+            if (false === $decoded = \base64_decode($value, true)) {
+                throw new \RuntimeException("The \"{$key}\" cookie value was tampered with.");
+            }
+
+            return $decoded;
+        };
     }
 
     /**
-     * {@inheritDoc}
+     * Disable encryption for the given cookie name(s).
+     *
+     * @param string ... $names The cookie names
+     */
+    public function excludeEncodingFor(string ...$names): void
+    {
+        $this->excludeCookies = \array_merge($this->excludeCookies, $names);
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
-        // Decrypt the cookie values on request.
-        $response = $handler->handle($this->resolveCookies($request));
-
-        // Encrypt all cookies queued to the response
-        return $this->getCookies($request, $response);
-    }
-
-    /**
-     * Encrypt the cookies on an outgoing response.
-     *
-     * @param Request           $request
-     * @param ResponseInterface $response
-     *
-     * @return ResponseInterface
-     */
-    private function getCookies(Request $request, ResponseInterface $response): ResponseInterface
-    {
-        $headers = $response->getHeader('Set-Cookie');
-
-        foreach ($this->cookieJar->getCookies() as $cookie) {
-            if ($cookie->isExpired()) {
-                continue;
-            }
-
-            if (!$cookie->matchesDomain($request->getUri()->getHost())) {
-                continue;
-            }
-
-            if (!$cookie->matchesPath($request->getUri()->getPath())) {
-                continue;
-            }
-
-            if ($cookie->getSecure() && ('https' !== $request->getUri()->getScheme())) {
-                continue;
-            }
-
-            if (null !== $this->encrypter) {
-                $cookie->setValue('ecp@' . ($this->encrypter)($cookie->getValue(), true));
-            }
-
-            $headers[] = (string) $cookie;
-        }
-
-        if (!empty($headers)) {
-            $response = $response->withHeader('Set-Cookie', $headers);
-        }
-
-        return $response;
-    }
-
-    /**
-     * Decrypt the cookies on the request.
-     *
-     * @param Request $request
-     *
-     * @return Request
-     */
-    private function resolveCookies(Request $request): Request
-    {
-        $cookies = [];
-        $request = $request->withAttribute(self::ATTRIBUTE, $this->cookieJar);
-
-        if (null === $this->encrypter) {
-            return $request;
-        }
+        $cookieParams = [];
 
         // Handle an incoming request cookie.
         foreach ($request->getCookieParams() as $key => $cookie) {
-            try {
-                $cookies[$key] = $this->decryptCookie($cookie);
-            } catch (\Throwable $e) {
-                // If cookie failed to decrypt, which means the cookie
-                // wasn't encrypted. Hence, we will pass the cookie values
-                // in raw state.
-                $cookies[$key] = $cookie;
+            if (!\is_string($cookie) || false === \strpos($cookie, $this->prefix)) {
+                $cookieParams[$key] = $cookie;
+
+                continue;
             }
+
+            // Unpack all cookies into request and decrypt prefixed cookies.
+            $cookieParams[$key] = ($this->encipher)(\substr($cookie, \strlen($this->prefix)), $key, false);
         }
 
-        // Send Decrypted cookies to request.
-        return $request->withCookieParams($cookies);
+        $request = $request->withCookieParams($cookieParams)->withAttribute(self::ATTRIBUTE, $this->cookieJar);
+
+        return $this->encodeResponseSetCookieHeaders($request->getUri(), $handler->handle($request));
     }
 
     /**
-     * Decrypt the given cookie and return the value.
-     *
-     * @param string                      $name
-     * @param array<string,string>|string $cookie
-     *
-     * @return array<string,string>|string
+     * Unpack cookies from cookies factory into response.
      */
-    private function decryptCookie($cookie)
+    public function encodeResponseSetCookieHeaders(UriInterface $requestUri, ResponseInterface $response): ResponseInterface
     {
-        if (\is_array($cookie)) {
-            return $this->decryptArray($cookie);
-        }
+        $matchCookie = static function (Cookie $cookie) use ($requestUri): bool {
+            $cookiePath = $cookie->getPath();
+            $cookieDomain = $cookie->getDomain();
 
-        if ('ecp@' === \substr($cookie, 0, 3)) {
-            $cookie = ($this->encrypter)(\substr($cookie, 3), false);
-        }
-
-        return $cookie;
-    }
-
-    /**
-     * Decrypt an array based cookie.
-     *
-     * @param array<string,string> $cookie
-     *
-     * @return array<string,string>
-     */
-    private function decryptArray(array $cookie)
-    {
-        $decrypted = [];
-
-        foreach ($cookie as $key => $value) {
-            if (\is_string($value)) {
-                $decrypted[$key] = $this->decryptCookie($value);
+            if ('/' === $cookiePath || null === $cookiePath || $cookiePath === $requestUri->getPath()) {
+                goto check_domain;
             }
+
+            check_domain:
+            if (null === $cookieDomain || $cookieDomain === $requestUri->getHost()) {
+                return true;
+            }
+
+            if ('.' === $cookieDomain[0] && 1 === \preg_match('/' . \strtr($cookieDomain, ['.' => '\\.']) . '$/', $requestUri->getHost())) {
+                return true;
+            }
+
+            return false;
+        };
+
+        $cookieCollection = $this->cookieJar->fromResponse($response);
+        $response = $response->withoutHeader('Set-Cookie'); // Remove Set-Cookie header from response ...
+
+        foreach ($cookieCollection->getMatchingCookies($matchCookie) as $cookie) {
+            if (!\in_array($cookie->getName(), $this->excludeCookies, true)) {
+                $encryptedValue = $this->prefix . ($this->encipher)($cookie->getValue(), $cookie->getName(), true);
+                $cookie = $cookie->withRawValue($encryptedValue);
+            }
+
+            $response = $cookie->addToResponse($response);
         }
 
-        return $decrypted;
+        return $response;
     }
 }
