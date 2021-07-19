@@ -19,6 +19,7 @@ namespace Biurad\Http\Factory;
 
 use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * This class is designed to hold a set of Cookies,
@@ -134,5 +135,18 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
         }
 
         return $cookies;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function fromResponse(ResponseInterface $response): CookieFactoryInterface
+    {
+        foreach ($response->getHeader('Set-Cookie') as $setCookieString) {
+            $cookie = Cookie::fromCookieString($setCookieString);
+            $this->cookies[$cookie->getName()] = $cookie;
+        }
+
+        return $this;
     }
 }

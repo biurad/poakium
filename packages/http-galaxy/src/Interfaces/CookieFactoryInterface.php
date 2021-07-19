@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Http\Interfaces;
 
 use Biurad\Http\Cookie;
+use Psr\Http\Message\ResponseInterface;
 
 interface CookieFactoryInterface
 {
@@ -53,7 +54,7 @@ interface CookieFactoryInterface
     /**
      * Returns the cookies which have been queued for the next request.
      *
-     * @return CookieInterface[]
+     * @return Cookie[]
      */
     public function getCookies(): array;
 
@@ -65,6 +66,13 @@ interface CookieFactoryInterface
      * @return Cookie[]
      */
     public function getMatchingCookies(callable $match): array;
+
+    /**
+     * Populates the cookie factory from a HttP response Set-Cookie header.
+     *
+     * @param ResponseInterface $response The response object to populate from.
+     */
+    public function fromResponse(ResponseInterface $response): self;
 
     /**
      * Removes all cookies.
