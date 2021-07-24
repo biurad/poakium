@@ -23,23 +23,72 @@ use Psr\Http\Message\UploadedFileInterface;
 
 class UploadedFile implements UploadedFileInterface
 {
-    use Traits\UploadedFileDecoratorTrait;
+    /** @var UploadedFileInterface */
+    private $uploadedFile;
 
     /**
      * @param resource|StreamInterface|string $streamOrFile
-     * @param int                             $size
-     * @param int                             $errorStatus
-     * @param null|string                     $clientFilename
-     * @param null|string                     $clientMediaType
      */
-    public function __construct($streamOrFile, $size, $errorStatus, $clientFilename = null, $clientMediaType = null)
+    public function __construct($streamOrFile, ?int $size, int $errorStatus, string $clientFilename = null, string $clientMediaType = null)
     {
-        $this->uploadedFile = new Psr7UploadedFile(
-            $streamOrFile,
-            $size,
-            $errorStatus,
-            $clientFilename,
-            $clientMediaType
-        );
+        $this->uploadedFile = new Psr7UploadedFile($streamOrFile, $size, $errorStatus, $clientFilename, $clientMediaType);
+    }
+
+    /**
+     * Exchanges the underlying uploadedFile with another.
+     */
+    public function withUploadFile(UploadedFileInterface $uploadedFile): UploadedFileInterface
+    {
+        $this->uploadedFile = $uploadedFile;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStream(): StreamInterface
+    {
+        return $this->uploadedFile->getStream();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function moveTo($targetPath): void
+    {
+        $this->uploadedFile->moveTo($targetPath);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSize(): ?int
+    {
+        return $this->uploadedFile->getSize();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getError(): int
+    {
+        return $this->uploadedFile->getError();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getClientFilename(): ?string
+    {
+        return $this->uploadedFile->getClientFilename();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getClientMediaType(): ?string
+    {
+        return $this->uploadedFile->getClientMediaType();
     }
 }
