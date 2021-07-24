@@ -23,119 +23,35 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 /**
- * Handles Default Settings for Request and Response
+ * Handles Default Headers for Request and Response.
  *
- * @author  Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class HttpMiddleware implements MiddlewareInterface
 {
-    /** @var array */
+    /** @var array<string,array<string,mixed>> */
     private $config;
 
-    public function __construct(array $config = [])
+    public function __construct(array $headers = [])
     {
-        $this->config = $this->normalizeConfig($config);
+        $this->config = $headers += ['response' => [], 'request' => []];
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
-        // Append headers to request headers...
-        $this->appendRequestHeaders($request, $this->config['headers']['request'] ?? []);
+        foreach ($this->config['request'] ?? [] as $reqHeader => $reqValue) {
+            $request = $request->withHeader($reqHeader, $reqValue);
+        }
 
         $response = $handler->handle($request);
-        $this->resolveResponse($response, $this->config);
+
+        foreach ($this->config['response'] ?? [] as $resHeader => $resValue) {
+            $request = $request->withHeader($resHeader, $resValue);
+        }
 
         return $response;
-    }
-
-    private function appendRequestHeaders(Request &$request, array $headers): void
-    {
-        foreach ($headers as $name => $value) {
-            $request = $request->withHeader($name, $value);
-        }
-    }
-
-    private function resolveResponse(ResponseInterface &$response, array $config): void
-    {
-        $policies   = $config['policies'] ?? [];
-        $headers    = \array_map('strval', $config['headers']['response'] ?? []);
-
-        if (null !== $frames = $policies['frame_policy']) {
-            if (\preg_match('#^https?:#', $policies['frame_policy'])) {
-                $frames = "ALLOW-FROM $frames";
-            }
-
-            $headers['X-Frame-Options'] = false === $frames ? 'DENY' : $frames;
-        }
-
-        foreach (['content_security_policy', 'csp_report_only'] as $key) {
-            $cpKey = ($key === 'content_security_policy' ? '' : '-Report-Only');
-
-            if (!isset($policies[$key])) {
-                continue;
-            }
-
-            $headers['Content-Security-Policy' . $cpKey] = $value = $this->buildPolicy($policies[$key]);
-        }
-
-        if (isset($config['feature_policy'])) {
-            $headers['Feature-Policy'] = $this->buildPolicy($config['feature_policy']);
-        }
-
-        if (isset($config['referrer_policy'])) {
-            $headers['Referrer-Policy'] = \implode(', ', $config['referrer_policy']);
-        }
-
-        foreach ($headers as $key => $value) {
-            if ($value !== '') {
-                $response = $response->withHeader($key, $value);
-            }
-        }
-    }
-
-    private function buildPolicy(array $config): string
-    {
-        $nonQuoted = ['require-sri-for' => 1, 'sandbox' => 1];
-        $value     = '';
-
-        foreach ($config as $type => $policy) {
-            if ($policy === false) {
-                continue;
-            }
-
-            $policy = $policy === true ? [] : (array) $policy;
-            $value .= $type;
-
-            foreach ($policy as $item) {
-                $value .= !isset($nonQuoted[$type]) && \preg_match('#^[a-z-]+\z#', $item) ? " '$item'" : " $item";
-            }
-
-            $value .= '; ';
-        }
-
-        return $value;
-    }
-
-    /**
-     * Normalize the options for usage
-     *
-     * @param array $options
-     *
-     * @return array
-     */
-    private function normalizeConfig(array $options = []): array
-    {
-        $options = \array_merge([
-            'headers'      => ['response' => [], 'request' => []],
-            'policies'     => [
-                'frame_policy' => null,
-            ],
-        ], $options);
-
-        return $options;
     }
 }
