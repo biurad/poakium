@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use GuzzleHttp\Exception\RequestException;
+use Biurad\Http\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -33,54 +33,49 @@ final class ErrorHandlerMiddleware implements MiddlewareInterface
     /** @var bool */
     private $throwDisabled;
 
-    /**
-     * @param bool $disable
-     */
-    public function __construct(bool $disable = false)
+    public function __construct(bool $disable = true)
     {
         $this->throwDisabled = $disable;
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {
-        $response = $handler->handle($request);
+        try {
+            $response = $handler->handle($request);
 
-        // Incase response is empty
-        if ($this->isResponseEmpty($response)) {
-            // prevent PHP from sending the Content-Type header based on default_mimetype
-            \ini_set('default_mimetype', '');
+            // Incase response is empty
+            if ($this->isResponseEmpty($response)) {
+                // prevent PHP from sending the Content-Type header based on default_mimetype
+                \ini_set('default_mimetype', '');
 
-            $response = $response
-                ->withoutHeader('Allow')
-                ->withoutHeader('Content-MD5')
-                ->withoutHeader('Content-Type')
-                ->withoutHeader('Content-Length');
+                $response = $response->withoutHeader('Allow')->withoutHeader('Content-MD5')->withoutHeader('Content-Type')->withoutHeader('Content-Length');
+            }
+        } catch (\Throwable $e) {
+            if ($this->throwDisabled) {
+                throw $e;
+            }
+
+            throw RequestException::create($request, null, $e);
         }
 
-        // If is below 4XX Responses code will never throw an exception
-        if (true !== $this->throwDisabled || $response->getStatusCode() < 400) {
-            return $response;
+        // If is >= 4XX Response status code, avoid throwing an exception
+        if (!$this->throwDisabled && $response->getStatusCode() >= 400) {
+            throw RequestException::create($request, $response);
         }
 
-        throw RequestException::create($request, $response);
+        return $response;
     }
 
     /**
-     * Asserts response body is empty or status code is 204, 205 or 304
-     *
-     * @param ResponseInterface $response
-     *
-     * @return bool
+     * Asserts response body is empty or status code is 204, 205 or 304.
      */
     private function isResponseEmpty(ResponseInterface $response): bool
     {
         $contents = (string) $response->getBody();
 
-        return empty($contents) ||
-            ($response->getStatusCode() >= 100 && $response->getStatusCode() < 200) ||
-            (\in_array($response->getStatusCode(), [204, 304]));
+        return empty($contents) || ($response->getStatusCode() >= 100 && $response->getStatusCode() < 200) || (\in_array($response->getStatusCode(), [204, 304]));
     }
 }

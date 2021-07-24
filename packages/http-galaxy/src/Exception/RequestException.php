@@ -53,7 +53,7 @@ class RequestException extends \RuntimeException
     public static function create(RequestInterface $request, ResponseInterface $response = null, \Throwable $previous = null): self
     {
         if (null === $response) {
-            return new self('Error completing request' . null !== $previous ? ': ' .$previous->getMessage() : '.', $request, $previous);
+            return new self('Error completing request' . (null !== $previous ? ': ' . $previous->getMessage() : '.'), $request, $previous);
         }
 
         $level = (int) \floor($response->getStatusCode() / 100);
