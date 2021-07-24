@@ -19,12 +19,14 @@ namespace Biurad\Http\Factory;
 
 use Biurad\Http\Response;
 use Biurad\Http\ServerRequest as Request;
-use Biurad\Http\Stream;
-use GuzzleHttp\Exception;
+use Biurad\Http\ServerRequest;
 use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\Uri;
+use Laminas\Diactoros\RelativeStream;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -38,6 +40,14 @@ class Psr7Bridge
 
     private const LF = "\n";
 
+    /** @var StreamFactoryInterface */
+    private $streamFactory;
+
+    public function __construct(StreamFactoryInterface $streamFactory)
+    {
+        $this->streamFactory = $streamFactory;
+    }
+
     /**
      * Serialize a response message to an array.
      */
@@ -50,48 +60,6 @@ class Psr7Bridge
             'headers' => $response->getHeaders(),
             'body' => (string) $response->getBody(),
         ];
-    }
-
-    /**
-     * Deserialize a response array to a response instance.
-     *
-     * @throws \UnexpectedValueException when cannot deserialize response
-     */
-    public static function responseFromArray(array $serializedResponse): Response
-    {
-        try {
-            $body = new Stream(\fopen('php://memory', 'wb+'));
-            $body->write(self::getValueFromKey($serializedResponse, 'body'));
-
-            $statusCode = self::getValueFromKey($serializedResponse, 'status_code');
-            $headers = self::getValueFromKey($serializedResponse, 'headers');
-            $protocolVersion = self::getValueFromKey($serializedResponse, 'protocol_version');
-            $reasonPhrase = self::getValueFromKey($serializedResponse, 'reason_phrase');
-
-            return new Response($statusCode, $headers, $body, $protocolVersion, $reasonPhrase);
-        } catch (\Throwable $exception) {
-            throw new \UnexpectedValueException('Cannot deserialize response', $exception->getCode(), $exception);
-        }
-    }
-
-    /**
-     * Parse a response from a stream.
-     *
-     * @throws Exception\InvalidArgumentException when the stream is not readable
-     * @throws \UnexpectedValueException          when errors occur parsing the message
-     */
-    public static function fromStreamToResponse(StreamInterface $stream): Response
-    {
-        if (!$stream->isReadable() || !$stream->isSeekable()) {
-            throw new Exception\InvalidArgumentException('Message stream must be both readable and seekable');
-        }
-
-        $stream->rewind();
-
-        [$version, $status, $reasonPhrase] = self::getStatusLine($stream);
-        [$headers, $body] = self::splitStream($stream);
-
-        return new Response($body, $status, $headers, $version, $reasonPhrase);
     }
 
     /**
@@ -110,41 +78,109 @@ class Psr7Bridge
     }
 
     /**
-     * Deserialize a request array to a request instance.
+     * Serialize a request message to an array.
+     */
+    public static function serverRequestToArray(ServerRequestInterface $request): array
+    {
+        return self::requestToArray($request) + [
+            'attributes' => $request->getAttributes(),
+            'cookie_params' => $request->getCookieParams(),
+            'server_params' => $request->getServerParams(),
+            'uploaded_files' => $request->getUploadedFiles(),
+            'parsed_body' => $request->getParsedBody(),
+        ];
+    }
+
+    /**
+     * Deserialize a response array to a response instance.
      *
      * @throws \UnexpectedValueException when cannot deserialize response
      */
-    public static function requestFromArray(array $serializedRequest): Request
+    public function responseFromArray(array $serializedResponse): Response
     {
         try {
-            $uri = self::getValueFromKey($serializedRequest, 'uri');
-            $method = self::getValueFromKey($serializedRequest, 'method');
-            $body = new Stream(\fopen('php://memory', 'wb+'));
-            $body->write(self::getValueFromKey($serializedRequest, 'body'));
-            $headers = self::getValueFromKey($serializedRequest, 'headers');
-            $requestTarget = self::getValueFromKey($serializedRequest, 'request_target');
-            $protocolVersion = self::getValueFromKey($serializedRequest, 'protocol_version');
+            $body = $this->streamFactory->createStream(self::getValueFromKey($serializedResponse, 'body'));
 
-            return (new Request($method, $uri, $headers, $body, $protocolVersion))
-                ->withRequestTarget($requestTarget);
+            $statusCode = self::getValueFromKey($serializedResponse, 'status_code');
+            $headers = self::getValueFromKey($serializedResponse, 'headers');
+            $protocolVersion = self::getValueFromKey($serializedResponse, 'protocol_version');
+            $reasonPhrase = self::getValueFromKey($serializedResponse, 'reason_phrase');
+
+            return new Response($statusCode, $headers, $body, $protocolVersion, $reasonPhrase);
         } catch (\Throwable $exception) {
-            throw new \UnexpectedValueException('Cannot deserialize request', $exception->getCode(), $exception);
+            throw new \UnexpectedValueException('Cannot deserialize response', $exception->getCode(), $exception);
         }
     }
 
     /**
-     * Deserialize a request stream to a request instance.
+     * Parse a response from a string.
      *
-     * @throws Exception\InvalidArgumentException if the message stream is not
-     *                                            readable or seekable
-     * @throws \UnexpectedValueException          if an invalid request line is detected
+     * @throws \UnexpectedValueException when errors occur parsing the message
      */
-    public static function fromStreamToRequest(StreamInterface $stream): Request
+    public function responseFromString(string $response): Response
     {
-        if (!$stream->isReadable() || !$stream->isSeekable()) {
-            throw new Exception\InvalidArgumentException('Message stream must be both readable and seekable');
+        \fwrite($resource = \fopen('php://temp', 'r+'), $response);
+
+        $stream = $this->streamFactory->createStreamFromResource($resource);
+        $stream->rewind();
+
+        [$version, $status, $reasonPhrase] = self::getStatusLine($stream);
+        [$headers, $body] = self::splitStream($stream);
+
+        return new Response($status, $headers, $body, $version, $reasonPhrase);
+    }
+
+    /**
+     * Deserialize a request array to a request instance.
+     *
+     * @throws \UnexpectedValueException when cannot deserialize response
+     */
+    public function requestFromArray(array $serializedRequest): Request
+    {
+        try {
+            $uri = self::getValueFromKey($serializedRequest, 'uri');
+            $method = self::getValueFromKey($serializedRequest, 'method');
+            $body = $this->streamFactory->createStream(self::getValueFromKey($serializedRequest, 'body'));
+            $headers = self::getValueFromKey($serializedRequest, 'headers');
+            $requestTarget = self::getValueFromKey($serializedRequest, 'request_target');
+            $protocolVersion = self::getValueFromKey($serializedRequest, 'protocol_version');
+
+            $request = (new Request($method, $uri, $headers, $body, $protocolVersion, $serializedRequest['server_params'] ?? $_SERVER));
+        } catch (\Throwable $exception) {
+            throw new \UnexpectedValueException('Cannot deserialize request', $exception->getCode(), $exception);
         }
 
+        if (isset($serializedRequest['attributes'])) {
+            foreach ($serializedRequest['attributes'] as $attrKey => $attrValue) {
+                $request = $request->withAttribute($attrKey, $attrValue);
+            }
+        }
+
+        if (isset($serializedRequest['cookie_params'])) {
+            $request = $request->withCookieParams($serializedRequest['cookie_params']);
+        }
+
+        if (isset($serializedRequest['uploaded_files'])) {
+            $request = $request->withUploadedFiles($serializedRequest['uploaded_files']);
+        }
+
+        if (isset($serializedRequest['parsed_body'])) {
+            $request = $request->withParsedBody($serializedRequest['parsed_body']);
+        }
+
+        return $request->withRequestTarget($requestTarget);
+    }
+
+    /**
+     * Parse a server request from a string.
+     *
+     * @throws \UnexpectedValueException when errors occur parsing the message
+     */
+    public function requestFromString(string $request): ServerRequest
+    {
+        \fwrite($resource = \fopen('php://temp', 'r+'), $request);
+
+        $stream = $this->streamFactory->createStreamFromResource($resource);
         $stream->rewind();
 
         [$method, $requestTarget, $version] = self::getRequestLine($stream);
@@ -152,7 +188,7 @@ class Psr7Bridge
 
         [$headers, $body] = self::splitStream($stream);
 
-        return (new Request($method, $uri, $headers, $body, $version))->withRequestTarget($requestTarget);
+        return (new Request($method, $uri, $headers, $body, $version, $_SERVER))->withRequestTarget($requestTarget);
     }
 
     /**
@@ -247,8 +283,8 @@ class Psr7Bridge
             $headers[$currentHeader][] = $value . \ltrim($line);
         }
 
-        // use RelativeStream to avoid copying initial stream into memory
-        return [$headers, new LimitStream($stream, -1, $stream->tell())];
+        // use a limiting stream to avoid copying initial stream into memory
+        return [$headers, \class_exists(RelativeStream::class) ? new RelativeStream($stream, $stream->tell()) : new LimitStream($stream, -1, $stream->tell())];
     }
 
     /**
@@ -262,11 +298,9 @@ class Psr7Bridge
      */
     private static function getRequestLine(StreamInterface $stream): array
     {
-        $requestLine = self::getLine($stream);
-
         \preg_match(
             '#^(?P<method>[!\#$%&\'*+.^_`|~a-zA-Z0-9-]+) (?P<target>[^\s]+) HTTP/(?P<version>[1-9]\d*\.\d+)$#',
-            $requestLine,
+            self::getLine($stream),
             $matches
         );
 
@@ -322,11 +356,9 @@ class Psr7Bridge
      */
     private static function getStatusLine(StreamInterface $stream): array
     {
-        $line = self::getLine($stream);
-
         \preg_match(
             '#^HTTP/(?P<version>[1-9]\d*\.\d) (?P<status>[1-5]\d{2})(\s+(?P<reason>.+))?$#',
-            $line,
+            self::getLine($stream),
             $matches
         );
 
