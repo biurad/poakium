@@ -17,12 +17,11 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use Biurad\Http\Interfaces\RequestMatcherInterface;
-use Biurad\Http\Strategies\RequestMatcher;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
@@ -39,9 +38,6 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  */
 class HttpCorsMiddleware implements MiddlewareInterface
 {
-    /** @var RequestMatcher */
-    protected $matcher;
-
     /** @var array<string,mixed> */
     protected $options;
 
@@ -56,9 +52,8 @@ class HttpCorsMiddleware implements MiddlewareInterface
         'expires',
     ];
 
-    public function __construct(array $options = [], RequestMatcherInterface $requestMatcher = null)
+    public function __construct(array $options = [])
     {
-        $this->matcher = $requestMatcher ?? new RequestMatcher();
         $this->options = $this->normalizeOptions($options);
     }
 
@@ -70,7 +65,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
         $response = $handler->handle($request);
 
         // Check if we're dealing with CORS and if we should handle it
-        if (!$this->isMatchingPath($request)) {
+        if (!$this->isMatchingPath($request->getUri(), $request->getServerParams()['PATH_INFO'] ?? '')) {
             return $response;
         }
 
@@ -206,23 +201,21 @@ class HttpCorsMiddleware implements MiddlewareInterface
     /**
      * The the path from the config, to see if the CORS Service should run.
      */
-    private function isMatchingPath(RequestInterface $request): bool
+    private function isMatchingPath(UriInterface $requestUri, string $pathInfo): bool
     {
         if (true === $paths = $this->options['allow_paths']) {
             return true;
         }
 
+        // Support matching sub-directory sites ...
+        $requestPath = !empty($pathInfo) ? $pathInfo : $requestUri->getPath();
+
         foreach ($paths as $pathRegexp => $options) {
-            $this->matcher->matchPath($pathRegexp);
-
-            // skip if the host is not matching
-            $this->matcher->matchHost($options['hosts'] ?? []);
-
-            if ($this->matcher->matches($request)) {
-                $this->options = \array_merge($this->options, $options);
-
-                return true;
+            if (1 !== \preg_match('/' . $pathRegexp . '/', $requestPath)) {
+                return false;
             }
+
+            $this->options = \array_merge($this->options, $options);
         }
 
         return false;
