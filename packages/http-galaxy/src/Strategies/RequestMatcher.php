@@ -34,13 +34,13 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class RequestMatcher implements RequestMatcherInterface
 {
-    /** @var null|string */
+    /** @var string|null */
     private $path;
 
-    /** @var null|string|string[] */
+    /** @var string|string[]|null */
     private $hosts = [];
 
-    /** @var null|int */
+    /** @var int|null */
     private $port;
 
     /** @var string[] */
@@ -88,7 +88,7 @@ class RequestMatcher implements RequestMatcherInterface
     /**
      * Adds a check for the HTTP scheme.
      *
-     * @param null|string|string[] $scheme An HTTP scheme or an array of HTTP schemes
+     * @param string|string[]|null $scheme An HTTP scheme or an array of HTTP schemes
      */
     public function matchScheme($scheme): void
     {
@@ -108,7 +108,7 @@ class RequestMatcher implements RequestMatcherInterface
     /**
      * Adds a check for the the URL port.
      *
-     * @param null|int $port The port number to connect to
+     * @param int|null $port The port number to connect to
      */
     public function matchPort(?int $port): void
     {
@@ -136,7 +136,7 @@ class RequestMatcher implements RequestMatcherInterface
     /**
      * Adds a check for the client IP.
      *
-     * @param null|string|string[] $ips A specific IP address or a range specified using IP/netmask like 192.168.1.0/24
+     * @param string|string[]|null $ips A specific IP address or a range specified using IP/netmask like 192.168.1.0/24
      */
     public function matchIps($ips): void
     {
@@ -150,7 +150,7 @@ class RequestMatcher implements RequestMatcherInterface
     /**
      * Adds a check for the HTTP method.
      *
-     * @param null|string|string[] $method An HTTP method or an array of HTTP methods
+     * @param string|string[]|null $method An HTTP method or an array of HTTP methods
      */
     public function matchMethod($method): void
     {
@@ -171,7 +171,7 @@ class RequestMatcher implements RequestMatcherInterface
     public function matches(ServerRequestInterface $request): bool
     {
         $requestUri = $request->getUri();
-        $pathInfo   = $this->resolveMatchPath($requestUri->getPath(), $request);
+        $pathInfo = $this->resolveMatchPath($requestUri->getPath(), $request->getServerParams()['PATH_INFO'] ?? '');
 
         if (!empty($this->schemes) && !\in_array($requestUri->getScheme(), $this->schemes, true)) {
             return false;
@@ -212,15 +212,9 @@ class RequestMatcher implements RequestMatcherInterface
         return 0 === \count($this->ips);
     }
 
-    private function resolveMatchPath(string $uri, ServerRequestInterface $request): string
+    private function resolveMatchPath(string $uri, string $pathInfo): string
     {
-        $basePath = \dirname($request->getServerParams()['SCRIPT_NAME']);
-
-        if (\strpos($uri, $basePath) !== false) {
-            return \strlen($basePath) > 1 ? \substr($uri, \strlen($basePath)) ?? '/' : $uri;
-        }
-
-        return $uri;
+        return empty($pathInfo) ? $uri : $pathInfo;
     }
 
     private function resolveMatchIps(ServerRequestInterface $request): ?string
