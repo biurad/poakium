@@ -21,7 +21,6 @@ use Biurad\Http\Interfaces\Psr17Interface;
 use Biurad\Http\Request;
 use Biurad\Http\Response;
 use Biurad\Http\ServerRequest;
-use Biurad\Http\Stream;
 use Biurad\Http\UploadedFile;
 use Biurad\Http\Uri;
 use Laminas\Diactoros\RequestFactory;
@@ -80,7 +79,7 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStream($content));
+        return (new StreamFactory())->createStream($content);
     }
 
     /**
@@ -88,7 +87,7 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStreamFromFile($file, $mode));
+        return (new StreamFactory())->createStreamFromFile($file, $mode);
     }
 
     /**
@@ -96,7 +95,7 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        return (new Stream())->withStream((new StreamFactory)->createStreamFromResource($resource));
+        return (new StreamFactory())->createStreamFromResource($resource);
     }
 
     /**
@@ -104,10 +103,10 @@ class LaminasPsr7Factory implements Psr17Interface
      */
     public function createUploadedFile(
         StreamInterface $stream,
-        ?int $size = null,
+        int $size = null,
         int $error = \UPLOAD_ERR_OK,
-        ?string $clientFilename = null,
-        ?string $clientMediaType = null
+        string $clientFilename = null,
+        string $clientMediaType = null
     ): UploadedFileInterface {
         if (null === $size) {
             $size = $stream->getSize();
