@@ -19,24 +19,18 @@ namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
 use Biurad\Http\Traits\InjectContentTypeTrait;
-use GuzzleHttp\Exception;
+use Biurad\Http\Exception;
 use Psr\Http\Message\StreamInterface;
 
 /**
- * XML response.
- *
- * Allows creating a response by passing an XML string to the constructor; by default,
- * sets a status code of 200 and sets the Content-Type header to application/xml.
+ * XML response with Content-Type header to application/xml.
  */
 class XmlResponse extends Response
 {
     use InjectContentTypeTrait;
 
     /**
-     * Create an XML response.
-     *
-     * Produces an XML response with a Content-Type of application/xml and a default
-     * status of 200.
+     * Produces an XML response with a Content-Type of application/xml and a default status of 200.
      *
      * @param StreamInterface|string $xml     string or stream for the message body
      * @param int                    $status  integer status code for the response; 200 by default
@@ -44,15 +38,8 @@ class XmlResponse extends Response
      *
      * @throws Exception\InvalidArgumentException if $text is neither a string or stream
      */
-    public function __construct(
-        $xml,
-        int $status = 200,
-        array $headers = []
-    ) {
-        parent::__construct(
-            $status,
-            $this->injectContentType('application/xml; charset=utf-8', $headers),
-            $xml
-        );
+    public function __construct($xml, int $status = 200, array $headers = [])
+    {
+        parent::__construct($status, $this->injectContentType('application/xml; charset=utf-8', $headers), $xml);
     }
 }

@@ -19,25 +19,18 @@ namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
 use Biurad\Http\Traits\InjectContentTypeTrait;
-use GuzzleHttp\Exception;
+use Biurad\Http\Exception;
 use Psr\Http\Message\StreamInterface;
 
 /**
- * HTML response.
- *
- * Allows creating a response by passing an HTML string to the constructor;
- * by default, sets a status code of 200 and sets the Content-Type header to
- * text/html.
+ * HTML response with Content-Type header to text/html.
  */
 class HtmlResponse extends Response
 {
     use InjectContentTypeTrait;
 
     /**
-     * Create an HTML response.
-     *
-     * Produces an HTML response with a Content-Type of text/html and a default
-     * status of 200.
+     * Produces an HTML response with a Content-Type of text/html and a default status of 200.
      *
      * @param StreamInterface|string $html    HTML or stream for the message body
      * @param int                    $status  integer status code for the response; 200 by default
@@ -47,10 +40,6 @@ class HtmlResponse extends Response
      */
     public function __construct($html, int $status = 200, array $headers = [])
     {
-        parent::__construct(
-            $status,
-            $this->injectContentType('text/html; charset=utf-8', $headers),
-            $html
-        );
+        parent::__construct($status, $this->injectContentType('text/html; charset=utf-8', $headers), $html);
     }
 }

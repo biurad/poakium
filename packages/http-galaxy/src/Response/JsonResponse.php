@@ -19,59 +19,33 @@ namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
 use Biurad\Http\Traits\InjectContentTypeTrait;
-use GuzzleHttp\Exception;
+use Biurad\Http\Exception;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Http\Message\StreamInterface;
 
-use function GuzzleHttp\Psr7\stream_for;
-
 /**
- * JSON response.
- *
- * Allows creating a response by passing data to the constructor; by default,
- * serializes the data to JSON, sets a status code of 200 and sets the
- * Content-Type header to application/json.
+ * JSON response with Content-Type header to application/json.
  */
 class JsonResponse extends Response
 {
     use InjectContentTypeTrait;
 
-    /**
-     * Default flags for json_encode; value of:
-     *
-     * <code>
-     * JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES
-     * </code>
-     *
-     * @const int
-     */
-    public const DEFAULT_JSON_FLAGS = 79;
+    /** @var int produces RFC4627-compliant JSON */
+    public const DEFAULT_JSON_FLAGS = \JSON_HEX_TAG | \JSON_HEX_APOS | \JSON_HEX_AMP | \JSON_HEX_QUOT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR;
 
-    /**
-     * @var mixed
-     */
+    /** @var mixed */
     private $payload;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     private $encodingOptions;
 
     /**
      * Create a JSON response with the given data.
      *
-     * Default JSON encoding is performed with the following options, which
-     * produces RFC4627-compliant JSON, capable of embedding into HTML.
-     *
-     * - JSON_HEX_TAG
-     * - JSON_HEX_APOS
-     * - JSON_HEX_AMP
-     * - JSON_HEX_QUOT
-     * - JSON_UNESCAPED_SLASHES
-     *
-     * @param mixed $data            data to convert to JSON
-     * @param int   $status          integer status code for the response; 200 by default
-     * @param array $headers         array of headers to use at initialization
-     * @param int   $encodingOptions JSON encoding options to use
+     * @param iterable|array|\JsonSerializable $data            data to convert to JSON
+     * @param int                              $status          integer status code for the response; 200 by default
+     * @param array                            $headers         array of headers to use at initialization
+     * @param int                              $encodingOptions JSON encoding options to use
      *
      * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */
@@ -81,16 +55,15 @@ class JsonResponse extends Response
         array $headers = [],
         int $encodingOptions = self::DEFAULT_JSON_FLAGS
     ) {
-        $this->setPayload($data);
+        $this->payload = \is_object($data) ? clone $data : $data;
         $this->encodingOptions = $encodingOptions;
-
         $headers = $this->injectContentType('application/json', $headers);
 
         parent::__construct($status, $headers, $this->jsonEncode($data, $this->encodingOptions));
     }
 
     /**
-     * @return mixed
+     * @return iterable|array|\JsonSerializable
      */
     public function getPayload()
     {
@@ -98,12 +71,12 @@ class JsonResponse extends Response
     }
 
     /**
-     * @param mixed $data
+     * @param iterable|array|\JsonSerializable $data
      */
     public function withPayload($data): JsonResponse
     {
         $new = clone $this;
-        $new->setPayload($data);
+        $new->payload = \is_object($data) ? clone $data : $data;
 
         return $this->updateBodyFor($new);
     }
@@ -115,7 +88,7 @@ class JsonResponse extends Response
 
     public function withEncodingOptions(int $encodingOptions): JsonResponse
     {
-        $new                  = clone $this;
+        $new = clone $this;
         $new->encodingOptions = $encodingOptions;
 
         return $this->updateBodyFor($new);
@@ -123,7 +96,7 @@ class JsonResponse extends Response
 
     private function createBodyFromJson(string $json): StreamInterface
     {
-        $body = stream_for('php://temp', ['mode' => 'wb+']);
+        $body = new Stream('php://temp', ['mode' => 'wb+']);
         $body->write($json);
         $body->rewind();
 
@@ -133,7 +106,7 @@ class JsonResponse extends Response
     /**
      * Encode the provided data to JSON.
      *
-     * @param mixed $data
+     * @param iterable|array|\JsonSerializable $data
      *
      * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */
@@ -143,32 +116,7 @@ class JsonResponse extends Response
             throw new Exception\InvalidArgumentException('Cannot JSON encode resources');
         }
 
-        // Clear json_last_error()
-        \json_encode(null);
-
-        $json = \json_encode($data, $encodingOptions);
-
-        if (\JSON_ERROR_NONE !== \json_last_error()) {
-            throw new Exception\InvalidArgumentException(\sprintf(
-                'Unable to encode data to JSON in %s: %s',
-                __CLASS__,
-                \json_last_error_msg()
-            ));
-        }
-
-        return $json;
-    }
-
-    /**
-     * @param mixed $data
-     */
-    private function setPayload($data): void
-    {
-        if (\is_object($data)) {
-            $data = clone $data;
-        }
-
-        $this->payload = $data;
+        return \json_encode($data, $encodingOptions);
     }
 
     /**

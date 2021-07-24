@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
-use GuzzleHttp\Exception;
+use Biurad\Http\Exception;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -27,10 +27,7 @@ use Psr\Http\Message\UriInterface;
 class RedirectResponse extends Response
 {
     /**
-     * Create a redirect response.
-     *
-     * Produces a redirect response with a Location header and the given status
-     * (302 by default).
+     * Produces a redirect response with a Location header and the given status (302 by default).
      *
      * Note: this method overwrites the `location` $headers value.
      *
