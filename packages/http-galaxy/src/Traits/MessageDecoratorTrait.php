@@ -33,8 +33,6 @@ trait MessageDecoratorTrait
      *
      * Since the underlying Message is immutable as well
      * exposing it is not an issue, because it's state cannot be altered
-     *
-     * @return MessageInterface
      */
     public function getMessage(): MessageInterface
     {
@@ -52,9 +50,9 @@ trait MessageDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withProtocolVersion($version): self
+    public function withProtocolVersion($version): MessageInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->message->withProtocolVersion($version);
 
         return $new;
@@ -103,9 +101,9 @@ trait MessageDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withHeader($header, $value): self
+    public function withHeader($header, $value): MessageInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->message->withHeader($header, $value);
 
         return $new;
@@ -114,9 +112,9 @@ trait MessageDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withAddedHeader($header, $value): self
+    public function withAddedHeader($header, $value): MessageInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->message->withAddedHeader($header, $value);
 
         return $new;
@@ -125,9 +123,9 @@ trait MessageDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withoutHeader($header): self
+    public function withoutHeader($header): MessageInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->message->withoutHeader($header);
 
         return $new;
@@ -136,9 +134,9 @@ trait MessageDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withBody(StreamInterface $body): self
+    public function withBody(StreamInterface $body): MessageInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->message->withBody($body);
 
         return $new;

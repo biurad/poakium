@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Traits;
 
-use Biurad\Http\Cookie;
-use Biurad\Http\Interfaces\CookieInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 trait ServerRequestDecoratorTrait
@@ -30,27 +28,18 @@ trait ServerRequestDecoratorTrait
      *
      * Since the underlying Request is immutable as well
      * exposing it is not an issue, because it's state cannot be altered
-     *
-     * @return ServerRequestInterface
      */
     public function getRequest(): ServerRequestInterface
     {
-        /** @var ServerRequestInterface $message */
-        $message = $this->getMessage();
-
-        return $message;
+        return $this->getMessage();
     }
 
     /**
      * Exchanges the underlying server request with another.
-     *
-     * @param ServerRequestInterface $request
-     *
-     * @return ServerRequestInterface
      */
     public function withRequest(ServerRequestInterface $request): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $request;
 
         return $new;
@@ -115,9 +104,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withAttribute($name, $value)
+    public function withAttribute($name, $value): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withAttribute($name, $value);
 
         return $new;
@@ -126,9 +115,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withoutAttribute($name)
+    public function withoutAttribute($name): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withoutAttribute($name);
 
         return $new;
@@ -137,9 +126,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withCookieParams(array $cookies)
+    public function withCookieParams(array $cookies): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withCookieParams($cookies);
 
         return $new;
@@ -148,9 +137,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withParsedBody($data)
+    public function withParsedBody($data): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withParsedBody($data);
 
         return $new;
@@ -159,9 +148,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withQueryParams(array $query)
+    public function withQueryParams(array $query): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withQueryParams($query);
 
         return $new;
@@ -170,9 +159,9 @@ trait ServerRequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withUploadedFiles(array $uploadedFiles)
+    public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withUploadedFiles($uploadedFiles);
 
         return $new;
@@ -186,35 +175,29 @@ trait ServerRequestDecoratorTrait
      * @param string $key     the attribute name
      * @param mixed  $default default value to return if the attribute does not exist
      *
-     * @return CookieInterface|mixed
+     * @return mixed
      */
     public function getCookie(string $key, $default = null)
     {
         $cookies = $this->getRequest()->getCookieParams();
 
-        if (isset($cookies[$key])) {
-            return Cookie::fromString($cookies[$key]);
-        }
-
-        return $default;
+        return $cookies[$key] ?? $default;
     }
 
     /**
-     * Checks if a cookie exists in the browser's request
+     * Checks if a cookie exists in the browser's request.
      *
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param string $name The cookie name
-     *
-     * @return bool
      */
     public function hasCookie(string $name): bool
     {
-        return $this->getCookie($name) instanceof CookieInterface;
+        return isset($this->getRequest()->getCookieParams()[$name]);
     }
 
     /**
-     * Fetch serverRequest parameter value from server, body or query string (in that order).
+     * Fetch from parsed body ($_POST), server ($_SERVER), uri queries (in that order).
      *
      * Note: This method is not part of the PSR-7 standard.
      *
@@ -226,26 +209,15 @@ trait ServerRequestDecoratorTrait
     public function getParameter(string $key, $default = null)
     {
         $request = $this->getRequest();
-
         $postParams = $request->getParsedBody() ?? $request->getBody()->getContents();
-        $getParams  = $request->getQueryParams();
-        $result     = $default;
-
-        if (array_key_exists($key, $serverParams = $request->getServerParams())) {
-            return $serverParams[$key];
-        }
 
         if (\is_array($postParams) && isset($postParams[$key])) {
             $result = $postParams[$key];
-        } elseif (\is_object($postParams) && $postParams instanceof \stdClass) {
+        } elseif ($postParams instanceof \stdClass) {
             $result = $postParams->{$key};
         }
 
-        if (null === $result && isset($getParams[$key])) {
-            $result = $getParams[$key];
-        }
-
-        return $result;
+        return $result ?? $request->getServerParams()[$key] ?? $request->getQueryParams()[$key] ?? $default;
     }
 
     /**
@@ -260,13 +232,15 @@ trait ServerRequestDecoratorTrait
      */
     public function getUriForPath(string $path): string
     {
-        $uri    = $this->getUri();
-        $port   = $uri->getPort();
-        $query  = $uri->getQuery();
+        $uri = $this->getUri();
+        $port = $uri->getPort();
+        $query = $uri->getQuery();
 
         if ('' !== $query) {
             $query = '?' . $query;
         }
+
+        $requestUri = $uri->getScheme() . '://' . $uri->getAuthority();
 
         if (null !== $uri->getPort() && !\in_array($uri->getPort(), [80, 443], true)) {
             $port = ':' . $uri->getPort();
@@ -280,8 +254,6 @@ trait ServerRequestDecoratorTrait
      * exists. Consider using psr-15 middlewares to customize configuration.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return null|string
      */
     public function getRemoteAddress(): ?string
     {

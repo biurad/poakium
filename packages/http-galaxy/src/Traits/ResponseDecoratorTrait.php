@@ -17,10 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Traits;
 
-use Biurad\Http\Interfaces\CookieInterface;
+use Biurad\Http\Cookie;
 use Biurad\Http\Response;
 use Fig\Http\Message\StatusCodeInterface;
-use GuzzleHttp\Exception\InvalidArgumentException;
+use Biurad\Http\Exception\InvalidArgumentException;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -39,27 +39,18 @@ trait ResponseDecoratorTrait
      *
      * Since the underlying Response is immutable as well
      * exposing it is not an issue, because it's state cannot be altered
-     *
-     * @return ResponseInterface
      */
     public function getResponse(): ResponseInterface
     {
-        /** @var ResponseInterface $message */
-        $message = $this->getMessage();
-
-        return $message;
+        return $this->getMessage();
     }
 
     /**
      * Exchanges the underlying response with another.
-     *
-     * @param ResponseInterface $response
-     *
-     * @return ResponseInterface
      */
     public function withResponse(ResponseInterface $response): ResponseInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $response;
 
         return $new;
@@ -78,7 +69,7 @@ trait ResponseDecoratorTrait
      */
     public function withStatus($code, $reasonPhrase = ''): self
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getResponse()->withStatus($code, $reasonPhrase);
 
         return $new;
@@ -90,6 +81,21 @@ trait ResponseDecoratorTrait
     public function getReasonPhrase(): string
     {
         return $this->getResponse()->getReasonPhrase();
+    }
+
+    /**
+     * Set a cookie on response.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @final
+     */
+    public function withCookie(Cookie $cookie): Response
+    {
+        $new = clone $this;
+        $new->message = $this->getResponse()->withAddedHeader('Set-Cookie', (string) $cookie);
+
+        return $new;
     }
 
     /**
@@ -110,29 +116,9 @@ trait ResponseDecoratorTrait
     }
 
     /**
-     * Set a cookie on response.
-     *
-     * @param CookieInterface $cookie
-     *
-     * @return Response
-     *
-     * @final
-     */
-    public function withCookie(CookieInterface $cookie): self
-    {
-        $new          = clone $this;
-        $new->message = $this->withHeader('Set-Cookie', (string) $cookie);
-
-        return $new;
-    }
-
-    /**
      * Attempts to cache the sent entity by its last modification date.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @param \DateTimeInterface $lastModified
-     * @param string             $etag
      *
      * @return Response
      */
@@ -145,19 +131,14 @@ trait ResponseDecoratorTrait
         }
 
         if (null !== $lastModified) {
-            if ($lastModified instanceof \DateTime) {
-                $lastModified = \DateTimeImmutable::createFromMutable($lastModified);
-            }
-
-            $lastModified->setTimezone(new \DateTimeZone('UTC'));
-            $response = $response->withHeader('Last-Modified', $lastModified->format('D, d M Y H:i:s') . ' GMT');
+            $response = $response->withHeader('Last-Modified', $lastModified->format(\DateTime::RFC7231));
         }
 
         if (null !== $etag) {
             $response = $response->withHeader('ETag', '"' . \addslashes($etag) . '"');
         }
 
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $response;
 
         return $new;
@@ -171,16 +152,13 @@ trait ResponseDecoratorTrait
      *
      * @param string[] $headers
      *
-     * @return Response
-     *
      * @see https://tools.ietf.org/html/rfc2616#section-10.3.5
      *
      * @final
      */
-    public function withNotModified(array $headers = []): self
+    public function withNotModified(array $headers = []): Response
     {
         $response = $this->getResponse();
-        $response = $response->withStatus(StatusCodeInterface::STATUS_NOT_MODIFIED);
 
         // remove headers that MUST NOT be included with 304 Not Modified responses
         $headers = \array_replace([
@@ -197,8 +175,8 @@ trait ResponseDecoratorTrait
             $response = $response->withoutHeader($header);
         }
 
-        $new          = clone $this;
-        $new->message = $response;
+        $new = clone $this;
+        $new->message = $response->withStatus(StatusCodeInterface::STATUS_NOT_MODIFIED);
 
         return $new;
     }
@@ -210,7 +188,7 @@ trait ResponseDecoratorTrait
      *                                                     streamable or resource
      * @param string                          $name        Public file name (in
      *                                                     attachment), by default local
-     *                                                     filename. Name is mandratory
+     *                                                     filename. Name is mandatory
      *                                                     when filename supplied in a form
      *                                                     of stream or resource.
      * @param string                          $disposition One of "inline" or "attachment"
@@ -218,15 +196,13 @@ trait ResponseDecoratorTrait
      *                                                     a downloaded file
      *
      * @throws InvalidArgumentException
-     *
-     * @return Response
      */
     public function withAttachment(
         $filename,
         string $name = '',
         string $disposition = 'attachment',
         string $mimetype = 'application/octet-stream'
-    ): self {
+    ): Response {
         $response = $this->getResponse();
 
         if (empty($name)) {
@@ -245,7 +221,7 @@ trait ResponseDecoratorTrait
             $disposition . '; filename="' . \addcslashes($name, '"') . '"'
         );
 
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $response->withBody($stream);
 
         return $new;
@@ -260,11 +236,9 @@ trait ResponseDecoratorTrait
      * response to the client.
      *
      * @param string|UriInterface $url    the redirect destination
-     * @param null|int            $status the redirect HTTP status code
-     *
-     * @return Response
+     * @param int|null            $status the redirect HTTP status code
      */
-    public function withRedirect(string $url, $status = StatusCodeInterface::STATUS_FOUND): self
+    public function withRedirect(string $url, $status = StatusCodeInterface::STATUS_FOUND): Response
     {
         $response = $this->getResponse()->withHeader('Location', (string) $url);
 
@@ -285,8 +259,6 @@ trait ResponseDecoratorTrait
      * Is this response empty?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isEmpty(): bool
     {
@@ -297,20 +269,16 @@ trait ResponseDecoratorTrait
      * Is this response OK?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isOk(): bool
     {
-        return $this->getStatusCode() === StatusCodeInterface::STATUS_OK;
+        return StatusCodeInterface::STATUS_OK === $this->getStatusCode();
     }
 
     /**
      * Is this response a redirect?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isRedirect(): bool
     {
@@ -322,33 +290,27 @@ trait ResponseDecoratorTrait
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return bool
-     *
      * @api
      */
     public function isForbidden(): bool
     {
-        return $this->getStatusCode() === StatusCodeInterface::STATUS_FORBIDDEN;
+        return StatusCodeInterface::STATUS_FORBIDDEN === $this->getStatusCode();
     }
 
     /**
      * Is this response not Found?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isNotFound(): bool
     {
-        return $this->getStatusCode() === StatusCodeInterface::STATUS_NOT_FOUND;
+        return StatusCodeInterface::STATUS_NOT_FOUND === $this->getStatusCode();
     }
 
     /**
      * Is this response informational?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isInformational(): bool
     {
@@ -359,8 +321,6 @@ trait ResponseDecoratorTrait
      * Is this response successful?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isSuccessful(): bool
     {
@@ -371,8 +331,6 @@ trait ResponseDecoratorTrait
      * Is this response a redirection?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isRedirection(): bool
     {
@@ -383,8 +341,6 @@ trait ResponseDecoratorTrait
      * Is this response a client error?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isClientError(): bool
     {
@@ -395,8 +351,6 @@ trait ResponseDecoratorTrait
      * Is this response a server error?
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isServerError(): bool
     {
@@ -430,7 +384,7 @@ trait ResponseDecoratorTrait
             return false;
         }
 
-        if (\strpos($cacheControl, 'no-store') !== false || \strpos($cacheControl, 'private') !== false) {
+        if (false !== \strpos($cacheControl, 'no-store') || false !== \strpos($cacheControl, 'private')) {
             return false;
         }
 
@@ -453,9 +407,9 @@ trait ResponseDecoratorTrait
     /**
      * Returns the HTTP header value converted to a date.
      *
-     * @throws \RuntimeException When the HTTP header is not parseable
+     * @throws \RuntimeException When the HTTP header is not parsable
      *
-     * @return null|DateTimeInterface The parsed DateTime or the default value if the header does not exist
+     * @return DateTimeInterface|null The parsed DateTime or the default value if the header does not exist
      */
     private function getDate(string $key, \DateTime $default = null)
     {
@@ -464,7 +418,7 @@ trait ResponseDecoratorTrait
         }
 
         if (false === $date = \DateTime::createFromFormat(\DATE_RFC2822, $value)) {
-            throw new \RuntimeException(\sprintf('The "%s" HTTP header is not parseable (%s).', $key, $value));
+            throw new \RuntimeException(\sprintf('The "%s" HTTP header is not parsable (%s).', $key, $value));
         }
 
         return $date;
@@ -474,8 +428,6 @@ trait ResponseDecoratorTrait
      * Create stream for given filename.
      *
      * @param resource|StreamInterface|string $stream
-     *
-     * @return StreamInterface
      */
     private function getStream($stream): StreamInterface
     {
@@ -484,11 +436,7 @@ trait ResponseDecoratorTrait
         }
 
         if (!\is_string($stream) && !\is_resource($stream)) {
-            throw new InvalidArgumentException(
-                'Stream must be a string stream resource identifier, '
-                . 'an actual stream resource, '
-                . 'or a Psr\Http\Message\StreamInterface implementation'
-            );
+            throw new InvalidArgumentException('Stream must be a string stream resource identifier, an actual stream resource, or a Psr\Http\Message\StreamInterface implementation');
         }
 
         return Utils::streamFor($stream);

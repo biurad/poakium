@@ -34,14 +34,10 @@ trait UriDecorationTrait
 
     /**
      * Exchanges the underlying uri with another.
-     *
-     * @param UriInterface $uri
-     *
-     * @return UriInterface
      */
     public function withUri(UriInterface $uri): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $uri;
 
         return $new;
@@ -116,7 +112,7 @@ trait UriDecorationTrait
      */
     public function withScheme($scheme): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withScheme($scheme);
 
         return $new;
@@ -127,7 +123,7 @@ trait UriDecorationTrait
      */
     public function withUserInfo($user, $password = null): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withUserInfo($user, $password);
 
         return $new;
@@ -138,7 +134,7 @@ trait UriDecorationTrait
      */
     public function withHost($host): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withHost($host);
 
         return $new;
@@ -149,7 +145,7 @@ trait UriDecorationTrait
      */
     public function withPort($port): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withPort($port);
 
         return $new;
@@ -160,7 +156,7 @@ trait UriDecorationTrait
      */
     public function withPath($path): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withPath($path);
 
         return $new;
@@ -171,7 +167,7 @@ trait UriDecorationTrait
      */
     public function withQuery($query): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withQuery($query);
 
         return $new;
@@ -182,7 +178,7 @@ trait UriDecorationTrait
      */
     public function withFragment($fragment): UriInterface
     {
-        $new      = clone $this;
+        $new = clone $this;
         $new->uri = $this->uri->withFragment($fragment);
 
         return $new;

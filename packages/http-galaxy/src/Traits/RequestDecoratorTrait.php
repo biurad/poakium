@@ -63,27 +63,18 @@ trait RequestDecoratorTrait
      *
      * Since the underlying Request is immutable as well
      * exposing it is not an issue, because it's state cannot be altered
-     *
-     * @return RequestInterface
      */
     public function getRequest(): RequestInterface
     {
-        /** @var RequestInterface $message */
-        $message = $this->getMessage();
-
-        return $message;
+        return $this->getMessage();
     }
 
     /**
      * Exchanges the underlying request with another.
-     *
-     * @param RequestInterface $request
-     *
-     * @return RequestInterface
      */
     public function withRequest(RequestInterface $request): RequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $request;
 
         return $new;
@@ -100,9 +91,9 @@ trait RequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withRequestTarget($requestTarget): self
+    public function withRequestTarget($requestTarget): RequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withRequestTarget($requestTarget);
 
         return $new;
@@ -119,9 +110,9 @@ trait RequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withMethod($method): self
+    public function withMethod($method): RequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withMethod($method);
 
         return $new;
@@ -138,9 +129,9 @@ trait RequestDecoratorTrait
     /**
      * {@inheritdoc}
      */
-    public function withUri(UriInterface $uri, $preserveHost = false): self
+    public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
     {
-        $new          = clone $this;
+        $new = clone $this;
         $new->message = $this->getRequest()->withUri($uri, $preserveHost);
 
         return $new;
@@ -150,14 +141,12 @@ trait RequestDecoratorTrait
      * Get the Authorization header token from the request headers.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return null|string
      */
-    public function getAuthorizationToken($headerName = 'Bearer'): ?string
+    public function getAuthorizationToken(string $headerName = 'Bearer'): ?string
     {
         $header = $this->getHeaderLine('Authorization');
 
-        if (\mb_strpos($header, "$headerName ") !== false) {
+        if (false !== \mb_strpos($header, "$headerName ")) {
             return \mb_substr($header, 7);
         }
 
@@ -168,13 +157,10 @@ trait RequestDecoratorTrait
      * Check if request was made over http protocol.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isSecure(): bool
     {
-        //Double check though attributes?
-        return $this->getUri()->getScheme() == 'https';
+        return 'https' == $this->getUri()->getScheme();
     }
 
     /**
@@ -191,7 +177,7 @@ trait RequestDecoratorTrait
      */
     public function isXmlHttpRequest(): bool
     {
-        return \strtolower($this->getHeaderLine('X-Requested-With')) == 'xmlhttprequest';
+        return 'xmlhttprequest' == \strtolower($this->getHeaderLine('X-Requested-With'));
     }
 
     /**
@@ -200,8 +186,6 @@ trait RequestDecoratorTrait
      * Note: This method is not part of the PSR-7 standard.
      *
      * @see https://tools.ietf.org/html/rfc7231#section-4.2.1
-     *
-     * @return bool
      */
     public function isMethodSafe(): bool
     {
@@ -212,16 +196,10 @@ trait RequestDecoratorTrait
      * Checks whether or not the method is idempotent.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
      */
     public function isMethodIdempotent(): bool
     {
-        return \in_array(
-            $this->getMethod(),
-            ['HEAD', 'GET', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'PURGE'],
-            true
-        );
+        return \in_array($this->getMethod(), ['HEAD', 'GET', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'PURGE'], true);
     }
 
     /**
@@ -244,8 +222,6 @@ trait RequestDecoratorTrait
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param string $method Uppercase request method (GET, POST etc)
-     *
-     * @return bool
      */
     public function isMethod(string $method): bool
     {
@@ -253,96 +229,11 @@ trait RequestDecoratorTrait
     }
 
     /**
-     * Is this a DELETE serverRequest?
+     * Is this an XHR serverRequest? alias of "isXmlHttpRequest" method.
      *
      * Note: This method is not part of the PSR-7 standard.
      *
-     * @return bool
-     */
-    public function isDelete(): bool
-    {
-        return $this->isMethod('DELETE');
-    }
-
-    /**
-     * Is this a GET serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isGet(): bool
-    {
-        return $this->isMethod('GET');
-    }
-
-    /**
-     * Is this a HEAD serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isHead(): bool
-    {
-        return $this->isMethod('HEAD');
-    }
-
-    /**
-     * Is this a OPTIONS serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isOptions(): bool
-    {
-        return $this->isMethod('OPTIONS');
-    }
-
-    /**
-     * Is this a PATCH serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isPatch(): bool
-    {
-        return $this->isMethod('PATCH');
-    }
-
-    /**
-     * Is this a POST serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isPost(): bool
-    {
-        return $this->isMethod('POST');
-    }
-
-    /**
-     * Is this a PUT serverRequest?
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
-     */
-    public function isPut(): bool
-    {
-        return $this->isMethod('PUT');
-    }
-
-    /**
-     * Is this an XHR serverRequest? alias of
-     * "isXmlHttpRequest" method.
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return bool
+     * @see isXmlHttpRequest method
      */
     public function isXhr(): bool
     {
