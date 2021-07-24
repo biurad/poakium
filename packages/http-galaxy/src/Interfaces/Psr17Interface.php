@@ -34,29 +34,13 @@ interface Psr17Interface extends
     UriFactoryInterface
 {
     /**
-     * Create a request from the supplied superglobal values.
+     * Return a ServerRequest populated with superglobals:.
      *
-     * If any argument is not supplied, the corresponding superglobal value will
-     * be used.
-     *
-     * The ServerRequest created is then passed to the fromServer() method in
-     * order to marshal the request URI and headers.
-     *
-     * @see fromServer()
-     *
-     * @param array $server  $_SERVER superglobal
-     * @param array $query   $_GET superglobal
-     * @param array $body    $_POST superglobal
-     * @param array $cookies $_COOKIE superglobal
-     * @param array $files   $_FILES superglobal
-     *
-     * @return ServerRequestInterface
+     * $_GET
+     * $_POST
+     * $_COOKIE
+     * $_FILES
+     * $_SERVER.
      */
-    public static function fromGlobalRequest(
-        array $server = null,
-        array $query = null,
-        array $body = null,
-        array $cookies = null,
-        array $files = null
-    ): ServerRequestInterface;
+    public static function fromGlobalRequest(): ServerRequestInterface;
 }
