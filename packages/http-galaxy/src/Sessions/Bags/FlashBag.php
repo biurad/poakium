@@ -26,7 +26,7 @@ use Biurad\Http\Interfaces\SessionDataInterface;
  */
 class FlashBag implements SessionDataInterface
 {
-    private $name = 'flashes';
+    private $name = '__flashes';
 
     private $flashes = [];
 
@@ -200,7 +200,7 @@ class FlashBag implements SessionDataInterface
      */
     private function all()
     {
-        $return        = $this->flashes;
+        $return = $this->flashes;
         $this->flashes = [];
 
         return $return;

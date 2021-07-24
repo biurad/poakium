@@ -29,20 +29,28 @@ use Biurad\Http\Utils\SessionUtils;
  */
 abstract class AbstractSessionHandler implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface
 {
+    /** @var string */
     private $sessionName;
 
+    /** @var string */
     private $prefetchId;
 
+    /** @var mixed */
     private $prefetchData;
 
+    /** @var string */
     private $newSessionId;
 
+    /** @var string|null */
     private $igbinaryEmptyData;
 
+    /** @var bool */
+    protected $gcCalled = false;
+
     /**
-     * @return bool
+     * {@inheritdoc}
      */
-    public function open($savePath, $sessionName)
+    public function open($savePath, $sessionName): bool
     {
         $this->sessionName = $sessionName;
 
@@ -54,12 +62,12 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     }
 
     /**
-     * @return bool
+     * {@inheritdoc}
      */
-    public function validateId($sessionId)
+    public function validateId($sessionId): bool
     {
         $this->prefetchData = $this->read($sessionId);
-        $this->prefetchId   = $sessionId;
+        $this->prefetchId = $sessionId;
 
         if (\PHP_VERSION_ID < 70317 || (70400 <= \PHP_VERSION_ID && \PHP_VERSION_ID < 70405)) {
             // work around https://bugs.php.net/79413
@@ -78,13 +86,13 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
-    public function read($sessionId)
+    public function read($sessionId): string
     {
         if (null !== $this->prefetchId) {
-            $prefetchId       = $this->prefetchId;
-            $prefetchData     = $this->prefetchData;
+            $prefetchId = $this->prefetchId;
+            $prefetchData = $this->prefetchData;
             $this->prefetchId = $this->prefetchData = null;
 
             if ($prefetchId === $sessionId || '' === $prefetchData) {
@@ -94,16 +102,16 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
             }
         }
 
-        $data               = $this->doRead($sessionId);
+        $data = $this->doRead($sessionId);
         $this->newSessionId = '' === $data ? $sessionId : null;
 
         return $data;
     }
 
     /**
-     * @return bool
+     * {@inheritdoc}
      */
-    public function write($sessionId, $data)
+    public function write($sessionId, $data): bool
     {
         if (null === $this->igbinaryEmptyData) {
             // see https://github.com/igbinary/igbinary/issues/146
@@ -119,14 +127,15 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     }
 
     /**
-     * @return bool
+     * {@inheritdoc}
      */
-    public function destroy($sessionId)
+    public function destroy($sessionId): bool
     {
         if (!\headers_sent() && \filter_var(\ini_get('session.use_cookies'), \FILTER_VALIDATE_BOOLEAN)) {
             if (!$this->sessionName) {
                 throw new \LogicException(\sprintf('Session name cannot be empty, did you forget to call "parent::open()" in "%s"?.', static::class));
             }
+
             $cookie = SessionUtils::popSessionCookie($this->sessionName, $sessionId);
 
             /*
@@ -153,17 +162,20 @@ abstract class AbstractSessionHandler implements \SessionHandlerInterface, \Sess
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
-    abstract protected function doRead(string $sessionId);
+    public function gc($maxlifetime): bool
+    {
+        // We delay gc() to close() so that it is executed outside the transactional and blocking read-write process.
+        // This way, pruning expired sessions does not block them from being started while the current session is used.
+        $this->gcCalled = true;
 
-    /**
-     * @return bool
-     */
-    abstract protected function doWrite(string $sessionId, string $data);
+        return true;
+    }
 
-    /**
-     * @return bool
-     */
-    abstract protected function doDestroy(string $sessionId);
+    abstract protected function doRead(string $sessionId): string;
+
+    abstract protected function doWrite(string $sessionId, string $data): bool;
+
+    abstract protected function doDestroy(string $sessionId): bool;
 }

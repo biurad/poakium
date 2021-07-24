@@ -148,7 +148,7 @@ class MockFileSessionStorage extends MockArraySessionStorage
      */
     private function read(): void
     {
-        $filePath   = $this->getFilePath();
+        $filePath = $this->getFilePath();
         $this->data = \is_readable($filePath) && \is_file($filePath) ? \unserialize(\file_get_contents($filePath)) : [];
 
         $this->loadSession();

@@ -24,18 +24,7 @@ namespace Biurad\Http\Sessions\Handlers;
  */
 class NullSessionHandler extends AbstractSessionHandler
 {
-    /**
-     * @return bool
-     */
-    public function close()
-    {
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
-    public function validateId($sessionId)
+    public function close(): bool
     {
         return true;
     }
@@ -43,15 +32,23 @@ class NullSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doRead(string $sessionId)
+    public function validateId($sessionId): bool
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function doRead(string $sessionId): string
     {
         return '';
     }
 
     /**
-     * @return bool
+     * {@inheritdoc}
      */
-    public function updateTimestamp($sessionId, $data)
+    public function updateTimestamp($sessionId, $data): bool
     {
         return true;
     }
@@ -59,7 +56,7 @@ class NullSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doWrite(string $sessionId, string $data)
+    protected function doWrite(string $sessionId, string $data): bool
     {
         return true;
     }
@@ -67,15 +64,7 @@ class NullSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doDestroy(string $sessionId)
-    {
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
-    public function gc($maxlifetime)
+    protected function doDestroy(string $sessionId): bool
     {
         return true;
     }

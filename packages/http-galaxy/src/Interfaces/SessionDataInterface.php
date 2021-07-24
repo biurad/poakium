@@ -31,25 +31,19 @@ interface SessionDataInterface extends SessionBagInterface, IteratorAggregate
     /**
      * Set data in session.
      *
-     * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      */
     public function add(string $name, $value): void;
 
     /**
      * Check if value presented in session.
-     *
-     * @param string $name
-     *
-     * @return bool
      */
     public function has(string $name): bool;
 
     /**
      * Get value stored in session.
      *
-     * @param string $name
-     * @param mixed  $default
+     * @param mixed $default
      *
      * @return mixed
      */
@@ -58,8 +52,7 @@ interface SessionDataInterface extends SessionBagInterface, IteratorAggregate
     /**
      * Read item from session and delete it after.
      *
-     * @param string $name
-     * @param mixed  $default default value when no such item exists
+     * @param mixed $default default value when no such item exists
      *
      * @return mixed
      */
@@ -67,8 +60,6 @@ interface SessionDataInterface extends SessionBagInterface, IteratorAggregate
 
     /**
      * Delete data from session.
-     *
-     * @param string $name
      *
      * @return mixed
      */

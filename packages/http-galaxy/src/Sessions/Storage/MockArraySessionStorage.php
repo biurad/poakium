@@ -35,39 +35,25 @@ use Biurad\Http\Sessions\MetadataBag;
  */
 class MockArraySessionStorage implements SessionStorageInterface
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $id = '';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $name;
 
-    /**
-     * @var bool
-     */
+    /** @var bool */
     protected $started = false;
 
-    /**
-     * @var bool
-     */
+    /** @var bool */
     protected $closed = false;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $data = [];
 
-    /**
-     * @var MetadataBag
-     */
+    /** @var MetadataBag */
     protected $metadataBag;
 
-    /**
-     * @var array|SessionBagInterface[]
-     */
+    /** @var SessionBagInterface[] */
     protected $bags = [];
 
     public function __construct(string $name = 'MOCKSESSID', MetadataBag $metaBag = null)
@@ -158,8 +144,9 @@ class MockArraySessionStorage implements SessionStorageInterface
         if (!$this->started || $this->closed) {
             throw new \RuntimeException('Trying to save a session that was not started yet or was already closed.');
         }
+
         // nothing to do since we don't persist the session data
-        $this->closed  = false;
+        $this->closed = false;
         $this->started = false;
     }
 
@@ -214,17 +201,11 @@ class MockArraySessionStorage implements SessionStorageInterface
 
     public function setMetadataBag(MetadataBag $bag = null): void
     {
-        if (null === $bag) {
-            $bag = new MetadataBag();
-        }
-
-        $this->metadataBag = $bag;
+        $this->metadataBag = $bag ?? new MetadataBag();
     }
 
     /**
      * Gets the MetadataBag.
-     *
-     * @return MetadataBag
      */
     public function getMetadataBag(): MetadataBag
     {
@@ -249,12 +230,12 @@ class MockArraySessionStorage implements SessionStorageInterface
         $bags = \array_merge($this->bags, [$this->metadataBag]);
 
         foreach ($bags as $bag) {
-            $key              = $bag->getStorageKey();
-            $this->data[$key] = isset($this->data[$key]) ? $this->data[$key] : [];
+            $key = $bag->getStorageKey();
+            $this->data[$key] = $this->data[$key] ?? [];
             $bag->initialize($this->data[$key]);
         }
 
         $this->started = true;
-        $this->closed  = false;
+        $this->closed = false;
     }
 }

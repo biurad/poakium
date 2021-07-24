@@ -43,52 +43,34 @@ class StrictSessionHandler extends AbstractSessionHandler
         }
 
         $this->handler = $handler;
-
-        $this->wrapper         = ($handler instanceof \SessionHandler);
-        $this->saveHandlerName = $this->wrapper ? \ini_get('session.save_handler') : 'user';
     }
 
-    /**
-     * @return bool
-     */
-    public function open($savePath, $sessionName)
+    public function open($savePath, $sessionName): bool
     {
         parent::open($savePath, $sessionName);
 
         return $this->handler->open($savePath, $sessionName);
     }
 
-    /**
-     * @return bool
-     */
-    public function updateTimestamp($sessionId, $data)
+    public function updateTimestamp($sessionId, $data): bool
     {
         return $this->write($sessionId, $data);
     }
 
-    /**
-     * @return bool
-     */
-    public function destroy($sessionId)
+    public function destroy($sessionId): bool
     {
         $this->doDestroy = true;
-        $destroyed       = parent::destroy($sessionId);
+        $destroyed = parent::destroy($sessionId);
 
         return $this->doDestroy ? $this->doDestroy($sessionId) : $destroyed;
     }
 
-    /**
-     * @return bool
-     */
-    public function close()
+    public function close(): bool
     {
         return $this->handler->close();
     }
 
-    /**
-     * @return bool
-     */
-    public function gc($maxlifetime)
+    public function gc($maxlifetime): bool
     {
         return $this->handler->gc($maxlifetime);
     }
@@ -96,7 +78,7 @@ class StrictSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doRead($sessionId)
+    protected function doRead($sessionId): string
     {
         return $this->handler->read($sessionId);
     }
@@ -104,7 +86,7 @@ class StrictSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doWrite($sessionId, $data)
+    protected function doWrite($sessionId, $data): bool
     {
         return $this->handler->write($sessionId, $data);
     }
@@ -112,7 +94,7 @@ class StrictSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    protected function doDestroy($sessionId)
+    protected function doDestroy($sessionId): bool
     {
         $this->doDestroy = false;
 

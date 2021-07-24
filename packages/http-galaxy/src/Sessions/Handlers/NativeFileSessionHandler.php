@@ -44,7 +44,7 @@ class NativeFileSessionHandler extends \SessionHandler
 
         if ($count = \substr_count($savePath, ';')) {
             if ($count > 2) {
-                throw new \InvalidArgumentException(\sprintf('Invalid argument $savePath \'%s\'', $savePath));
+                throw new \InvalidArgumentException(\sprintf('Invalid argument $savePath \'%s\'.', $savePath));
             }
 
             // characters after last ';' are the path

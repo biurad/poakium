@@ -29,17 +29,11 @@ class SessionMiddleware implements MiddlewareInterface
     // request attribute
     public const ATTRIBUTE = Session::class;
 
-    /**
-     * The session instance.
-     *
-     * @var SessionInterface
-     */
+    /** @var SessionInterface */
     protected $session;
 
     /**
      * Create a new session middleware.
-     *
-     * @param SessionInterface $session
      */
     public function __construct(SessionInterface $session)
     {
@@ -47,7 +41,7 @@ class SessionMiddleware implements MiddlewareInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function process(Request $request, RequestHandler $handler): ResponseInterface
     {

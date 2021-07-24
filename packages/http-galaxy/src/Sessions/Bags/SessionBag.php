@@ -50,7 +50,7 @@ class SessionBag implements SessionDataInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function setName(string $name): void
     {
@@ -92,7 +92,7 @@ class SessionBag implements SessionDataInterface
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function count()
     {
@@ -169,7 +169,7 @@ class SessionBag implements SessionDataInterface
      */
     public function clear()
     {
-        $return           = $this->attributes;
+        $return = $this->attributes;
         $this->attributes = [];
 
         return $return;

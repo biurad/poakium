@@ -34,40 +34,28 @@ class MetadataBag implements SessionBagInterface
 
     public const LIFETIME = 'l';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $meta = [self::CREATED => 0, self::UPDATED => 0, self::LIFETIME => 0];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $name = '__metadata';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $storageKey;
 
-    /**
-     * Unix timestamp.
-     *
-     * @var int
-     */
+    /** @var int */
     private $lastUsed;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     private $updateThreshold;
 
     /**
      * @param string $storageKey      The key used to store bag in the session
      * @param int    $updateThreshold The time to wait between two UPDATED updates
      */
-    public function __construct(string $storageKey = '_sf2_meta', int $updateThreshold = 0)
+    public function __construct(string $storageKey = '_bf_meta', int $updateThreshold = 0)
     {
-        $this->storageKey      = $storageKey;
+        $this->storageKey = $storageKey;
         $this->updateThreshold = $updateThreshold;
     }
 
@@ -93,8 +81,6 @@ class MetadataBag implements SessionBagInterface
 
     /**
      * Gets the lifetime that the session cookie was set with.
-     *
-     * @return int
      */
     public function getLifetime(): int
     {
@@ -168,8 +154,7 @@ class MetadataBag implements SessionBagInterface
 
     private function stampCreated(int $lifetime = null): void
     {
-        $timeStamp                  = \time();
-        $this->meta[self::CREATED]  = $this->meta[self::UPDATED]  = $this->lastUsed  = $timeStamp;
+        $this->meta[self::CREATED] = $this->meta[self::UPDATED] = $this->lastUsed = \time();
         $this->meta[self::LIFETIME] = (null === $lifetime) ? \ini_get('session.cookie_lifetime') : $lifetime;
     }
 }

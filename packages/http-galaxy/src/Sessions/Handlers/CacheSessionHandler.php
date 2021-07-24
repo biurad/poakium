@@ -21,40 +21,34 @@ use Psr\Cache\CacheItemPoolInterface;
 
 class CacheSessionHandler extends AbstractSessionHandler
 {
-    /**
-     * The cache repository instance.
-     *
-     * @var CacheItemPoolInterface
-     */
-    protected $cache;
+    /** @var CacheItemPoolInterface */
+    private $cache;
 
-    /**
-     * Session Name
-     *
-     * @var string
-     */
-    protected $sessionOpen;
+    /** @var int|float */
+    private $sessionOpen;
 
-    /**
-     * The number of minutes to store the data in the cache.
-     *
-     * @var int
-     */
-    protected $minutes;
+    /** @var string */
+    private $sessionId;
+
+    /** @var int */
+    private $minutes;
 
     /**
      * Create a new cache driven handler instance.
      *
-     * @param CacheItemPoolInterface $cache
-     * @param null|int|string                 $minutes
+     * @param int|string|null $minutes
      */
     public function __construct(CacheItemPoolInterface $cache, $minutes = null)
     {
         $this->cache = $cache;
 
-        // convert expiration time to a Unix timestamp
-        $minutes       = !\is_numeric($minutes) ? \str_replace('-', '', \time() - \strtotime($minutes)) : $minutes;
-        $this->minutes = $minutes ?: (int) \ini_get('session.gc_maxlifetime');
+        if (null === $minutes) {
+            $minutes = (int) \ini_get('session.gc_maxlifetime');
+        } elseif (!\is_numeric($minutes)) {
+            $minutes = \time() - \strtotime($minutes);
+        }
+
+        $this->minutes = $minutes;
     }
 
     /**
@@ -64,7 +58,7 @@ class CacheSessionHandler extends AbstractSessionHandler
      *
      * @return bool Whether current session expired
      */
-    public function isSessionExpired()
+    public function isSessionExpired(): bool
     {
         if (@$this->sessionOpen < \time() - $this->minutes) {
             //Session flash expired
@@ -74,20 +68,14 @@ class CacheSessionHandler extends AbstractSessionHandler
         return false;
     }
 
-    /**
-     * @return bool
-     */
-    public function open($savePath, $sessionName)
+    public function open($savePath, $sessionName): bool
     {
         $this->sessionOpen = \time();
 
         return parent::open($savePath, $sessionName);
     }
 
-    /**
-     * @return bool
-     */
-    public function updateTimestamp($sessionId, $sessionData)
+    public function updateTimestamp($sessionId, $sessionData): bool
     {
         return $this->write($sessionId, $sessionData);
     }
@@ -95,7 +83,7 @@ class CacheSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    public function doDestroy($sessionId)
+    public function doDestroy($sessionId): bool
     {
         $exists = $this->cache->hasItem($sessionId);
 
@@ -109,31 +97,31 @@ class CacheSessionHandler extends AbstractSessionHandler
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): bool
     {
+        if ($this->gcCalled && null !== $this->sessionId) {
+            $this->gcCalled = false;
+
+            $this->cache->deleteItem($this->sessionId);
+        }
+
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function gc($lifetime)
+    protected function doRead($sessionId): string
     {
-        return true;
-    }
+        $this->sessionId = $sessionId;
 
-    /**
-     * @inheritDoc
-     */
-    protected function doRead($sessionId)
-    {
         return (string) $this->cache->getItem($sessionId)->get();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
-    protected function doWrite($sessionId, $data)
+    protected function doWrite($sessionId, $data): bool
     {
         $item = $this->cache->getItem($sessionId)
             ->expiresAfter($this->minutes);

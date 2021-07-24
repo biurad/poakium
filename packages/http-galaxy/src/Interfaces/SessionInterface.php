@@ -21,15 +21,11 @@ use Biurad\Http\Sessions\Bags\FlashBag;
 use Biurad\Http\Sessions\Bags\SessionBag;
 use Biurad\Http\Sessions\MetadataBag;
 use Psr\Http\Message\ServerRequestInterface;
-use RuntimeException;
-use SessionHandlerInterface;
 
 interface SessionInterface
 {
     /**
      * Checks if an attribute is defined.
-     *
-     * @return bool
      */
     public function has(string $name): bool;
 
@@ -69,37 +65,27 @@ interface SessionInterface
     /**
      * Starts the session storage.
      *
-     * @throws RuntimeException if session fails to start
-     *
-     * @return bool
+     * @throws \RuntimeException if session fails to start
      */
     public function start(): bool;
 
     /**
      * Returns the session ID.
-     *
-     * @return string
      */
     public function getId(): string;
 
     /**
      * Sets the session ID.
-     *
-     * @param string $id
      */
     public function setId(string $id): void;
 
     /**
      * Returns the session name.
-     *
-     * @return string
      */
     public function getName(): string;
 
     /**
      * Sets the session name.
-     *
-     * @param string $name
      */
     public function setName(string $name): void;
 
@@ -113,8 +99,6 @@ interface SessionInterface
      *                      will leave the system settings unchanged, 0 sets the cookie
      *                      to expire with browser session. Time is in seconds, and is
      *                      not a Unix timestamp.
-     *
-     * @return bool
      */
     public function invalidate(int $lifetime = null): bool;
 
@@ -127,8 +111,6 @@ interface SessionInterface
      *                       will leave the system settings unchanged, 0 sets the cookie
      *                       to expire with browser session. Time is in seconds, and is
      *                       not a Unix timestamp.
-     *
-     * @return bool
      */
     public function migrate(bool $destroy = false, int $lifetime = null): bool;
 
@@ -143,8 +125,6 @@ interface SessionInterface
 
     /**
      * Checks if the session was started.
-     *
-     * @return bool
      */
     public function isStarted(): bool;
 
@@ -155,45 +135,31 @@ interface SessionInterface
 
     /**
      * Gets a bag instance by name.
-     *
-     * @param string $name
-     *
-     * @return SessionBagInterface
      */
     public function getBag(string $name): SessionBagInterface;
 
     /**
-     * Gets the default sessionbag
-     *
-     * @return SessionBag
+     * Gets the default sessionbag.
      */
     public function getSessionBag(): SessionBag;
 
     /**
      * Gets the flashbag from sessions.
-     *
-     * @return FlashBag
      */
     public function getFlashBag(): FlashBag;
 
     /**
      * Gets session meta.
-     *
-     * @return MetadataBag
      */
     public function getMetadataBag(): MetadataBag;
 
     /**
      * Get the session handler instance.
-     *
-     * @return SessionHandlerInterface
      */
-    public function getHandler(): SessionHandlerInterface;
+    public function getHandler(): \SessionHandlerInterface;
 
     /**
      * Set the request on the handler instance.
-     *
-     * @param ServerRequestInterface $request
      */
     public function setRequestOnHandler(ServerRequestInterface $request): void;
 }

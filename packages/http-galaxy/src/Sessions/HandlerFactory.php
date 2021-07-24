@@ -25,45 +25,32 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class HandlerFactory
 {
-    /** @var null|CacheItemPoolInterface */
+    /** @var CacheItemPoolInterface|null */
     private $cache;
 
-    /** @var null|CookieFactoryInterface */
+    /** @var CookieFactoryInterface|null */
     private $cookie;
 
-    /** @var null|int|string */
+    /** @var int|string|null */
     private $minutes;
 
     /**
-     * @param null|CacheItemPoolInterface  $cache
-     * @param null|CookieFactoryInterface $cookie
-     * @param null|int|string              $minutes
+     * @param int|string|null $minutes
      */
-    public function __construct(
-        ?CacheItemPoolInterface $cache = null,
-        ?CookieFactoryInterface $cookie = null,
-        $minutes = null
-    ) {
-        $this->cache    = $cache;
-        $this->cookie   = $cookie;
-        $this->minutes  = $minutes;
+    public function __construct(CookieFactoryInterface $cookie = null, CacheItemPoolInterface $cache = null, $minutes = null)
+    {
+        $this->cache = $cache;
+        $this->cookie = $cookie;
+        $this->minutes = $minutes;
     }
 
     /**
      * @param PDO|string $connection Connection or DSN
-     *
-     * @return Handlers\AbstractSessionHandler
      */
     public function createHandler($connection): Handlers\AbstractSessionHandler
     {
         if (!\is_string($connection) && !\is_object($connection)) {
-            throw new \TypeError(
-                \sprintf(
-                    'Argument 1 passed to %s() must be a string or a connection object, %s given.',
-                    __METHOD__,
-                    \gettype($connection)
-                )
-            );
+            throw new \TypeError(\sprintf('Argument 1 passed to %s() must be a string or a connection object, %s given.', __METHOD__, \gettype($connection)));
         }
 
         switch (true) {

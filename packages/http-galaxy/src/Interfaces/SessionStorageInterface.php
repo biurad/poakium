@@ -18,8 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Http\Interfaces;
 
 use Biurad\Http\Sessions\MetadataBag;
-use InvalidArgumentException;
-use RuntimeException;
 
 /**
  * StorageInterface.
@@ -32,7 +30,7 @@ interface SessionStorageInterface
     /**
      * Starts the session.
      *
-     * @throws RuntimeException if something goes wrong starting the session
+     * @throws \RuntimeException if something goes wrong starting the session
      *
      * @return bool True if started
      */
@@ -94,7 +92,7 @@ interface SessionStorageInterface
      *                       to expire with browser session. Time is in seconds, and is
      *                       not a Unix timestamp.
      *
-     * @throws RuntimeException If an error occurs while regenerating this storage
+     * @throws \RuntimeException If an error occurs while regenerating this storage
      *
      * @return bool True if session regenerated, false if error
      */
@@ -108,8 +106,8 @@ interface SessionStorageInterface
      * a real PHP session would interfere with testing, in which case
      * it should actually persist the session data if required.
      *
-     * @throws RuntimeException if the session is saved without being started, or if the session
-     *                          is already closed
+     * @throws \RuntimeException if the session is saved without being started, or if the session
+     *                           is already closed
      */
     public function save(): void;
 
@@ -121,9 +119,7 @@ interface SessionStorageInterface
     /**
      * Gets a SessionBagInterface by name.
      *
-     * @throws InvalidArgumentException If the bag does not exist
-     *
-     * @return SessionBagInterface
+     * @throws \InvalidArgumentException If the bag does not exist
      */
     public function getBag(string $name): SessionBagInterface;
 
@@ -132,8 +128,5 @@ interface SessionStorageInterface
      */
     public function registerBag(SessionBagInterface $bag): void;
 
-    /**
-     * @return MetadataBag
-     */
     public function getMetadataBag(): MetadataBag;
 }

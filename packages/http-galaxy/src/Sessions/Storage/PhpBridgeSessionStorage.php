@@ -20,16 +20,13 @@ namespace Biurad\Http\Sessions\Storage;
 use Biurad\Http\Sessions\MetadataBag;
 
 /**
- * Allows session to be started by PHP and managed by Biurad adopting Symfony Style.
+ * Allows session to be started by PHP and managed by this class.
  *
  * @author Drak <drak@zikula.org>
  */
 class PhpBridgeSessionStorage extends NativeSessionStorage
 {
-    /**
-     * @param null|AbstractProxy|\SessionHandlerInterface $handler
-     */
-    public function __construct($handler = null, MetadataBag $metaBag = null)
+    public function __construct(\SessionHandlerInterface $handler = null, MetadataBag $metaBag = null)
     {
         if (!\extension_loaded('session')) {
             throw new \LogicException('PHP extension "session" is required.');

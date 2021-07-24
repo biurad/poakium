@@ -26,8 +26,6 @@ interface SessionBagInterface
 {
     /**
      * Gets this bag's name.
-     *
-     * @return string
      */
     public function getName(): string;
 
@@ -38,8 +36,6 @@ interface SessionBagInterface
 
     /**
      * Gets the storage key for this bag.
-     *
-     * @return string
      */
     public function getStorageKey(): string;
 

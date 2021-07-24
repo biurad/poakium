@@ -24,8 +24,6 @@ use Biurad\Http\Sessions\Bags\FlashBag;
 use Biurad\Http\Sessions\Bags\SessionBag;
 use Biurad\Http\Sessions\Handlers\CookieSessionHandler;
 use Biurad\Http\Sessions\MetadataBag;
-use Biurad\Http\Sessions\Proxy\AbstractProxy;
-use Biurad\Http\Sessions\Proxy\SessionBagProxy;
 use Biurad\Http\Sessions\Storage\NativeSessionStorage;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -39,55 +37,29 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Session implements SessionInterface
 {
-    /**
-     * The session handler implementation.
-     *
-     * @var \SessionHandlerInterface
-     */
+    /** @var \SessionHandlerInterface */
     protected $saveHandler;
 
-    /**
-     * The secction storage implementation
-     *
-     * @var AbstractProxy|SessionStorageInterface
-     */
+    /** @var SessionStorageInterface */
     protected $storage;
 
-    /**
-     * The session attributes storage name.
-     *
-     * @var string
-     */
+    /** @var string */
     private $attributeName;
 
-    /**
-     * The session flashes storage name.
-     *
-     * @var string
-     */
+    /** @var string */
     private $flashName;
 
-    /** @var array */
-    private $data = [];
-
-    /** @var int */
-    private $usageIndex = 0;
-
-    /** @var null|callable */
-    private $usageReporter;
-
-    public function __construct(?SessionStorageInterface $storage = null, callable $usageReporter = null)
+    public function __construct(SessionStorageInterface $storage = null)
     {
-        $this->storage         = $storage ?? new NativeSessionStorage();
-        $this->usageReporter   = $usageReporter;
+        $this->storage = $storage ?? new NativeSessionStorage();
 
-        $attributes          = new SessionBag();
+        $attributes = new SessionBag();
         $this->attributeName = $attributes->getName();
-        $this->registerBag($attributes);
+        $this->storage->registerBag($attributes);
 
-        $flashes         = new FlashBag();
+        $flashes = new FlashBag();
         $this->flashName = $flashes->getName();
-        $this->registerBag($flashes);
+        $this->storage->registerBag($flashes);
     }
 
     /**
@@ -104,11 +76,6 @@ class Session implements SessionInterface
     public function isStarted(): bool
     {
         return $this->storage->isStarted();
-    }
-
-    public function &getUsageIndex(): int
-    {
-        return $this->usageIndex;
     }
 
     /**
@@ -194,28 +161,6 @@ class Session implements SessionInterface
     }
 
     /**
-     * @internal
-     */
-    public function isEmpty(): bool
-    {
-        if ($this->isStarted()) {
-            ++$this->usageIndex;
-
-            if ($this->usageReporter && 0 <= $this->usageIndex) {
-                ($this->usageReporter)();
-            }
-        }
-
-        foreach ($this->data as &$data) {
-            if (!empty($data)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function invalidate(int $lifetime = null): bool
@@ -244,31 +189,33 @@ class Session implements SessionInterface
     /**
      * Returns an iterator for attributes.
      *
-     * @return ArrayIterator An \ArrayIterator instance
+     * @return \ArrayIterator An \ArrayIterator instance
      */
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
         return $this->getSessionBag()->getIterator();
     }
 
     /**
      * Returns the number of attributes.
-     *
-     * @return int
      */
-    public function count()
+    public function count(): int
     {
-        return \count($this->getSessionBag());
+        return $this->getSessionBag()->count();
     }
 
     /**
      * Get the underlying session handler implementation.
-     *
-     * @return \SessionHandlerInterface
      */
     public function getHandler(): \SessionHandlerInterface
     {
-        return $this->saveHandler;
+        $saveHandler = $this->saveHandler;
+
+        if (null === $saveHandler && $this->storage instanceof NativeSessionStorage) {
+            return $this->storage->getSaveHandler();
+        }
+
+        return $saveHandler;
     }
 
     /**
@@ -287,23 +234,24 @@ class Session implements SessionInterface
      * @see https://php.net/sessionhandlerinterface
      * @see https://php.net/sessionhandler
      *
-     * @param null|AbstractProxy|\SessionHandlerInterface $saveHandler
+     * @param \SessionHandlerInterface|null $saveHandler
      *
      * @throws \InvalidArgumentException
      */
-    public function setHandler(?\SessionHandlerInterface $handler): void
+    public function setHandler(\SessionHandlerInterface $handler): void
     {
-        if (!$handler instanceof \SessionHandlerInterface && null !== $handler) {
-            throw new \InvalidArgumentException('Must implement \SessionHandlerInterface; and not null.');
-        }
         $this->saveHandler = $handler;
 
-        if (\headers_sent() || \PHP_SESSION_ACTIVE === \session_status()) {
-            return;
-        }
+        if ($this->storage instanceof NativeSessionStorage) {
+            $this->storage->setSaveHandler($handler);
+        } else {
+            if (\headers_sent() || \PHP_SESSION_ACTIVE === \session_status()) {
+                return;
+            }
 
-        if ($this->saveHandler instanceof \SessionHandlerInterface) {
-            \session_set_save_handler($this->saveHandler, false);
+            if ($this->saveHandler instanceof \SessionHandlerInterface) {
+                \session_set_save_handler($this->saveHandler, false);
+            }
         }
     }
 
@@ -312,12 +260,6 @@ class Session implements SessionInterface
      */
     public function getMetadataBag(): MetadataBag
     {
-        ++$this->usageIndex;
-
-        if ($this->usageReporter && 0 <= $this->usageIndex) {
-            ($this->usageReporter)();
-        }
-
         return $this->storage->getMetadataBag();
     }
 
@@ -326,7 +268,7 @@ class Session implements SessionInterface
      */
     public function registerBag(SessionBagInterface $bag): void
     {
-        $this->storage->registerBag(new SessionBagProxy($bag, $this->data, $this->usageIndex, $this->usageReporter));
+        $this->storage->registerBag($bag);
     }
 
     /**
@@ -334,9 +276,7 @@ class Session implements SessionInterface
      */
     public function getBag($name): SessionBagInterface
     {
-        $bag = $this->storage->getBag($name);
-
-        return \method_exists($bag, 'getBag') ? $bag->getBag() : $bag;
+        return $this->storage->getBag($name);
     }
 
     /**
@@ -357,13 +297,17 @@ class Session implements SessionInterface
 
     /**
      * Set the request on the handler instance.
-     *
-     * @param ServerRequestInterface $request
      */
     public function setRequestOnHandler(ServerRequestInterface $request): void
     {
-        if ($this->saveHandler instanceof CookieSessionHandler) {
-            $this->saveHandler->setRequest($request);
+        $saveHandler = $this->saveHandler;
+
+        if ($this->storage instanceof NativeSessionStorage) {
+            $saveHandler = $this->storage->getSaveHandler();
+        }
+
+        if ($saveHandler instanceof CookieSessionHandler) {
+            $saveHandler->setRequest($request);
         }
     }
 }
