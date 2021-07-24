@@ -21,10 +21,10 @@ use Biurad\Http\Interfaces\Psr17Interface;
 use Biurad\Http\Request;
 use Biurad\Http\Response;
 use Biurad\Http\ServerRequest;
-use Biurad\Http\Stream;
 use Biurad\Http\UploadedFile;
 use Biurad\Http\Uri;
 use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
+use GuzzleHttp\Psr7\Stream;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -75,9 +75,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStream(string $content = ''): StreamInterface
     {
-        $stream = Utils::streamFor($content);
-
-        return (new Stream())->withStream($stream);
+        return Utils::streamFor($content);
     }
 
     /**
@@ -85,10 +83,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStreamFromFile(string $file, string $mode = 'r'): StreamInterface
     {
-        $resource = Utils::tryFopen($file, $mode);
-        $stream = Utils::streamFor($resource);
-
-        return (new Stream())->withStream($stream);
+        return new Stream(Utils::tryFopen($file, $mode));
     }
 
     /**
@@ -96,9 +91,7 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createStreamFromResource($resource): StreamInterface
     {
-        $stream = Utils::streamFor($resource);
-
-        return (new Stream())->withStream($stream);
+        return new Stream($resource);
     }
 
     /**
@@ -106,10 +99,10 @@ class GuzzleHttpPsr7Factory implements Psr17Interface
      */
     public function createUploadedFile(
         StreamInterface $stream,
-        ?int $size = null,
+        int $size = null,
         int $error = \UPLOAD_ERR_OK,
-        ?string $clientFilename = null,
-        ?string $clientMediaType = null
+        string $clientFilename = null,
+        string $clientMediaType = null
     ): UploadedFileInterface {
         return new UploadedFile($stream, $size ?? $stream->getSize(), $error, $clientFilename, $clientMediaType);
     }
