@@ -23,7 +23,7 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
- * Class ServerRequest
+ * Class ServerRequest.
  */
 class ServerRequest implements ServerRequestInterface
 {
@@ -35,9 +35,9 @@ class ServerRequest implements ServerRequestInterface
      * @param string                               $method       HTTP method
      * @param string|UriInterface                  $uri          URI
      * @param array                                $headers      Request headers
-     * @param null|resource|StreamInterface|string $body         Request body
+     * @param resource|StreamInterface|string|null $body         Request body
      * @param string                               $version      Protocol version
-     * @param array                                $serverParams Typically the $_SERVER superglobal
+     * @param array<string,mixed>                  $serverParams Typically the $_SERVER superglobal
      */
     public function __construct(
         string $method,
@@ -48,24 +48,5 @@ class ServerRequest implements ServerRequestInterface
         array $serverParams = []
     ) {
         $this->message = new Psr7ServerRequest($method, $uri, $headers, $body, $version, $serverParams);
-    }
-
-    /**
-     * Return a ServerRequest populated with superglobals:
-     * $_GET
-     * $_POST
-     * $_COOKIE
-     * $_FILES
-     * $_SERVER
-     *
-     * @return ServerRequestInterface
-     */
-    public static function fromGlobals()
-    {
-        $method        = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri           = Psr7ServerRequest::getUriFromGlobals();
-        $serverRequest = new static($method, $uri);
-
-        return $serverRequest->withRequest(Psr7ServerRequest::fromGlobals());
     }
 }
