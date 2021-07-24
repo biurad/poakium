@@ -15,13 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Exceptions;
-
-use DomainException;
+namespace Biurad\Http\Exception;
 
 /**
- * General Psr17 exception.
+ * Exception when a server error is encountered (5xx codes)
  */
-class InvalidPsr17FactoryException extends DomainException
+class ServerException extends BadResponseException
 {
 }

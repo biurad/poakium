@@ -15,10 +15,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Exceptions;
+namespace Biurad\Http\Exception;
 
-use DomainException;
-
-class EmitterException extends DomainException
+/**
+ * Exception when a client error is encountered (4xx codes)
+ */
+class ClientException extends BadResponseException
 {
 }
