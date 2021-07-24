@@ -30,6 +30,35 @@ trait RequestDecoratorTrait
     }
 
     /**
+     * Convert response to string.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     */
+    public function __toString(): string
+    {
+        $eol = "\r\n"; // EOL characters used for HTTP response
+        $output = \sprintf('%s %s HTTP/%s', $this->getMethod(), (string) $this->getUri(), $this->getProtocolVersion() . $eol);
+
+        foreach ($this->getHeaders() as $name => $values) {
+            if ('Host' === $name) {
+                $values = \array_unique($values);
+            }
+
+            if (\count($values) > 10) {
+                $output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . $eol;
+            } else {
+                foreach ($values as $value) {
+                    $output .= $name . ': ' . $value . $eol;
+                }
+            }
+        }
+
+        $output .= $eol . (string) $this->getBody();
+
+        return $output;
+    }
+
+    /**
      * Returns the decorated request.
      *
      * Since the underlying Request is immutable as well

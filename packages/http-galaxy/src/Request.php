@@ -22,7 +22,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
-class Request implements RequestInterface
+class Request implements RequestInterface, \Stringable
 {
     use Traits\RequestDecoratorTrait {
         getRequest as private;
@@ -32,7 +32,7 @@ class Request implements RequestInterface
      * @param string                               $method  HTTP method
      * @param string|UriInterface                  $uri     URI
      * @param array                                $headers Request headers
-     * @param null|resource|StreamInterface|string $body    Request body
+     * @param resource|StreamInterface|string|null $body    Request body
      * @param string                               $version Protocol version
      */
     public function __construct(string $method, $uri, array $headers = [], $body = null, string $version = '1.1')

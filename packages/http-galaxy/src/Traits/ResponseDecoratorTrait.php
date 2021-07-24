@@ -35,35 +35,6 @@ trait ResponseDecoratorTrait
     }
 
     /**
-     * Convert response to string.
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return string
-     */
-    public function __toString(): string
-    {
-        $eol = "\r\n"; // EOL characters used for HTTP response
-
-        $output   = \sprintf(
-            'HTTP/%s %s %s%s',
-            $this->getProtocolVersion(),
-            $this->getStatusCode(),
-            $this->getReasonPhrase(),
-            $eol
-        );
-
-        foreach ($this->getHeaders() as $name => $values) {
-            $output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . $eol;
-        }
-
-        $output .= $eol;
-        $output .= (string) $this->getBody();
-
-        return $output;
-    }
-
-    /**
      * Returns the decorated response.
      *
      * Since the underlying Response is immutable as well

@@ -179,35 +179,6 @@ trait ServerRequestDecoratorTrait
     }
 
     /**
-     * Convert response to string.
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return string
-     */
-    public function __toString(): string
-    {
-        $eol = "\r\n"; // EOL characters used for HTTP response
-
-        $output   = \sprintf(
-            'HTTP/%s %s %s%s',
-            $this->getProtocolVersion(),
-            $this->getMethod(),
-            (string) $this->getUri(),
-            $eol
-        );
-
-        foreach ($this->getHeaders() as $name => $values) {
-            $output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . $eol;
-        }
-
-        $output .= $eol;
-        $output .= (string) $this->getBody();
-
-        return $output;
-    }
-
-    /**
      * Fetch cookie value from cookies sent by the client to the server.
      *
      * Note: This method is not part of the PSR-7 standard.

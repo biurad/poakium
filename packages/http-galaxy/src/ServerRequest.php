@@ -25,7 +25,7 @@ use Psr\Http\Message\UriInterface;
 /**
  * Class ServerRequest.
  */
-class ServerRequest implements ServerRequestInterface
+class ServerRequest implements ServerRequestInterface, \Stringable
 {
     use Traits\ServerRequestDecoratorTrait {
         getRequest as private;

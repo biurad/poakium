@@ -23,9 +23,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
 /**
- * Class Response
+ * Class Response.
  */
-class Response implements ResponseInterface, StatusCodeInterface
+class Response implements ResponseInterface, StatusCodeInterface, \Stringable
 {
     use Traits\ResponseDecoratorTrait {
         getResponse as private;
@@ -34,17 +34,35 @@ class Response implements ResponseInterface, StatusCodeInterface
     /**
      * @param int                                  $status  Status code
      * @param array                                $headers Response headers
-     * @param null|resource|StreamInterface|string $body    Response body
+     * @param resource|StreamInterface|string|null $body    Response body
      * @param string                               $version Protocol version
-     * @param null|string                          $reason  Reason phrase (optional)
+     * @param string|null                          $reason  Reason phrase (optional)
      */
-    public function __construct(
-        int $status = 200,
-        array $headers = [],
-        $body = null,
-        string $version = '1.1',
-        string $reason = null
-    ) {
+    public function __construct(int $status = 200, array $headers = [], $body = null, string $version = '1.1', string $reason = null)
+    {
         $this->message = new Psr7Response($status, $headers, $body, $version, $reason);
+    }
+
+    /**
+     * Convert response to string.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     */
+    public function __toString(): string
+    {
+        $eol = "\r\n"; // EOL characters used for HTTP response
+        $output = \sprintf('HTTP/%s %d %s', $this->getProtocolVersion(), $this->getStatusCode(), $this->getReasonPhrase() . $eol);
+
+        foreach ($this->getHeaders() as $name => $values) {
+            if (\count($values) > 10) {
+                $output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . $eol;
+            } else {
+                foreach ($values as $value) {
+                    $output .= $name . ': ' . $value . $eol;
+                }
+            }
+        }
+
+        return $output .= $eol . (string) $this->getBody();
     }
 }
