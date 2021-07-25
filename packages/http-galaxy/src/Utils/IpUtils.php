@@ -80,7 +80,7 @@ class IpUtils
         }
 
         if (false !== \strpos($ip, '/')) {
-            list($address, $netmask) = \explode('/', $ip, 2);
+            [$address, $netmask] = \explode('/', $ip, 2);
 
             if ('0' === $netmask) {
                 return self::$checkedIps[$cacheKey] = \filter_var($address, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV4);
@@ -105,7 +105,7 @@ class IpUtils
      * Compares two IPv6 addresses.
      * In case a subnet is given, it checks if it contains the request IP.
      *
-     * @author David Soria Parra <dsp at php dot net>
+     * @author David Soria Parra <dsp@php.net>
      *
      * @see https://github.com/dsp/v6tools
      *
@@ -128,7 +128,7 @@ class IpUtils
         }
 
         if (false !== \strpos($ip, '/')) {
-            list($address, $netmask) = \explode('/', $ip, 2);
+            [$address, $netmask] = \explode('/', $ip, 2);
 
             if ('0' === $netmask) {
                 return (bool) \unpack('n*', @\inet_pton($address));
@@ -173,7 +173,7 @@ class IpUtils
 
         if ('[' === \substr($ip, 0, 1) && ']' === \substr($ip, -1, 1)) {
             $wrappedIPv6 = true;
-            $ip          = \substr($ip, 1, -1);
+            $ip = \substr($ip, 1, -1);
         }
 
         $packedAddress = \inet_pton($ip);

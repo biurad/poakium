@@ -34,7 +34,7 @@ final class SessionUtils
     public static function popSessionCookie(string $sessionName, string $sessionId): ?string
     {
         $sessionCookie = null;
-        $sessionCookiePrefix = ' ' . \urlencode($sessionName)  . '=';;
+        $sessionCookiePrefix = ' ' . \urlencode($sessionName)  . '=';
         $sessionCookieWithId = $sessionCookiePrefix . \urlencode($sessionId) . ';';
         $otherCookies = [];
 

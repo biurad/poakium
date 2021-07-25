@@ -56,10 +56,7 @@ class ContentLengthMiddleware implements MiddlewareInterface
 
         // cf. RFC2616 14.13
         if (('HEAD' === $request->getMethod()) && null !== $response->getBody()->getSize()) {
-            $response = $response->withHeader(
-                'Content-Length',
-                $response->getHeaderLine('Content-Length')
-            );
+            $response = $response->withHeader('Content-Length', $response->getHeaderLine('Content-Length'));
         }
 
         return $response;
