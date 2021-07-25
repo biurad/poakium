@@ -19,20 +19,66 @@ namespace Biurad\Http\Middlewares;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class BasicAuthMiddleware implements MiddlewareInterface
 {
-    /** @var mixed[] */
-    protected $users = [];
+    /**
+     * Authentication based on HTTP `X-Api-Key` request header.
+     *
+     * Supports authentication based on the access token provided in header's value.
+     */
+    public const HTTP_AUTH = 'X-Api-Key';
+
+    /**
+     * Http QueryParameter authentication.
+     *
+     * Supports authentication based on the `access_token` passed through a query parameter.
+     */
+    public const QUERY_AUTH = 'access_token';
+
+    /**
+     * HTTP Basic authentication based on $_SERVER['PHP_AUTH_USER'] and $_SERVER['PHP_AUTH_PW'].
+     *
+     * @see https://tools.ietf.org/html/rfc7617
+     */
+    public const BASIC_AUTH = 'Basic';
+
+    /**
+     * Authentication based on HTTP Bearer token.
+     *
+     * @see https://tools.ietf.org/html/rfc6750
+     */
+    public const BEARER_AUTH = 'Bearer';
+
+    /**
+     * URL Patterns for http authentication should be allowed on.
+     *
+     * E.g. an array of ['#^/home#i', '#^/secure#i'] or true for all.
+     *
+     * @var bool|string[]
+     */
+    private $urlPatterns = [];
+
+    /** @var callable|null */
+    private $authenticationCallback;
 
     /** @var string */
-    private $title;
+    private $realm;
 
-    public function __construct(string $title = 'Restrict zone')
+    /**
+     * @param bool|string[]            $urlPatterns
+     * @param callable(mixed,int)|null $authenticationCallback A PHP callable that will authenticate
+     *                                                         the HTTP authentication information
+     * @param string                   $realm                  The HTTP authentication realm
+     */
+    public function __construct($urlPatterns = [], callable $authenticationCallback = null, string $realm = 'api')
     {
-        $this->title = $title;
+        $this->realm = $realm;
+        $this->urlPatterns = $urlPatterns;
+        $this->authenticationCallback = $authenticationCallback;
     }
 
     /**
@@ -40,58 +86,93 @@ class BasicAuthMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $authorization = $this->parseAuthorizationHeader($request->getHeaderLine('Authorization'));
+        $response = $handler->handle($request);
+        $matched = $this->checkMatchingURL($request->getUri(), $request->getServerParams()['PATH_INFO'] ?? '');
 
-        if ($authorization !== null && $this->auth($authorization['username'], $authorization['password'])) {
-            return $handler->handle($request->withAttribute('username', $authorization['username']));
+        if ($matched && null !== $authenticationCallback = $this->authenticationCallback) {
+            $credentials = $this->getAuthenticationCredentials($request);
+
+            if (!$authenticationCallback(...$credentials)) {
+                $response = $response->withStatus(401);
+
+                if (self::BASIC_AUTH === $credentials[1] || self::BEARER_AUTH === $credentials[1]) {
+                    $response = $response->withHeader('WWW-Authenticate', "{$credentials[1]} realm=\"{$this->realm}\"");
+                }
+            }
         }
 
-        return $handler
-            ->handle($request)
-            ->withStatus(401)
-            ->withHeader('WWW-Authenticate', 'Basic realm="' . $this->title . '"');
-    }
-
-    public function addUser(string $user, string $password, bool $unsecured = false): self
-    {
-        $this->users[$user] = [
-            'password'  => $password,
-            'unsecured' => $unsecured,
-        ];
-
-        return $this;
-    }
-
-    protected function auth(string $user, string $password): bool
-    {
-        if (!isset($this->users[$user])) {
-            return false;
-        }
-
-        if (
-            ($this->users[$user]['unsecured'] && !\hash_equals($password, $this->users[$user]['password'])) ||
-            (!$this->users[$user]['unsecured'] && !\password_verify($password, $this->users[$user]['password']))
-        ) {
-            return false;
-        }
-
-        return true;
+        return $response;
     }
 
     /**
-     * @return null|mixed[]
+     * Obtains authentication credentials from request.
+     *
+     * @return array [$token, $auth] array
      */
-    protected function parseAuthorizationHeader(string $header): ?array
+    private function getAuthenticationCredentials(ServerRequestInterface $request): array
     {
-        if (\strpos($header, 'Basic') !== 0) {
-            return null;
+        $username = $request->getServerParams()['PHP_AUTH_USER'] ?? null;
+        $password = $request->getServerParams()['PHP_AUTH_PW'] ?? null;
+
+        if (null !== $username || null !== $password) {
+            return [$username, $password];
         }
 
-        $header = \explode(':', (string) \base64_decode(\substr($header, 6), true), 2);
+        /*
+         * Apache with php-cgi does not pass HTTP Basic authentication to PHP by default.
+         * To make it work, add the following line to to your .htaccess file:
+         *
+         * RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+         */
+        if (null !== $token = $this->getTokenFromHeaders($request)) {
+            if (\str_starts_with($token, self::BASIC_AUTH)) {
+                return [\substr($token, 6), self::BASIC_AUTH];
+            }
 
-        return [
-            'username' => $header[0],
-            'password' => $header[1] ?? null,
-        ];
+            if (\str_starts_with($token, self::BEARER_AUTH)) {
+                return [\substr($token, 6), self::BEARER_AUTH];
+            }
+        }
+
+        if ($request->hasHeader(self::HTTP_AUTH)) {
+            return [$request->getHeaderLine('X-Api-Key'), self::HTTP_AUTH];
+        }
+
+        if (!empty($queryToken = $request->getQueryParams()[self::QUERY_AUTH] ?? null)) {
+            return [$queryToken, self::QUERY_AUTH];
+        }
+
+        return [null, null];
+    }
+
+    private function getTokenFromHeaders(ServerRequestInterface $request): ?string
+    {
+        if (!empty($header = $request->getHeaderLine('Authorization'))) {
+            return $header;
+        }
+
+        return $request->getServerParams()['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+    }
+
+    /**
+     * Check if global basic auth is enabled for the given request.
+     */
+    private function checkMatchingURL(UriInterface $requestUri, string $pathInfo): bool
+    {
+        if (\is_bool($patterns = $this->urlPatterns)) {
+            return $patterns;
+        }
+
+        if (\is_array($patterns) && !empty($patterns)) {
+            $requestPath = !empty($pathInfo) ? $pathInfo : $requestUri->getPath();
+
+            foreach ($patterns as $pathRegexp) {
+                if (1 === \preg_match($pathRegexp, $requestPath)) {
+                    return true;
+                }
+            }
+        }
+
+        return false; // No patterns match
     }
 }
