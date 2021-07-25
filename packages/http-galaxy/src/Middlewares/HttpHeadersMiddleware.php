@@ -27,7 +27,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class HttpMiddleware implements MiddlewareInterface
+class HttpHeadersMiddleware implements MiddlewareInterface
 {
     /** @var array<string,array<string,mixed>> */
     private $config;
@@ -49,7 +49,7 @@ class HttpMiddleware implements MiddlewareInterface
         $response = $handler->handle($request);
 
         foreach ($this->config['response'] ?? [] as $resHeader => $resValue) {
-            $request = $request->withHeader($resHeader, $resValue);
+            $response = $response->withHeader($resHeader, $resValue);
         }
 
         return $response;
