@@ -257,6 +257,6 @@ trait ServerRequestDecoratorTrait
      */
     public function getRemoteAddress(): ?string
     {
-        return $this->getParameter('REMOTE_ADDR');
+        return $this->getAttribute('TRUSTED_PROXY_IP', $this->getServerParams()['REMOTE_ADDR'] ?? null);
     }
 }
