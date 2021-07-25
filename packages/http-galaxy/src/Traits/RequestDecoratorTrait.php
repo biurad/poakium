@@ -138,22 +138,6 @@ trait RequestDecoratorTrait
     }
 
     /**
-     * Get the Authorization header token from the request headers.
-     *
-     * Note: This method is not part of the PSR-7 standard.
-     */
-    public function getAuthorizationToken(string $headerName = 'Bearer'): ?string
-    {
-        $header = $this->getHeaderLine('Authorization');
-
-        if (false !== \mb_strpos($header, "$headerName ")) {
-            return \mb_substr($header, 7);
-        }
-
-        return null;
-    }
-
-    /**
      * Check if request was made over http protocol.
      *
      * Note: This method is not part of the PSR-7 standard.
