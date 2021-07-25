@@ -23,7 +23,12 @@ use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class BasicAuthMiddleware implements MiddlewareInterface
+/**
+ * Authenticates a user's identity via various HTTP authentication methods.
+ * 
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
+ */
+class HttpAuthMiddleware implements MiddlewareInterface
 {
     /**
      * Authentication based on HTTP `X-Api-Key` request header.
@@ -60,7 +65,7 @@ class BasicAuthMiddleware implements MiddlewareInterface
      *
      * @var bool|string[]
      */
-    private $urlPatterns = [];
+    private $urlPatterns;
 
     /** @var callable|null */
     private $authenticationCallback;
