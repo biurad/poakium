@@ -28,7 +28,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  *
  * Status codes 400-499 lead to a ClientErrorException, status 500-599 to a ServerErrorException.
  */
-final class ErrorHandlerMiddleware implements MiddlewareInterface
+class ErrorHandlerMiddleware implements MiddlewareInterface
 {
     /** @var bool */
     private $throwDisabled;
