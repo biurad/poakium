@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Strategies;
+namespace Biurad\Http;
 
 use Biurad\Http\Interfaces\RequestMatcherInterface;
 use Biurad\Http\ServerRequest;
