@@ -25,7 +25,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Authenticates a user's identity via various HTTP authentication methods.
- * 
+ *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class HttpAuthMiddleware implements MiddlewareInterface
@@ -74,10 +74,10 @@ class HttpAuthMiddleware implements MiddlewareInterface
     private $realm;
 
     /**
-     * @param bool|string[]            $urlPatterns
-     * @param callable(mixed,int)|null $authenticationCallback A PHP callable that will authenticate
-     *                                                         the HTTP authentication information
-     * @param string                   $realm                  The HTTP authentication realm
+     * @param bool|string[]                              $urlPatterns
+     * @param (callable(array:string|null,?string))|null $authenticationCallback A PHP callable that will authenticate
+     *                                                                           the HTTP authentication information
+     * @param string                                     $realm                  The HTTP authentication realm
      */
     public function __construct($urlPatterns = [], callable $authenticationCallback = null, string $realm = 'api')
     {
@@ -120,7 +120,7 @@ class HttpAuthMiddleware implements MiddlewareInterface
         $password = $request->getServerParams()['PHP_AUTH_PW'] ?? null;
 
         if (null !== $username || null !== $password) {
-            return [$username, $password];
+            return [[$username, $password], self::BASIC_AUTH];
         }
 
         /*
