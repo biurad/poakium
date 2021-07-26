@@ -211,11 +211,11 @@ class HttpCorsMiddleware implements MiddlewareInterface
         $requestPath = !empty($pathInfo) ? $pathInfo : $requestUri->getPath();
 
         foreach ($paths as $pathRegexp => $options) {
-            if (1 !== \preg_match('/' . $pathRegexp . '/', $requestPath)) {
-                return false;
-            }
+            if (1 === \preg_match('{' . \preg_quote($pathRegexp, '/') . '}', $requestPath)) {
+                $this->options = \array_merge($this->options, $options);
 
-            $this->options = \array_merge($this->options, $options);
+                return true;
+            }
         }
 
         return false;
