@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
+use Biurad\Http\Interfaces\HttpAuthInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -67,19 +68,18 @@ class HttpAuthMiddleware implements MiddlewareInterface
      */
     private $urlPatterns;
 
-    /** @var callable|null */
+    /** @var HttpAuthInterface|null */
     private $authenticationCallback;
 
     /** @var string */
     private $realm;
 
     /**
-     * @param bool|string[]                              $urlPatterns
-     * @param (callable(array:string|null,?string))|null $authenticationCallback A PHP callable that will authenticate
-     *                                                                           the HTTP authentication information
-     * @param string                                     $realm                  The HTTP authentication realm
+     * @param HttpAuthInterface $authenticationCallback For authenticating HTTP auth information
+     * @param bool|string[]     $urlPatterns            E.g. an array of ['#^/home#i', '#^/secure#i'] or true for all.
+     * @param string            $realm                  The HTTP authentication realm
      */
-    public function __construct($urlPatterns = [], callable $authenticationCallback = null, string $realm = 'api')
+    public function __construct(HttpAuthInterface $authenticationCallback, $urlPatterns = false, string $realm = 'api')
     {
         $this->realm = $realm;
         $this->urlPatterns = $urlPatterns;
@@ -94,10 +94,10 @@ class HttpAuthMiddleware implements MiddlewareInterface
         $response = $handler->handle($request);
         $matched = $this->checkMatchingURL($request->getUri(), $request->getServerParams()['PATH_INFO'] ?? '');
 
-        if ($matched && null !== $authenticationCallback = $this->authenticationCallback) {
-            $credentials = $this->getAuthenticationCredentials($request);
+        if ($matched && null !== $credentials = $this->getAuthenticationCredentials($request)) {
+            $authenticated = ($this->authenticationCallback)(...$credentials);
 
-            if (!$authenticationCallback(...$credentials)) {
+            if (!$authenticated) {
                 $response = $response->withStatus(401);
 
                 if (self::BASIC_AUTH === $credentials[1] || self::BEARER_AUTH === $credentials[1]) {
@@ -112,9 +112,9 @@ class HttpAuthMiddleware implements MiddlewareInterface
     /**
      * Obtains authentication credentials from request.
      *
-     * @return array [$token, $auth] array
+     * @return array<int,mixed>|null [$token, $auth] array
      */
-    private function getAuthenticationCredentials(ServerRequestInterface $request): array
+    private function getAuthenticationCredentials(ServerRequestInterface $request): ?array
     {
         $username = $request->getServerParams()['PHP_AUTH_USER'] ?? null;
         $password = $request->getServerParams()['PHP_AUTH_PW'] ?? null;
@@ -147,7 +147,7 @@ class HttpAuthMiddleware implements MiddlewareInterface
             return [$queryToken, self::QUERY_AUTH];
         }
 
-        return [null, null];
+        return $queryToken;
     }
 
     private function getTokenFromHeaders(ServerRequestInterface $request): ?string
