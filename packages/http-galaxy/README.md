@@ -1,72 +1,93 @@
-# Http Pipeline: abstraction for HTTP request, response, and csp protection plus more.
+<div align="center">
 
-HTTP request and response are encapsulated in `Biurad\Http\Request` and `Biurad\Http\Response` objects which offer comfortable API and also act as
-sanitization filter. This package uses [guzzlehttp/psr7](https://github.com/guzzlehttp/psr7).
+# The PHP HTTP GALAXY
 
-**`Please note that you can get the documentation for this dependency on guzzlehttp website, psr7`**
+[![PHP Version](https://img.shields.io/packagist/php-v/biurad/http-galaxy.svg?style=flat-square&colorB=%238892BF)](http://php.net)
+[![Latest Version](https://img.shields.io/packagist/v/biurad/php-http-galaxy.svg?style=flat-square)](https://packagist.org/packages/biurad/php-http-galaxy)
+[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-http-galaxy/build?style=flat-square)](https://github.com/biurad/php-http-galaxy/actions?query=workflow%3Abuild)
+[![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-http-galaxy?style=flat-square)](https://codeclimate.com/github/biurad/php-http-galaxy)
+[![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-http-galaxy?style=flat-square)](https://codecov.io/gh/biurad/php-http-galaxy)
+[![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-http-galaxy.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-http-galaxy)
 
-## Installation
+</div>
 
-The recommended way to install Http Manager is via Composer:
+---
 
-```bash
-composer require biurad/biurad-http
-```
+Contains full [PSR-17] factory implementation, [PSR-7], [PSR-15], cookies, sessions, and some other functionalities for working with HTTP in [PHP]. Again the [PSR-7] implementation uses [guzzlehttp/psr7] internally, which offers support to dump request and response as stringable values.
 
-It requires PHP version 7.1 and supports PHP up to 7.4. The dev-master version requires PHP 7.2.
+## 📦 Installation & Basic Usage
 
-## How To Use
-
-You have no limitation to what you can do with this package. This package has two factories that implements Psr17 http factories. This package is shipped with two http factories, thus `Biurad\Http\Factory\GuzzleHttpPsr17Factory` and `Biurad\Http\Factory\LaminasPs17Factory`, you can create you custom factory by extending it to abstract class `Biurad\Http\Factory\Psr17Factory`.
-
-If you are using a different package for psr7 http messages, and you want to migrate it this package, use our Biurad\Http\Factory\Psr17Bridge.
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Testing
-
-To run the tests you'll have to start the included node based server if any first in a separate terminal window.
-
-With the server running, you can start testing.
+This project requires [PHP] 7.3 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
-vendor/bin/phpunit
+$ composer require biurad/http-galaxy
 ```
 
-## Security
+## 📓 Documentation
 
-If you discover any security related issues, please report using the issue tracker.
-use our example [Issue Report](.github/ISSUE_TEMPLATE/Bug_report.md) template.
+For in-depth documentation before using this library.. Full documentation on advanced usage, configuration, and customization can be found at [docs.biurad.com][docs].
 
-## Want to be listed on our projects website
+## ⏫ Upgrading
 
-You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us a message on our website, mentioning which of our package(s) you are using.
+Information on how to upgrade to newer versions of this library can be found in the [UPGRADE].
 
-Post Here: [Project Patreons - https://patreons.biurad.com](https://patreons.biurad.com)
+## 🏷️ Changelog
 
-We publish all received request's on our website.
+[SemVer](http://semver.org/) is followed closely. Minor and patch releases should not introduce breaking changes to the codebase; See [CHANGELOG] for more information on what has changed recently.
 
-## Credits
+Any classes or methods marked `@internal` are not intended for use outside of this library and are subject to breaking changes at any time, so please avoid using them.
 
-- [Divine Niiquaye](https://github.com/divineniiquaye)
-- [All Contributors](https://biurad.com/projects/biurad-http/contributers)
+## 🛠️ Maintenance & Support
 
-## Support us
+(This policy may change in the future and exceptions may be made on a case-by-case basis.)
 
-`Biurad Lap` is a webdesign agency in Accra, Ghana. You'll find an overview of all our open source projects [on our website](https://biurad.com/opensource).
+- A new **patch version released** (e.g. `1.0.10`, `1.1.6`) comes out roughly every month. It only contains bug fixes, so you can safely upgrade your applications.
+- A new **minor version released** (e.g. `1.1`, `1.2`) comes out every six months: one in June and one in December. It contains bug fixes and new features, but it doesn’t include any breaking change, so you can safely upgrade your applications;
+- A new **major version released** (e.g. `1.0`, `2.0`, `3.0`) comes out every two years. It can contain breaking changes, so you may need to do some changes in your applications before upgrading.
 
-Does your business depend on our contributions? Reach out and support us on to build more project's. We want to build over one hundred project's in two years. [Support Us](https://biurad.com/donate) achieve our goal.
+When a **major** version is released, the number of minor versions is limited to five per branch (X.0, X.1, X.2, X.3 and X.4). The last minor version of a branch (e.g. 1.4, 2.4) is considered a **long-term support (LTS) version** with lasts for more that 2 years and the other ones cam last up to 8 months:
 
-Reach out and support us on [Patreon](https://www.patreon.com/biurad). All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
+**Get a professional support from [Biurad Lap][] after the active maintenance of a released version has ended**.
 
-[Thanks to all who made Donations and Pledges to Us.](.github/ISSUE_TEMPLATE/Support_us.md)
+## 🧪 Testing
 
-## License
+```bash
+$ ./vendor/bin/phpunit
+```
 
-The BSD-3-Clause . Please see [License File](LICENSE.md) for more information.
+This will tests divineniiquaye/php-rade will run against PHP 7.4 version or higher.
+
+## 🏛️ Governance
+
+This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Contributions are welcome 👷‍♀️! To contribute, please familiarize yourself with our [CONTRIBUTING] guidelines.
+
+To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
+
+## 🙌 Sponsors
+
+Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
+
+## 👥 Credits & Acknowledgements
+
+- [Divine Niiquaye Ibok][@divineniiquaye]
+- [All Contributors][]
+
+## 📄 License
+
+The **biurad/http-galaxy** library is copyright © [Divine Niiquaye Ibok](https://divinenii.com) and licensed for use under the [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE).
+
+[PHP]: https://php.net
+[PSR-7]: http://www.php-fig.org/psr/psr-7/
+[PSR-15]: http://www.php-fig.org/psr/psr-15/
+[PSR-17]: http://www.php-fig.org/psr/psr-17/
+[guzzlehttp/psr7]: https://github.com/guzzlehttp/psr7
+[@divineniiquaye]: https://github.com/divineniiquaye
+[docs]: https://docs.biurad.com/php/http-galaxy
+[commit]: https://commits.biurad.com/flight-routing.git
+[UPGRADE]: UPGRADE.md
+[CHANGELOG]: CHANGELOG.md
+[CONTRIBUTING]: ./.github/CONTRIBUTING.md
+[All Contributors]: https://github.com/divineniiquaye/php-rade/contributors
+[Biurad Lap]: https://team.biurad.com
+[email]: support@biurad.com
+[message]: https://projects.biurad.com/message
