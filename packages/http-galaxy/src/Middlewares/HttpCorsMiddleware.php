@@ -54,7 +54,16 @@ class HttpCorsMiddleware implements MiddlewareInterface
 
     public function __construct(array $options = [])
     {
-        $this->options = $this->normalizeOptions($options);
+        $this->options = $options += [
+            'allow_origin' => [],
+            'allow_paths' => [],
+            'origin_regex' => false,
+            'allow_credentials' => false,
+            'allow_headers' => null,
+            'expose_headers' => null,
+            'allow_methods' => [],
+            'max_age' => 0,
+        ];
     }
 
     /**
@@ -126,7 +135,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
                     continue;
                 }
 
-                $exposedHeaders[] = $headers;
+                $exposedHeaders[] = $header;
             }
 
             if (!empty($exposedHeaders)) {
@@ -210,6 +219,12 @@ class HttpCorsMiddleware implements MiddlewareInterface
         // Support matching sub-directory sites ...
         $requestPath = !empty($pathInfo) ? $pathInfo : $requestUri->getPath();
 
+        if (isset($paths[$requestPath])) {
+            $this->options = \array_merge($this->options, $paths[$requestPath]);
+
+            return true;
+        }
+
         foreach ($paths as $pathRegexp => $options) {
             if (1 === \preg_match('{' . \preg_quote($pathRegexp, '/') . '}', $requestPath)) {
                 $this->options = \array_merge($this->options, $options);
@@ -219,28 +234,5 @@ class HttpCorsMiddleware implements MiddlewareInterface
         }
 
         return false;
-    }
-
-    /**
-     * Normalize the options for usage.
-     *
-     * @param array<string,mixed> $options
-     *
-     * @return array<string,mixed>
-     */
-    private function normalizeOptions(array $options = []): array
-    {
-        $defaultOptions = [
-            'allow_origin' => [],
-            'allow_paths' => [],
-            'origin_regex' => false,
-            'allow_credentials' => false,
-            'allow_headers' => null,
-            'expose_headers' => null,
-            'allow_methods' => [],
-            'max_age' => 0,
-        ];
-
-        return $options += $defaultOptions;
     }
 }
