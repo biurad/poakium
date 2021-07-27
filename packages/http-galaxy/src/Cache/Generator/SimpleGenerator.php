@@ -30,7 +30,7 @@ class SimpleGenerator implements CacheKeyGeneratorInterface
     /**
      * {@inheritdoc}
      */
-    public function generate(RequestInterface $request)
+    public function generate(RequestInterface $request): string
     {
         $body = (string) $request->getBody();
 

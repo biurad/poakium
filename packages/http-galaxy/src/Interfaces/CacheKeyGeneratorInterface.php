@@ -28,10 +28,6 @@ interface CacheKeyGeneratorInterface
 {
     /**
      * Generate a cache key from a Request.
-     *
-     * @param RequestInterface $request
-     *
-     * @return string
      */
-    public function generate(RequestInterface $request);
+    public function generate(RequestInterface $request): string;
 }

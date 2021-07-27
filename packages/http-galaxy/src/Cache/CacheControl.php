@@ -25,23 +25,22 @@ class CacheControl
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
      */
     public const HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES = [
-        'must_revalidate'  => false,
-        'no_cache'         => false,
-        'no_store'         => false,
-        'no_transform'     => false,
-        'public'           => false,
-        'private'          => false,
+        'must_revalidate' => false,
+        'no_cache' => false,
+        'no_store' => false,
+        'no_transform' => false,
+        'public' => false,
+        'private' => false,
         'proxy_revalidate' => false,
-        'max_age'          => true,
-        's_maxage'         => true,
-        'immutable'        => false,
+        'max_age' => true,
+        's_maxage' => true,
+        'immutable' => false,
     ];
 
     /**
      * Get the value of a parameter in the cache control header.
      *
-     * @param ResponseInterface $response
-     * @param string            $name     The field of Cache-Control to fetch
+     * @param string $name The field of Cache-Control to fetch
      *
      * @return bool|string The value of the directive, true if directive without value, false if directive not present
      */
@@ -51,12 +50,7 @@ class CacheControl
 
         foreach ($headers as $header) {
             if (\preg_match(\sprintf('|%s=?([0-9]+)?|i', $name), $header, $matches)) {
-                // return the value for $name if it exists
-                if (isset($matches[1])) {
-                    return $matches[1];
-                }
-
-                return true;
+                return $matches[1] ?? true;
             }
         }
 
@@ -72,20 +66,17 @@ class CacheControl
      * Note: This method is not part of the PSR-7 standard.
      *
      * @param array<string,string> $options
-     * @param ResponseInterface $response
      *
      * @throws \InvalidArgumentException
-     *
-     * @return ResponseInterface
      *
      * @final
      */
     public static function withCacheControl(array $options, ResponseInterface $response): ResponseInterface
     {
         $cacheControl = [];
-        $this->validateOptions($options);
+        self::validateOptions($options);
 
-        $cacheControl['max-age']  = isset($options['max_age']) ? \sprintf('=%s', $options['max_age']) : null;
+        $cacheControl['max-age'] = isset($options['max_age']) ? \sprintf('=%s', $options['max_age']) : null;
         $cacheControl['s-maxage'] = isset($options['s_maxage']) ? \sprintf('=%s', $options['s_maxage']) : null;
 
         foreach (self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES as $directive => $hasValue) {

@@ -24,6 +24,7 @@ use Psr\Http\Message\RequestInterface;
  * Generate a cache key by using HTTP headers.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class HeaderCacheKeyGenerator implements CacheKeyGeneratorInterface
 {
@@ -45,13 +46,14 @@ class HeaderCacheKeyGenerator implements CacheKeyGeneratorInterface
     /**
      * {@inheritdoc}
      */
-    public function generate(RequestInterface $request)
+    public function generate(RequestInterface $request): string
     {
         $concatenatedHeaders = [];
+
         foreach ($this->headerNames as $headerName) {
-            $concatenatedHeaders[] = sprintf(' %s:"%s"', $headerName, $request->getHeaderLine($headerName));
+            $concatenatedHeaders[] = \sprintf(' %s:"%s"', $headerName, $request->getHeaderLine($headerName));
         }
 
-        return $request->getMethod().' '.$request->getUri().implode('', $concatenatedHeaders).' '.$request->getBody();
+        return $request->getMethod() . ' ' . $request->getUri() . \implode('', $concatenatedHeaders) . ' ' . (string) $request->getBody();
     }
 }

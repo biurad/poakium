@@ -26,6 +26,7 @@ use Psr\Cache\CacheItemInterface;
  * Adds a header indicating if the response came from cache.
  *
  * @author Iain Connor <iainconnor@gmail.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class AddHeaderCacheListener implements CacheListenerInterface
 {
@@ -41,18 +42,10 @@ class AddHeaderCacheListener implements CacheListenerInterface
     }
 
     /**
-     * Called before the cache plugin returns the response, with information on whether that response came from cache.
-     *
-     * @param RequestInterface        $request
-     * @param ResponseInterface       $response
-     * @param bool                    $fromCache Whether the `$response` was from the cache or not.
-     *                                           Note that checking `$cacheItem->isHit()` is not sufficent to determine this.
-     * @param CacheItemInterface|null $cacheItem
-     *
-     * @return ResponseInterface
+     * {@inheritdoc}
      */
-    public function onCacheResponse(RequestInterface $request, ResponseInterface $response, $fromCache, $cacheItem)
+    public function onCacheResponse(RequestInterface $request, ResponseInterface $response, ?CacheItemInterface $cacheItem): ResponseInterface
     {
-        return $response->withHeader($this->headerName, $fromCache ? 'HIT' : 'MISS');
+        return $response->withHeader($this->headerName, null !== $cacheItem && $cacheItem->isHit() ? 'HIT' : 'MISS');
     }
 }
