@@ -23,7 +23,8 @@
     },
     "require": {
         "php": "^7.2 || ^8.0",
-        "symfony/polyfill-php80": "^1.23"
+        "symfony/polyfill-php80": "^1.23",
+        "symfony/polyfill-php81": "^1.23"
     },
     "require-dev": {
         "latte/latte": "^2.8",
