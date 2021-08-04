@@ -17,8 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Html {
 
-    use Biurad\UI\Renders\PhpHtmlRender;
-
     /**
      * Import/Use a script.
      *
@@ -85,7 +83,7 @@ namespace Biurad\UI\Html {
      * This element must come before other elements with attribute values of URLs,
      * such as `<link>`’s href attribute.
      *
-     * @param string $href                    The base URL to be used throughout the document for relative URLs
+     * @param string              $href       The base URL to be used throughout the document for relative URLs
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
@@ -1012,11 +1010,146 @@ namespace Biurad\UI\Html {
     }
 
     /**
-     * Create a grouped
+     * The `<u>` HTML element represents an unarticulated annotation (Underline).
      *
-     * @param array $children
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
      *
-     * @return string
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/u
+     */
+    function u($children, array $attributes = []): string
+    {
+        $attributes['children'] = $children;
+
+        return createElement('u', $attributes);
+    }
+
+    /**
+     * The `<var>` HTML element represents the name of a variable in a mathematical expression or a programming context.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/var
+     */
+    function _var($children, array $attributes = []): string
+    {
+        $attributes['children'] = $children;
+
+        return createElement('var', $attributes);
+    }
+
+    /**
+     * The `<wbr>` HTML element represents a word break opportunity.
+     *
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/wbr
+     */
+    function wbr(array $attributes = []): string
+    {
+        return createElement('wbr', $attributes, true);
+    }
+
+    /**
+     * The `<area>` HTML element represents an image map area element.
+     *
+     * @param string              $shape      defines the values rect, which defines a rectangular region
+     * @param string|null         $coord      the coords attribute details the coordinates of the shape attribute in
+     *                                        size, shape, and placement of an area
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/area
+     */
+    function area(string $shape, string $coord = null, array $attributes = []): string
+    {
+        $attributes += ['shape' => $shape, 'coord' => $coord];
+
+        return createElement('area', $attributes, true);
+    }
+
+    /**
+     * The `<audio>` HTML element represents an embed audio element.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio
+     */
+    function audio($children, array $attributes = []): string
+    {
+        $attributes['children'] = $children;
+
+        return createElement('audio', $attributes);
+    }
+
+    /**
+     * The `<img>` HTML element represents an image embed element.
+     *
+     * @param string              $src        is required, and contains the path to the image
+     * @param string              $alt        holds a text description of the image
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
+     */
+    function img(string $src, string $alt = '', array $attributes = []): string
+    {
+        $attributes += ['src' => $src, 'alt' => $alt];
+
+        return createElement('img', $attributes, true);
+    }
+
+    /**
+     * The `<map>` HTML element represents an image map element.
+     *
+     * @param string                   $name       gives the map a name so that it can be referenced
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map
+     */
+    function map(string $name, $children, array $attributes = []): string
+    {
+        $attributes += ['name' => $name, 'children' => $children];
+
+        return createElement('map', $attributes);
+    }
+
+    /**
+     * The `<track>` HTML element represents an embed text track element.
+     *
+     * @param string              $src        Address of the track (.vtt file). Must be a valid URL
+     * @param bool                $default    indicates that the track should be enabled
+     * @param string              $kind       How the text track is meant to be used
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
+     */
+    function track(string $src, bool $default = true, string $kind, array $attributes = []): string
+    {
+        $attributes += ['default' => $default, 'kind' => $kind, 'src' => $src];
+
+        return createElement('track', $attributes, true);
+    }
+
+    /**
+     * The `<video>` HTML element represents an image map element.
+     *
+     * @param string                   $src        The URL of the video to embed
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video
+     */
+    function video(string $src, bool $autoplay = true, $children, array $attributes = []): string
+    {
+        $attributes += ['src' => $src, 'children' => $children, 'autoplay' => $autoplay ? 'true' : 'false'];
+
+        return createElement('video', $attributes);
+    }
+
+    /**
+     * Create a grouped.
      */
     function elements(array $children): string
     {
