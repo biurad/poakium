@@ -9,11 +9,13 @@
 [![Psalm Type Coverage](https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fshepherd.dev%2Fgithub%2Fbiurad%2Fphp-starter%2Fcoverage)](https://shepherd.dev/github/biurad/php-starter)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-starter)
 
-## 📌 About
+---
 
-**biurad/php-starter** is a php library template repository for biurad lap. To use this library, rename **php-starter** and **BSD-3** on every file that contain it to your preferred library name and license. As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
+**biurad/php-starter** is a php library template repository for biurad lap. To use this library, edit contents to your preferred library name and license. As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
 
 This project adheres to a [code of conduct](CODE_OF_CONDUCT.md). By participating in this project and its community, you are expected to uphold this code.
+
+<!--- > This library is out of maintenance ir discontinued as it has reach its feature limit or end of life,  Updates will no longer be committed unless a **severe security venerability** is reported. -->
 
 ## 📦 Installation & Basic Usage
 
@@ -23,7 +25,9 @@ This project requires [PHP] 7.4 or higher. The recommended way to install, is vi
 $ composer require biurad/php-starter
 ```
 
+<!-- USAGE_START -->
 Write a bit of **How To** use this package, so developers can have a bit of idea about the repository before checking out documentation.
+<!-- USAGE_END -->
 
 ## 📓 Documentation
 
@@ -31,7 +35,7 @@ For in-depth documentation before using this library. Full documentation on adva
 
 ## ⏫ Upgrading
 
-Information on how to upgrade to newer versions of this library can be found in the [UPGRADE].
+Information on how to upgrade to newer versions of this library can be found in the [UPGRADE] if available.
 
 ## 🏷️ Changelog
 
@@ -41,24 +45,15 @@ Any classes or methods marked `@internal` are not intended for use outside of th
 
 ## 🛠️ Maintenance & Support
 
-When a new **major** version is released (`1.0`, `2.0`, etc), the previous one (`0.19.x`) will receive bug fixes for _at least_ 3 months and security updates for 6 months after that new release comes out.
-
 (This policy may change in the future and exceptions may be made on a case-by-case basis.)
 
-**Professional support, including notification of new releases and security updates, is available at [Biurad Commits][commit].**
+- A new **patch version released** (e.g. `1.0.10`, `1.1.6`) comes out roughly every month. It only contains bug fixes, so you can safely upgrade your applications.
+- A new **minor version released** (e.g. `1.1`, `1.2`) comes out every six months: one in June and one in December. It contains bug fixes and new features, but it doesn’t include any breaking change, so you can safely upgrade your applications;
+- A new **major version released** (e.g. `1.0`, `2.0`, `3.0`) comes out every two years. It can contain breaking changes, so you may need to do some changes in your applications before upgrading.
 
-## 👷‍♀️ Contributing
+When a **major** version is released, the number of minor versions is limited to five per branch (X.0, X.1, X.2, X.3 and X.4). The last minor version of a branch (e.g. 1.4, 2.4) is considered a **long-term support (LTS) version** with lasts for more that 2 years and the other ones cam last up to 8 months:
 
-To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
-
-Contributions to this library are **welcome**, especially ones that:
-
-- Improve usability or flexibility without compromising our ability to adhere to ???.
-- Optimize performance
-- Fix issues with adhering to ???.
-- ???.
-
-Please see [CONTRIBUTING] for additional details.
+**Get a professional support from [Biurad Lap](https://biurad.com) after the active maintenance of a released version has ended**.
 
 ## 🧪 Testing
 
@@ -66,36 +61,33 @@ Please see [CONTRIBUTING] for additional details.
 $ composer test
 ```
 
-This will tests biurad/php-starter will run against PHP 7.2 version or higher.
+This will tests biurad/php-starter will run against PHP 7.4 version or higher.
+
+## 🏛️ Governance
+
+This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Members of the [Biurad Lap][] Leadership Team may occasionally assist with some of these duties.
+
+Contributions are welcome 👷‍♀️! To contribute, please familiarize yourself with our [CONTRIBUTING] guidelines.
+
+To report a security vulnerability, please use the [Biurad Security](https://security.biurad.com). We will coordinate the fix and eventually commit the solution in this project.
+
+## 🙌 Sponsors
+
+Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
 
 ## 👥 Credits & Acknowledgements
 
 - [Divine Niiquaye Ibok][@divineniiquaye]
 - [All Contributors][]
 
-## 🙌 Sponsors
-
-Are you interested in sponsoring development of this project? Reach out and support us on [Patreon](https://www.patreon.com/biurad) or see <https://biurad.com/sponsor> for a list of ways to contribute.
-
 ## 📄 License
 
-**biurad/php-starter** is licensed under the BSD-3 license. See the [`LICENSE`](LICENSE) file for more details.
-
-## 🏛️ Governance
-
-This project is primarily maintained by [Divine Niiquaye Ibok][@divineniiquaye]. Members of the [Biurad Lap][] Leadership Team may occasionally assist with some of these duties.
-
-## 🗺️ Who Uses It?
-
-You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us an [email] or [message] mentioning this library. We publish all received request's at <https://patreons.biurad.com>.
-
-Check out the other cool things people are doing with `biurad/php-starter`: <https://packagist.org/packages/biurad/php-starter/dependents>
+The **biurad/php-starter** library is copyright © [Divine Niiquaye Ibok](https://divinenii.com) and licensed for use under the BSD-3 license. Please see [LICENSE](LICENSE) for more information.
 
 [PHP]: https://php.net
 [Composer]: https://getcomposer.org
 [@divineniiquaye]: https://github.com/divineniiquaye
 [docs]: https://docs.biurad.com/php-starter
-[commit]: https://commits.biurad.com/php-starter.git
 [UPGRADE]: UPGRADE-1.x.md
 [CHANGELOG]: CHANGELOG-0.x.md
 [CONTRIBUTING]: ./.github/CONTRIBUTING.md
