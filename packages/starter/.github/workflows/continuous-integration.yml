@@ -1,4 +1,4 @@
-name: Tests
+name: Continuous-Integration
 on: [push, pull_request]
 
 #env:
@@ -77,7 +77,7 @@ jobs:
       - name: Statically analyze code (Psalm)
         run: |
           vendor/bin/psalm --output-format=github
-          vendor/bin/psalm --taint-analysis --report=build/logs/psalm.sarif"
+          vendor/bin/psalm --taint-analysis --report=build/logs/psalm.sarif
 
       - name: "Upload security analysis results to GitHub"
         uses: "github/codeql-action/upload-sarif@v1"
