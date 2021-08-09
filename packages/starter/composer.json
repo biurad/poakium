@@ -1,36 +1,31 @@
 {
     "name": "biurad/php-starter",
-    "description": "A PHP package template repository.",
+    "description": "A template repository for setting up a new PHP library package.",
     "type": "library",
-    "keywords": ["biurad","biuradphp","php"],
-    "homepage": "https://www.biurad.com",
+    "keywords": ["biurad","php"],
+    "homepage": "https://github.com/biurad/php-starter",
     "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Divine Niiquaye Ibok",
             "email": "divineibok@gmail.com"
-        },
-        {
-            "name": "Biurad Lap Community",
-            "homepage": "https://biurad.com/projects/contributors"
         }
     ],
     "support": {
-        "docs": "https://docs.biurad.com/php-starter/",
-        "issues": "https://github.com/biurad/php-starter/issues",
+        "docs": "https://github.com/biurad/php-starter/tree/master/docs",
+        "issues": "https://github.com/biurad/php-starter/issues?state=open",
         "rss": "https://github.com/biurad/php-starter/releases.atom",
         "source": "https://github.com/biurad/php-starter"
     },
     "require": {
-        "php": "^7.1 || ^8.0"
+        "php": "^7.4 || ^8.0"
     },
     "require-dev": {
         "composer/package-versions-deprecated": "^1.11",
         "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
         "phpunit/phpunit": "^8.5 || ^9.5",
-        "squizlabs/php_codesniffer": "^3.5",
-        "vimeo/psalm": "^3.11"
+        "squizlabs/php_codesniffer": "^3.6",
+        "vimeo/psalm": "^4.7"
     },
     "autoload": {
         "psr-4": {
@@ -46,7 +41,7 @@
         "phpcs": "phpcs -q",
         "phpstan": "phpstan analyse",
         "psalm": "psalm --show-info=true",
-        "phpunit": "phpunit --no-coverage",
+        "phpunit": "phpunit --coverage-text",
         "test": [
             "@phpcs",
             "@phpstan",
