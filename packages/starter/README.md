@@ -1,20 +1,23 @@
 # The Biurad PHP Library Template
 
+[![PHP Version](https://img.shields.io/packagist/php-v/biurad/php-starter.svg?style=flat-square&colorB=%238892BF)](http://php.net)
 [![Latest Version](https://img.shields.io/packagist/v/biurad/php-starter.svg?style=flat-square)](https://packagist.org/packages/biurad/php-starter)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-starter/Continuous-Integration?style=flat-square)](https://github.com/biurad/php-starter/actions?query=workflow%3ATests)
+[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-starter/continuous-integration?style=flat-square)](https://github.com/biurad/php-starter/actions?query=workflow%3ATests)
 [![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-starter?style=flat-square)](https://codeclimate.com/github/biurad/php-starter)
 [![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-starter?style=flat-square)](https://codecov.io/gh/biurad/php-starter)
+[![Psalm Type Coverage](https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fshepherd.dev%2Fgithub%2Fbiurad%2Fphp-starter%2Fcoverage)](https://shepherd.dev/github/biurad/php-starter)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-starter)
-[![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://biurad.com/sponsor)
 
-**biurad/php-starter** is a php library template repository for biurad lap. To use this library, rename **php-starter** and **BSD-3** on every file that contain it to your preferred library name and license.
+## 📌 About
 
-As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
+**biurad/php-starter** is a php library template repository for biurad lap. To use this library, rename **php-starter** and **BSD-3** on every file that contain it to your preferred library name and license. As to why this project exist, it's to serve as a template for future open source PHP library projects. Of course, feel free to fork it and make your own recipe.
+
+This project adheres to a [code of conduct](CODE_OF_CONDUCT.md). By participating in this project and its community, you are expected to uphold this code.
 
 ## 📦 Installation & Basic Usage
 
-This project requires [PHP] 7.2 or higher. The recommended way to install, is via [Composer]. Simply run:
+This project requires [PHP] 7.4 or higher. The recommended way to install, is via [Composer]. Simply run:
 
 ```bash
 $ composer require biurad/php-starter
