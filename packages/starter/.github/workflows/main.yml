@@ -76,7 +76,7 @@ jobs:
 
       - name: Statically analyze code (Psalm)
         run: |
-          vendor/bin/psalm --output-format=github --shepherd
+          vendor/bin/psalm --output-format=github
           vendor/bin/psalm --taint-analysis --report=build/logs/psalm.sarif"
 
       - name: "Upload security analysis results to GitHub"
