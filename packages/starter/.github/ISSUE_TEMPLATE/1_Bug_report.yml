@@ -18,8 +18,8 @@ body:
       label: What happened?
       description: A concise description of what you're experiencing.
       placeholder: |
-          A clear and concise description of the problem...
-          A good bug report shouldn't leave others needing to chase you up for more information.
+        A clear and concise description of the problem...
+        A good bug report shouldn't leave others needing to chase you up for more information.
     validations:
       required: true
   - type: textarea
