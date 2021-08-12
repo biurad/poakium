@@ -1,13 +1,16 @@
+<div align="center">
+
 # The Biurad PHP Library Template
 
 [![PHP Version](https://img.shields.io/packagist/php-v/biurad/php-starter.svg?style=flat-square&colorB=%238892BF)](http://php.net)
 [![Latest Version](https://img.shields.io/packagist/v/biurad/php-starter.svg?style=flat-square)](https://packagist.org/packages/biurad/php-starter)
-[![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
 [![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-starter/build?style=flat-square)](https://github.com/biurad/php-starter/actions?query=workflow%3Abuild)
 [![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-starter?style=flat-square)](https://codeclimate.com/github/biurad/php-starter)
 [![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-starter?style=flat-square)](https://codecov.io/gh/biurad/php-starter)
 [![Psalm Type Coverage](https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fshepherd.dev%2Fgithub%2Fbiurad%2Fphp-starter%2Fcoverage)](https://shepherd.dev/github/biurad/php-starter)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-starter.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-starter)
+
+</div>
 
 ---
 
@@ -82,7 +85,7 @@ Are you interested in sponsoring development of this project? Reach out and supp
 
 ## 📄 License
 
-The **biurad/php-starter** library is copyright © [Divine Niiquaye Ibok](https://divinenii.com) and licensed for use under the BSD-3 license. Please see [LICENSE](LICENSE) for more information.
+The **biurad/php-starter** library is copyright © [Divine Niiquaye Ibok](https://divinenii.com) and licensed for use under the[![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE).
 
 [PHP]: https://php.net
 [Composer]: https://getcomposer.org
