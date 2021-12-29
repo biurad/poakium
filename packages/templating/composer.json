@@ -68,6 +68,11 @@
             "@phpunit"
         ]
     },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": false
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
