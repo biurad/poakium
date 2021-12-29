@@ -128,7 +128,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
 
         if ($loader instanceof ChainLoader) {
             $loader->addLoader($templateLoader);
-        } elseif (!$loader instanceof ArrayLoader || $loader->isEmpty()) {
+        } elseif (!$templateLoader instanceof ArrayLoader || !$templateLoader->isEmpty()) {
             $loader = new ChainLoader([$loader, $templateLoader]);
         }
 
@@ -230,11 +230,15 @@ class ArrayLoader implements Twig\Loader\LoaderInterface
     public function getCacheKey(string $name): string
     {
         if (!isset($this->templates[$name])) {
-            if ($this->ignoreKey) {
+            if (\file_exists($name)) {
                 return $name;
             }
 
-            throw new Twig\Error\LoaderError(sprintf('Template "%s" is not defined.', $name));
+            if (!$this->ignoreKey) {
+                return $name . ':' . $this->templates[$name];
+            }
+
+            throw new Twig\Error\LoaderError(\sprintf('Template "%s" is not defined.', $name));
         }
 
         return \file_exists($name) ? $name : $name . ':' . $this->templates[$name];
