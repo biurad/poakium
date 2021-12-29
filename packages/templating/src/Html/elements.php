@@ -1125,7 +1125,7 @@ namespace Biurad\UI\Html {
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
      */
-    function track(string $src, bool $default = true, string $kind, array $attributes = []): string
+    function track(string $src, string $kind, bool $default = true, array $attributes = []): string
     {
         $attributes += ['default' => $default, 'kind' => $kind, 'src' => $src];
 
@@ -1141,7 +1141,7 @@ namespace Biurad\UI\Html {
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video
      */
-    function video(string $src, bool $autoplay = true, $children, array $attributes = []): string
+    function video(string $src, $children, bool $autoplay = true, array $attributes = []): string
     {
         $attributes += ['src' => $src, 'children' => $children, 'autoplay' => $autoplay ? 'true' : 'false'];
 
