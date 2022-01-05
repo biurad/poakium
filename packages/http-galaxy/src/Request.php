@@ -17,16 +17,20 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
-use GuzzleHttp\Psr7\Request as Psr7Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 
 class Request implements RequestInterface, \Stringable
 {
-    use Traits\RequestDecoratorTrait {
-        getRequest as private;
-    }
+    use Traits\MessageDecoratorTrait;
+
+    /** @var string|null */
+    private $requestTarget;
+
+    /** @var UriInterface|null */
+    private $uri;
 
     /**
      * @param string                               $method  HTTP method
@@ -37,6 +41,143 @@ class Request implements RequestInterface, \Stringable
      */
     public function __construct(string $method, $uri, array $headers = [], $body = null, string $version = '1.1')
     {
-        $this->message = new Psr7Request($method, $uri, $headers, $body, $version);
+        if ($body instanceof StreamInterface) {
+            $body = $body->detach();
+        }
+
+        $this->message = HttpFoundationRequest::create((string) $uri, $method, [], [], [], $headers + ['SERVER_PROTOCOL' => 'HTTP/' . $version], $body, $version);
+    }
+
+    /**
+     * Convert response to string.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     */
+    public function __toString(): string
+    {
+        return $this->message->__toString();
+    }
+
+    /**
+     * Returns the decorated request.
+     *
+     * Since the underlying Request is immutable as well, exposing it is not an issue.
+     */
+    public function getRequest(): HttpFoundationRequest
+    {
+        return $this->message;
+    }
+
+    /**
+     * Exchanges the underlying request with another.
+     *
+     * @return static
+     */
+    public function withRequest(HttpFoundationRequest $request): self
+    {
+        $new = clone $this;
+        $new->message = $request;
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRequestTarget(): string
+    {
+        if (null !== $this->requestTarget) {
+            return $this->requestTarget;
+        }
+
+        if ('' === $target = $this->message->getPathInfo()) {
+            $target = '/';
+        }
+        if (!empty($uriQuery = $this->message->getQueryString())) {
+            $target .= '?' . $uriQuery;
+        }
+
+        return $target;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return static
+     */
+    public function withRequestTarget($requestTarget): self
+    {
+        if (\preg_match('#\s#', $requestTarget)) {
+            throw new \InvalidArgumentException('Invalid request target provided; cannot contain whitespace');
+        }
+
+        $new = clone $this;
+        $new->requestTarget = $requestTarget;
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMethod(): string
+    {
+        return $this->message->getMethod();
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return static
+     */
+    public function withMethod($method): self
+    {
+        $new = clone $this;
+        $new->message->setMethod($method);
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUri(): UriInterface
+    {
+        return $this->uri ?? $this->uri = new Uri($this->message->getUri());
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return static
+     */
+    public function withUri(UriInterface $uri, $preserveHost = false): self
+    {
+        $new = clone $this;
+        $new->uri = $uri;
+
+        if (!$preserveHost || !$new->message->headers->has('Host')) {
+            if ('' === $host = $new->message->getHttpHost()) {
+                return $new;
+            }
+
+            // Ensure Host is the first header.
+            // See: http://tools.ietf.org/html/rfc7230#section-5.4
+            $new->message->headers->replace(['HOST' => $host] + $this->message->headers->all());
+        }
+
+        return $new;
+    }
+
+    /**
+     * Does this serverRequest use a given method?
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param string $method Uppercase request method (GET, POST etc)
+     */
+    public function isMethod(string $method): bool
+    {
+        return $this->getMethod() === \strtoupper($method);
     }
 }

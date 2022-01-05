@@ -18,10 +18,10 @@ declare(strict_types=1);
 namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
-use Biurad\Http\Traits\InjectContentTypeTrait;
 use Biurad\Http\Exception;
-use GuzzleHttp\Psr7\Stream;
-use Psr\Http\Message\StreamInterface;
+use Biurad\Http\Traits\InjectContentTypeTrait;
+use Symfony\Component\HttpFoundation\JsonResponse as HttpFoundationJsonResponse;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
  * JSON response with Content-Type header to application/json.
@@ -30,15 +30,6 @@ class JsonResponse extends Response
 {
     use InjectContentTypeTrait;
 
-    /** @var int produces RFC4627-compliant JSON */
-    public const DEFAULT_JSON_FLAGS = \JSON_HEX_TAG | \JSON_HEX_APOS | \JSON_HEX_AMP | \JSON_HEX_QUOT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR;
-
-    /** @var mixed */
-    private $payload;
-
-    /** @var int */
-    private $encodingOptions;
-
     /**
      * Create a JSON response with the given data.
      *
@@ -46,91 +37,45 @@ class JsonResponse extends Response
      * @param int                              $status          integer status code for the response; 200 by default
      * @param array                            $headers         array of headers to use at initialization
      * @param int                              $encodingOptions JSON encoding options to use
+     * @param string|null                      $callback The JSONP callback or null to use none
      *
      * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */
-    public function __construct(
-        $data,
-        int $status = 200,
-        array $headers = [],
-        int $encodingOptions = self::DEFAULT_JSON_FLAGS
-    ) {
-        $this->payload = \is_object($data) ? clone $data : $data;
-        $this->encodingOptions = $encodingOptions;
-        $headers = $this->injectContentType('application/json', $headers);
-
-        parent::__construct($status, $headers, $this->jsonEncode($data, $this->encodingOptions));
-    }
-
-    /**
-     * @return iterable|array|\JsonSerializable
-     */
-    public function getPayload()
+    public function __construct($data, int $status = 200, array $headers = [], callable $callback = null)
     {
-        return $this->payload;
-    }
+        $this->message = new HttpFoundationJsonResponse($data, $status, $headers);
 
-    /**
-     * @param iterable|array|\JsonSerializable $data
-     */
-    public function withPayload($data): JsonResponse
-    {
-        $new = clone $this;
-        $new->payload = \is_object($data) ? clone $data : $data;
-
-        return $this->updateBodyFor($new);
-    }
-
-    public function getEncodingOptions(): int
-    {
-        return $this->encodingOptions;
-    }
-
-    public function withEncodingOptions(int $encodingOptions): JsonResponse
-    {
-        $new = clone $this;
-        $new->encodingOptions = $encodingOptions;
-
-        return $this->updateBodyFor($new);
-    }
-
-    private function createBodyFromJson(string $json): StreamInterface
-    {
-        $body = new Stream('php://temp', ['mode' => 'wb+']);
-        $body->write($json);
-        $body->rewind();
-
-        return $body;
-    }
-
-    /**
-     * Encode the provided data to JSON.
-     *
-     * @param iterable|array|\JsonSerializable $data
-     *
-     * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
-     */
-    private function jsonEncode($data, int $encodingOptions): string
-    {
-        if (\is_resource($data)) {
-            throw new Exception\InvalidArgumentException('Cannot JSON encode resources');
+        if (null !== $callback) {
+            $this->message->setCallback($callback);
         }
-
-        return \json_encode($data, $encodingOptions);
     }
 
     /**
-     * Update the response body for the given instance.
+     * {@inheritdoc}
      *
-     * @param self $toUpdate instance to update
-     *
-     * @return JsonResponse returns a new instance with an updated body
+     * @return HttpFoundationJsonResponse
      */
-    private function updateBodyFor(JsonResponse $toUpdate): JsonResponse
+    public function getResponse(): HttpFoundationResponse
     {
-        $json = $this->jsonEncode($toUpdate->payload, $toUpdate->encodingOptions);
-        $body = $this->createBodyFromJson($json);
+        return parent::getResponse();
+    }
 
-        return $toUpdate->withBody($body);
+    /**
+     * @param iterable|array|\JsonSerializable $data
+     */
+    public function withPayload($data): self
+    {
+        $new = clone $this;
+        $new->message->setData($data);
+
+        return $new;
+    }
+
+    public function withEncodingOptions(int $encodingOptions): self
+    {
+        $new = clone $this;
+        $new->message->setEncodingOptions($encodingOptions);
+
+        return $new;
     }
 }

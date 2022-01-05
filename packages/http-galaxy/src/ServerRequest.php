@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
-use GuzzleHttp\Psr7\ServerRequest as Psr7ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -25,11 +24,10 @@ use Psr\Http\Message\UriInterface;
 /**
  * Class ServerRequest.
  */
-class ServerRequest implements ServerRequestInterface, \Stringable
+class ServerRequest extends Request implements ServerRequestInterface
 {
-    use Traits\ServerRequestDecoratorTrait {
-        getRequest as private;
-    }
+    /** @var array|object|null */
+    private $parsedBody;
 
     /**
      * @param string                               $method       HTTP method
@@ -39,14 +37,134 @@ class ServerRequest implements ServerRequestInterface, \Stringable
      * @param string                               $version      Protocol version
      * @param array<string,mixed>                  $serverParams Typically the $_SERVER superglobal
      */
-    public function __construct(
-        string $method,
-        $uri,
-        array $headers = [],
-        $body = null,
-        string $version = '1.1',
-        array $serverParams = []
-    ) {
-        $this->message = new Psr7ServerRequest($method, $uri, $headers, $body, $version, $serverParams);
+    public function __construct(string $method, $uri, array $headers = [], $body = null, string $version = '1.1', array $serverParams = [])
+    {
+        parent::__construct($method, $uri, $headers + $serverParams, $body, $version);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAttribute($name, $default = null)
+    {
+        return $this->message->attributes->get($name, $default);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAttributes()
+    {
+        return $this->message->attributes->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCookieParams()
+    {
+        return $this->message->cookies->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getParsedBody()
+    {
+        return $this->parsedBody;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getQueryParams()
+    {
+        return $this->message->query->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getServerParams()
+    {
+        return $this->message->server->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUploadedFiles()
+    {
+        return $this->message->files->all();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withAttribute($name, $value): self
+    {
+        $new = clone $this;
+        $new->message->attributes->set($name, $value);
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withoutAttribute($name): self
+    {
+        $new = clone $this;
+        $new->message->attributes->remove($name);
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withCookieParams(array $cookies): self
+    {
+        $new = clone $this;
+        $new->message->cookies->add($cookies);
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withParsedBody($data): self
+    {
+        if (!\is_array($data) && !\is_object($data) && null !== $data) {
+            throw new \InvalidArgumentException('First parameter to withParsedBody MUST be object, array or null');
+        }
+
+        $new = clone $this;
+        $new->parsedBody = $data;
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withQueryParams(array $query): self
+    {
+        $new = clone $this;
+        $new->message->query->add($query);
+
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withUploadedFiles(array $uploadedFiles): self
+    {
+        $new = clone $this;
+        $new->message->files->add($uploadedFiles);
+
+        return $new;
     }
 }

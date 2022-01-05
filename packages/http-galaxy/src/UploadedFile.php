@@ -17,29 +17,41 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
-use GuzzleHttp\Psr7\UploadedFile as Psr7UploadedFile;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile as FileUploadedFile;
 
 class UploadedFile implements UploadedFileInterface
 {
-    /** @var UploadedFileInterface */
+    /** @var FileUploadedFile */
     private $uploadedFile;
+
+    /** @var StreamInterface */
+    private $stream;
+
+    /** @var int|null */
+    private $size;
 
     /**
      * @param resource|StreamInterface|string $streamOrFile
      */
-    public function __construct($streamOrFile, ?int $size, int $errorStatus, string $clientFilename = null, string $clientMediaType = null)
+    public function __construct($streamOrFile, ?int $size, int $errorStatus = null, string $clientFilename = null, string $clientMediaType = null)
     {
-        $this->uploadedFile = new Psr7UploadedFile($streamOrFile, $size, $errorStatus, $clientFilename, $clientMediaType);
+        if ($streamOrFile instanceof StreamInterface) {
+            $streamOrFile = $streamOrFile->detach();
+        }
+
+        $this->size = $size;
+        $this->uploadedFile = new FileUploadedFile($streamOrFile, $clientFilename, $clientMediaType, $errorStatus);
     }
 
     /**
      * Exchanges the underlying uploadedFile with another.
      */
-    public function withUploadFile(UploadedFileInterface $uploadedFile): UploadedFileInterface
+    public function withUploadFile(FileUploadedFile $uploadedFile): UploadedFileInterface
     {
-        $this->uploadedFile = $uploadedFile;
+        $new = clone $this;
+        $new->uploadedFile = $uploadedFile;
 
         return $this;
     }
@@ -49,7 +61,15 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getStream(): StreamInterface
     {
-        return $this->uploadedFile->getStream();
+        if (null !== $this->stream) {
+            return $this->stream;
+        }
+
+        try {
+            return $this->stream = new Stream(\fopen($this->uploadedFile->getPath(), 'r'));
+        } catch (\Throwable $e) {
+            throw new \RuntimeException(\sprintf('The file "%s" cannot be opened.', $this->file));
+        }
     }
 
     /**
@@ -57,7 +77,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function moveTo($targetPath): void
     {
-        $this->uploadedFile->moveTo($targetPath);
+        $this->uploadedFile->move($targetPath);
     }
 
     /**
@@ -65,7 +85,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getSize(): ?int
     {
-        return $this->uploadedFile->getSize();
+        return $this->size ?? $this->uploadedFile->getSize();
     }
 
     /**
@@ -81,7 +101,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getClientFilename(): ?string
     {
-        return $this->uploadedFile->getClientFilename();
+        return $this->uploadedFile->getClientOriginalName();
     }
 
     /**
@@ -89,6 +109,6 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getClientMediaType(): ?string
     {
-        return $this->uploadedFile->getClientMediaType();
+        return $this->uploadedFile->getClientMimeType();
     }
 }

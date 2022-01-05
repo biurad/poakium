@@ -17,43 +17,44 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Traits;
 
-use Psr\Http\Message\MessageInterface;
+use Biurad\Http\Stream;
 use Psr\Http\Message\StreamInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @author Márk Sági-Kazár <mark.sagikazar@gmail.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 trait MessageDecoratorTrait
 {
-    /** @var MessageInterface */
-    private $message;
+    /** @var Response|Request */
+    protected $message;
 
-    /**
-     * Returns the decorated message.
-     *
-     * Since the underlying Message is immutable as well
-     * exposing it is not an issue, because it's state cannot be altered
-     */
-    public function getMessage(): MessageInterface
-    {
-        return $this->message;
-    }
+    /** @var StreamInterface|null */
+    private $stream;
 
     /**
      * {@inheritdoc}
      */
     public function getProtocolVersion(): string
     {
-        return $this->message->getProtocolVersion();
+        return \str_replace('HTTP/', '', $this->message->getProtocolVersion() ?? '1.1');
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return static
      */
-    public function withProtocolVersion($version): MessageInterface
+    public function withProtocolVersion($version): self
     {
         $new = clone $this;
-        $new->message = $this->message->withProtocolVersion($version);
+
+        if ($this->message instanceof Response) {
+            $new->message->setProtocolVersion($version);
+        } elseif ($this->message instanceof Request) {
+            $new->message->server->set('SERVER_PROTOCOL', 'HTTP/' . $version);
+        }
 
         return $new;
     }
@@ -63,7 +64,7 @@ trait MessageDecoratorTrait
      */
     public function getHeaders(): array
     {
-        return $this->message->getHeaders();
+        return $this->message->headers->all();
     }
 
     /**
@@ -71,7 +72,7 @@ trait MessageDecoratorTrait
      */
     public function hasHeader($header): bool
     {
-        return $this->message->hasHeader($header);
+        return $this->message->headers->has($header);
     }
 
     /**
@@ -79,7 +80,7 @@ trait MessageDecoratorTrait
      */
     public function getHeader($header): array
     {
-        return $this->message->getHeader($header);
+        return $this->message->headers->all($header);
     }
 
     /**
@@ -87,7 +88,7 @@ trait MessageDecoratorTrait
      */
     public function getHeaderLine($header): string
     {
-        return $this->message->getHeaderLine($header);
+        return \implode(', ', $this->getHeader($header));
     }
 
     /**
@@ -95,49 +96,75 @@ trait MessageDecoratorTrait
      */
     public function getBody(): StreamInterface
     {
-        return $this->message->getBody();
+        if (null !== $this->stream) {
+            return $this->stream;
+        }
+
+        if ($this->message instanceof Request) {
+            $body = $this->message->getContent(true);
+        }
+
+        return $this->stream = new Stream($body ?? (string) $this->message->getContent());
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return static
      */
-    public function withHeader($header, $value): MessageInterface
+    public function withHeader($header, $value): self
     {
         $new = clone $this;
-        $new->message = $this->message->withHeader($header, $value);
+        $new->message->headers->set($header, $value);
 
         return $new;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return static
      */
-    public function withAddedHeader($header, $value): MessageInterface
+    public function withAddedHeader($header, $value): self
     {
         $new = clone $this;
-        $new->message = $this->message->withAddedHeader($header, $value);
+        $new->message->headers->set($header, $value, false);
 
         return $new;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return static
      */
-    public function withoutHeader($header): MessageInterface
+    public function withoutHeader($header): self
     {
         $new = clone $this;
-        $new->message = $this->message->withoutHeader($header);
+        $new->message->headers->remove($header);
 
         return $new;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return static
      */
-    public function withBody(StreamInterface $body): MessageInterface
+    public function withBody(StreamInterface $body): self
     {
         $new = clone $this;
-        $new->message = $this->message->withBody($body);
+        $new->stream = null;
+
+        if ($this->message instanceof Request) {
+            $new->message = \Closure::bind(static function (Request $request) use ($body): Request {
+                $request->content = $body->detach();
+
+                return $request;
+            }, null, $this->message)($this->message);
+        } elseif ($this->message instanceof Response) {
+            $new->message->setContent((string) $body);
+        }
 
         return $new;
     }
