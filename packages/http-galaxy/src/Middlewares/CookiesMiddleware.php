@@ -17,13 +17,14 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Middlewares;
 
-use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
+use Biurad\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Symfony\Component\HttpFoundation\Cookie;
 
 /**
  * Handle request cookies.
@@ -58,18 +59,7 @@ class CookiesMiddleware implements MiddlewareInterface
     {
         $this->prefix = $prefix;
         $this->cookieJar = $cookieJar;
-
-        $this->encipher = $encipher ?? static function (string $value, string $key, bool $encode): string {
-            if ($encode) {
-                return \base64_encode($value);
-            }
-
-            if (false === $decoded = \base64_decode($value, true)) {
-                throw new \RuntimeException("The \"{$key}\" cookie value was tampered with.");
-            }
-
-            return $decoded;
-        };
+        $this->encipher = $encipher;
     }
 
     /**
@@ -97,11 +87,19 @@ class CookiesMiddleware implements MiddlewareInterface
                 continue;
             }
 
-            // Unpack all cookies into request and decrypt prefixed cookies.
-            $cookieParams[$key] = ($this->encipher)(\substr($cookie, \strlen($this->prefix)), $key, false);
+            if (null === $this->encipher) {
+                $cookieParams[$key] = \rawurldecode($cookie);
+            } else {
+                // Unpack all cookies into request and decrypt prefixed cookies.
+                $cookieParams[$key] = ($this->encipher)(\substr($cookie, \strlen($this->prefix)), $cookie, false);
+            }
         }
 
-        $request = $request->withCookieParams($cookieParams)->withAttribute(self::ATTRIBUTE, $this->cookieJar);
+        $request = $request->withCookieParams($cookieParams);
+
+        if (null === $request->getAttribute(static::ATTRIBUTE)) {
+            $request = $request->withAttribute(static::ATTRIBUTE, $this->cookieJar);
+        }
 
         return $this->encodeResponseSetCookieHeaders($request->getUri(), $handler->handle($request));
     }
@@ -120,7 +118,7 @@ class CookiesMiddleware implements MiddlewareInterface
             }
 
             check_domain:
-            if (null === $cookieDomain || $cookieDomain === $requestUri->getHost()) {
+            if (empty($cookieDomain) || $cookieDomain === $requestUri->getHost()) {
                 return true;
             }
 
@@ -135,12 +133,20 @@ class CookiesMiddleware implements MiddlewareInterface
         $response = $response->withoutHeader('Set-Cookie'); // Remove Set-Cookie header from response ...
 
         foreach ($cookieCollection->getMatchingCookies($matchCookie) as $cookie) {
-            if (!\in_array($cookie->getName(), $this->excludeCookies, true)) {
-                $encryptedValue = $this->prefix . ($this->encipher)($cookie->getValue(), $cookie->getName(), true);
-                $cookie = $cookie->withRawValue($encryptedValue);
+            if (\in_array($cookie->getName(), $this->excludeCookies, true)) {
+                continue;
             }
 
-            $response = $cookie->addToResponse($response);
+            $cookie = null !== $this->encipher ? $cookie->withRaw()->withValue($this->prefix . ($this->encipher)($cookie->getValue(), $cookie->getName(), true)) : $cookie;
+
+            if ($response instanceof Response) {
+                $response->getResponse()->headers->removeCookie($cookie->getName(), $cookie->getPath(), $cookie->getDomain());
+                $response->getResponse()->headers->setCookie($cookie);
+
+                continue;
+            }
+
+            $response = $response->withAddedHeader('Set-Cookie', (string) $cookie);
         }
 
         return $response;
