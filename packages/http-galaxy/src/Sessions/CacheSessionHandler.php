@@ -15,9 +15,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Sessions\Handlers;
+namespace Biurad\Http\Sessions;
 
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
 class CacheSessionHandler extends AbstractSessionHandler
 {
@@ -32,6 +33,9 @@ class CacheSessionHandler extends AbstractSessionHandler
 
     /** @var int */
     private $minutes;
+
+    /** @var bool */
+    private $gcCalled = false;
 
     /**
      * Create a new cache driven handler instance.
@@ -92,6 +96,20 @@ class CacheSessionHandler extends AbstractSessionHandler
         }
 
         return (bool) $this->cache->deleteItem($sessionId);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return int|false
+     */
+    public function gc(int $maxlifetime): int
+    {
+        // We delay gc() to close() so that it is executed outside the transactional and blocking read-write process.
+        // This way, pruning expired sessions does not block them from being started while the current session is used.
+        $this->gcCalled = true;
+
+        return 0;
     }
 
     /**

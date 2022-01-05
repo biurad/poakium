@@ -15,20 +15,21 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Http\Sessions\Handlers;
+namespace Biurad\Http\Sessions;
 
-use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
 use Biurad\Http\Interfaces\CookieInterface;
-use Biurad\Http\Utils\CookieUtil;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
 class CookieSessionHandler extends AbstractSessionHandler
 {
     /** @var CookieFactoryInterface */
     private $cookie;
 
-    /** @var ServerRequestInterface|null */
+    /** @var RequestStack|null */
     private $request;
 
     /** @var int */
@@ -37,12 +38,16 @@ class CookieSessionHandler extends AbstractSessionHandler
     /** @var string */
     private $cookieName;
 
+    /** @var bool */
+    private $gcCalled = false;
+
     /**
      * Create a new cookie driven handler instance.
      */
-    public function __construct(CookieFactoryInterface $cookie, int $maxAge = null)
+    public function __construct(CookieFactoryInterface $cookie, RequestStack $requestStack, int $maxAge = null)
     {
         $this->cookie = $cookie;
+        $this->request = $requestStack;
         $this->cookieName = 'sess_' . \hash('md5', __CLASS__);
         $this->maxAge = $maxAge ?? (int) \ini_get('session.gc_maxlifetime');
     }
@@ -101,7 +106,7 @@ class CookieSessionHandler extends AbstractSessionHandler
         }
 
         if (isset($value[$sessionId])) {
-            $this->cookie->addCookie((new Cookie($this->cookieName, $cookie))->withMaxAge(CookieUtil::normalizeMaxAge($this->maxAge)));
+            $this->cookie->addCookie(Cookie::create($this->cookieName, $cookie, (new \DateTimeImmutable())->add(new \DateInterval('PT' . $this->maxAge . 'S'))));
 
             return true;
         }
@@ -121,12 +126,26 @@ class CookieSessionHandler extends AbstractSessionHandler
         }
 
         if (isset($value[$sessionId])) {
-            $this->cookie->addCookie((new Cookie($this->cookieName, $cookie))->expire());
+            $this->cookie->addCookie(new Cookie($this->cookieName, null, 1));
 
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return int|false
+     */
+    public function gc(int $maxlifetime): int
+    {
+        // We delay gc() to close() so that it is executed outside the transactional and blocking read-write process.
+        // This way, pruning expired sessions does not block them from being started while the current session is used.
+        $this->gcCalled = true;
+
+        return 0;
     }
 
     /**
@@ -144,7 +163,7 @@ class CookieSessionHandler extends AbstractSessionHandler
 
             // delete the session records that have expired
             if (isset($value['expires']) && \time() > $value['expires']) {
-                $this->cookie->addCookie((new Cookie($this->cookieName, $cookie))->expireWhenBrowserIsClosed());
+                $this->cookie->addCookie((new Cookie($this->cookieName, null, 1)));
             }
         }
 
@@ -166,8 +185,8 @@ class CookieSessionHandler extends AbstractSessionHandler
      */
     private function getCookie(string $cookieName)
     {
-        if (null !== $this->request) {
-            return $this->request->getCookieParams()[$cookieName] ?? null;
+        if (null !== $this->request && $request = $this->request->getMainRequest()) {
+            return $request->cookies->get($cookieName);
         }
 
         return $_COOKIE[$cookieName] ?? null;
