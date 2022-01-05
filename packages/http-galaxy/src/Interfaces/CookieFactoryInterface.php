@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Interfaces;
 
-use Biurad\Http\Cookie;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 
 interface CookieFactoryInterface
 {

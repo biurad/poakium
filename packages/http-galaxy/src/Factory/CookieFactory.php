@@ -17,9 +17,10 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Factory;
 
-use Biurad\Http\Cookie;
 use Biurad\Http\Interfaces\CookieFactoryInterface;
+use Biurad\Http\Response;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 
 /**
  * This class is designed to hold a set of Cookies,
@@ -142,9 +143,13 @@ class CookieFactory implements \Countable, \IteratorAggregate, CookieFactoryInte
      */
     public function fromResponse(ResponseInterface $response): CookieFactoryInterface
     {
-        foreach ($response->getHeader('Set-Cookie') as $setCookieString) {
-            $cookie = Cookie::fromCookieString($setCookieString);
-            $this->cookies[$cookie->getName()] = $cookie;
+        if ($response instanceof Response) {
+            $this->addCookie(...$response->getResponse()->headers->getCookies());
+        } else {
+            foreach ($response->getHeader('Set-Cookie') as $setCookieString) {
+                $cookie = Cookie::fromString($setCookieString);
+                $this->cookies[$cookie->getName()] = $cookie;
+            }
         }
 
         return $this;
