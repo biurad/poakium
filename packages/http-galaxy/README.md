@@ -13,7 +13,7 @@
 
 ---
 
-Contains full [PSR-17] factory implementation, [PSR-7], [PSR-15], cookies, sessions, and some other functionalities for working with HTTP in [PHP]. Again the [PSR-7] implementation uses [guzzlehttp/psr7] internally, which offers support to dump request and response as stringable values.
+**biurad/http-galaxy** is a fast, and simple [PSR-7] implementation for [PHP] 7.2+ based on [symfony/http-foundation] created by [Divine Niiquaye][@divineniiquaye]. This library seeks to add [PSR-7] support directly to [symfony/http-foundation] allowing the developer accessing both objects in one. It also shipped with [PSR-15] and [PSR-17] support.
 
 ## 📦 Installation & Basic Usage
 
@@ -55,7 +55,7 @@ When a **major** version is released, the number of minor versions is limited to
 $ ./vendor/bin/phpunit
 ```
 
-This will tests divineniiquaye/php-rade will run against PHP 7.4 version or higher.
+This will tests biurad/http-galaxy will run against PHP 7.3 version or higher.
 
 ## 🏛️ Governance
 
@@ -80,7 +80,7 @@ The **biurad/http-galaxy** library is copyright © [Divine Niiquaye Ibok](https:
 [PSR-7]: http://www.php-fig.org/psr/psr-7/
 [PSR-15]: http://www.php-fig.org/psr/psr-15/
 [PSR-17]: http://www.php-fig.org/psr/psr-17/
-[guzzlehttp/psr7]: https://github.com/guzzlehttp/psr7
+[symfony/http-foundation]: https://github.com/symfony/http-foundation
 [@divineniiquaye]: https://github.com/divineniiquaye
 [docs]: https://docs.biurad.com/php/http-galaxy
 [commit]: https://commits.biurad.com/flight-routing.git
