@@ -97,7 +97,7 @@ class CookiesMiddleware implements MiddlewareInterface
 
         $request = $request->withCookieParams($cookieParams);
 
-        if (null === $request->getAttribute(static::ATTRIBUTE)) {
+        if (!$request instanceof Request && null === $request->getAttribute(static::ATTRIBUTE)) {
             $request = $request->withAttribute(static::ATTRIBUTE, $this->cookieJar);
         }
 
