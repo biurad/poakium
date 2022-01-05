@@ -18,7 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Http\Factory;
 
 use Biurad\Http\Response;
-use Biurad\Http\ServerRequest as Request;
 use Biurad\Http\ServerRequest;
 use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\Uri;
@@ -135,7 +134,7 @@ class Psr7Bridge
      *
      * @throws \UnexpectedValueException when cannot deserialize response
      */
-    public function requestFromArray(array $serializedRequest): Request
+    public function requestFromArray(array $serializedRequest): ServerRequest
     {
         try {
             $uri = self::getValueFromKey($serializedRequest, 'uri');
@@ -145,7 +144,7 @@ class Psr7Bridge
             $requestTarget = self::getValueFromKey($serializedRequest, 'request_target');
             $protocolVersion = self::getValueFromKey($serializedRequest, 'protocol_version');
 
-            $request = (new Request($method, $uri, $headers, $body, $protocolVersion, $serializedRequest['server_params'] ?? $_SERVER));
+            $request = (new ServerRequest($method, $uri, $headers, $body, $protocolVersion, $serializedRequest['server_params'] ?? $_SERVER));
         } catch (\Throwable $exception) {
             throw new \UnexpectedValueException('Cannot deserialize request', $exception->getCode(), $exception);
         }
@@ -188,7 +187,7 @@ class Psr7Bridge
 
         [$headers, $body] = self::splitStream($stream);
 
-        return (new Request($method, $uri, $headers, $body, $version, $_SERVER))->withRequestTarget($requestTarget);
+        return (new ServerRequest($method, $uri, $headers, $body, $version, $_SERVER))->withRequestTarget($requestTarget);
     }
 
     /**
@@ -283,8 +282,14 @@ class Psr7Bridge
             $headers[$currentHeader][] = $value . \ltrim($line);
         }
 
+        if (\class_exists(RelativeStream::class)) {
+            $stream = new RelativeStream($stream, $stream->tell());
+        } elseif (\class_exists(LimitStream::class)) {
+            $stream = new LimitStream($stream, -1, $stream->tell());
+        }
+
         // use a limiting stream to avoid copying initial stream into memory
-        return [$headers, \class_exists(RelativeStream::class) ? new RelativeStream($stream, $stream->tell()) : new LimitStream($stream, -1, $stream->tell())];
+        return [$headers,  $stream];
     }
 
     /**
