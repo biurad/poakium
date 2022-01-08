@@ -104,7 +104,7 @@ trait MessageDecoratorTrait
             $body = $this->message->getContent(true);
         }
 
-        return $this->stream = new Stream($body ?? (string) $this->message->getContent());
+        return $this->stream = new Stream($body ?? $this->message->getContent());
     }
 
     /**

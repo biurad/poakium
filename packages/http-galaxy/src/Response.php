@@ -46,7 +46,7 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
         }
 
         if ($body instanceof StreamInterface) {
-            $body = $body->getContents();
+            $body = (string) $body;
         }
 
         $this->message = new HttpFoundationResponse($body, $status, $headers);
@@ -54,6 +54,13 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
 
         if (null !== $reason) {
             $this->message->setStatusCode($status, $reason);
+        }
+    }
+
+    public function __destruct()
+    {
+        if (null !== $this->stream) {
+            $this->message->setContent((string) $this->stream);
         }
     }
 
