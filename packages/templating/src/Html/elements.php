@@ -1293,6 +1293,141 @@ namespace Biurad\UI\Html {
     }
 
     /**
+     * The `<caption>` HTML element specifies the caption (or title) of a table.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/caption
+     */
+    function caption($children, array $attributes = []): string
+    {
+        return createElement('caption', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<col>` HTML element defines a column within a table and is used for
+     * defining common semantics on all common cells.
+     *
+     * @param int                 $span       contains a positive integer indicating for columns
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/col
+     */
+    function col(int $span = 1, array $attributes = []): string
+    {
+        return createElement('col', $attributes + ['span' => (string) $span], true);
+    }
+
+    /**
+     * The `<colgroup>` HTML element defines a group of columns within a table.
+     *
+     * @param int                      $span       contains a positive integer indicating for columns
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/colgroup
+     */
+    function colgroup($children, int $span = 1, array $attributes = []): string
+    {
+        return createElement('colgroup', $attributes + ['span' => (string) $span, 'children' => $children]);
+    }
+
+    /**
+     * The `<table>` HTML element represents tabular data — that is, information presented in a
+     * two-dimensional table comprised of rows and columns of cells containing data.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+     */
+    function table($children, array $attributes = []): string
+    {
+        return createElement('table', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<tbody>` HTML element encapsulates a set of table rows (`<tr>` elements),
+     * indicating that they comprise the body of the table (`<table>`).
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody
+     */
+    function tbody($children, array $attributes = []): string
+    {
+        return createElement('tbody', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<td>` HTML element defines a cell of a table that contains data.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td
+     */
+    function td($children, array $attributes = []): string
+    {
+        return createElement('td', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<tfoot>` HTML element defines a set of rows summarizing the columns of the table.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tfoot
+     */
+    function tfoot($children, array $attributes = []): string
+    {
+        return createElement('tfoot', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<th>` HTML element defines a cell as header of a group of table cells.
+     *
+     * @param string                   $scope      Defines a cell as header of a group of table cells
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/th
+     */
+    function th(string $scope, $children, array $attributes = []): string
+    {
+        return createElement('th', $attributes + ['scope' => $scope, 'children' => $children]);
+    }
+
+    /**
+     * The `<thead>` HTML element defines a set of rows defining the head of the columns of the table.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/thead
+     */
+    function thead($children, array $attributes = []): string
+    {
+        return createElement('thead', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<tr>` HTML element defines a row of cells in a table.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tr
+     */
+    function tr($children, array $attributes = []): string
+    {
+        return createElement('tr', $attributes + ['children' => $children]);
+    }
+
+    /**
      * Create a grouped.
      */
     function elements(array $children): string
