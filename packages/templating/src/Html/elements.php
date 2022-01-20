@@ -18,33 +18,46 @@ declare(strict_types=1);
 namespace Biurad\UI\Html {
 
     /**
-     * Import/Use a script.
+     * The `<canvas>` HTML element with either the canvas scripting API or
+     * the WebGL API to draw graphics and animations.
+     *
+     * @param array<int,string>   $children   The Element children
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas
+     */
+    function canvas($children, array $attributes = []): string
+    {
+        return createElement('canvas', $attributes + ['children' => $children]);
+    }
+
+    /**
+     * The `<script>` HTML element is used to embed executable code or data.
      *
      * @param string|array<int,string> $src        The internal/external scripts to apply
      * @param array<string,mixed>      $attributes The attributes for script tag
      *
-     * @link https://www.w3.org/TR/html52/semantics-scripting.html#the-script-element
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
      */
-    function script($src, array $attributes = []): string
+    function script($src, string $type = null, array $attributes = []): string
     {
-        if (\is_string($src)) {
-            $attributes['src'] = $src;
-        } else {
-            $attributes['children'] = $src;
-            $attributes += ['type' => 'text/javascript'];
-        }
+        $attributes += (\is_string($src) && 'j' === $src[-2] ? ['src' => $src, 'type' => $type] : ['children' => $src]);
 
         return createElement('script', $attributes);
     }
 
     /**
-     * NoScript Element.
+     * The `<noscript>` HTML element defines a section of HTML to be inserted if a script type
+     * on the page is unsupported or if scripting is currently turned off in the browser.
      *
-     * @link https://html.spec.whatwg.org/multipage/scripting.html#the-noscript-element
+     * @param array<int,string>   $children   The Element children
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noscript
      */
-    function noscript(string $children): string
+    function noscript($children, array $attributes = []): string
     {
-        return createElement('noscript', ['children' => $children]);
+        return createElement('noscript', $attributes + ['children' => $children]);
     }
 
     /**
