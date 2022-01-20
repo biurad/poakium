@@ -1263,6 +1263,36 @@ namespace Biurad\UI\Html {
     }
 
     /**
+     * The `<del>` HTML element represents a range of text that has been deleted from a document.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/del
+     */
+    function del($children, array $attributes = []): string
+    {
+        $attributes += ['children' => $children];
+
+        return createElement('del', $attributes);
+    }
+
+    /**
+     * The `<ins>` HTML element represents a range of text that has been added to a document.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ins
+     */
+    function ins($children, array $attributes = []): string
+    {
+        $attributes += ['children' => $children];
+
+        return createElement('ins', $attributes);
+    }
+
+    /**
      * Create a grouped.
      */
     function elements(array $children): string
