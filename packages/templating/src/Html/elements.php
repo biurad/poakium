@@ -1119,8 +1119,8 @@ namespace Biurad\UI\Html {
      * The `<track>` HTML element represents an embed text track element.
      *
      * @param string              $src        Address of the track (.vtt file). Must be a valid URL
-     * @param bool                $default    indicates that the track should be enabled
      * @param string              $kind       How the text track is meant to be used
+     * @param bool                $default    indicates that the track should be enabled
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
@@ -1146,6 +1146,107 @@ namespace Biurad\UI\Html {
         $attributes += ['src' => $src, 'children' => $children, 'autoplay' => $autoplay ? 'true' : 'false'];
 
         return createElement('video', $attributes);
+    }
+
+    /**
+     * The `<embed>` HTML element represents external content at the specified point in the document.
+     *
+     * @param string              $src        The URL of the resource being embedded
+     * @param bool                $type       The MIME type to use to select the plug-in to instantiate
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed
+     */
+    function embed(string $src, string $type, array $attributes = []): string
+    {
+        $attributes += ['type' => $type, 'src' => $src];
+
+        return createElement('embed', $attributes, true);
+    }
+
+    /**
+     * The `<iframe>` HTML element represents a nested browsing context,
+     * embedding another HTML page into the current one.
+     *
+     * @param string              $src        The URL of the page to embed
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
+     */
+    function iframe(string $src = 'about:blank', array $attributes = []): string
+    {
+        $attributes += ['src' => $src];
+
+        return createElement('iframe', $attributes);
+    }
+
+    /**
+     * The `<object>` HTML element represents an external resource treated as image.
+     *
+     * @param string                   $data       The address of the resource as a valid URL
+     * @param bool                     $type       The content type of the resource specified by data
+     * @param string|array<int,string> $children   The Element children (only param, del and ins tags)
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object
+     */
+    function object(string $data, string $type, $children, array $attributes = []): string
+    {
+        $attributes += ['data' => $data, 'children' => $children, 'type' => $type];
+
+        return createElement('object', $attributes);
+    }
+
+    /**
+     * The `<param>` HTML element defines parameters for an object element.
+     *
+     * @param string              $name       Name of the parameter
+     * @param bool                $value      Name of the parameter
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
+     */
+    function param(string $name, string $value, array $attributes = []): string
+    {
+        $attributes += ['name' => $name, 'value' => $value];
+
+        return createElement('param', $attributes, true);
+    }
+
+    /**
+     * The `<picture>` HTML element contains zero or more `<source>` elements and one `<img>` element,
+     * to offer alternative versions of an image for different display/device scenarios.
+     *
+     * @param string|array<int,string> $children   The Element children
+     * @param array<string,mixed>      $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture
+     */
+    function picture($children, array $attributes = []): string
+    {
+        $attributes += ['children' => $children];
+
+        return createElement('picture', $attributes);
+    }
+
+    /**
+     * The `<source>` HTML element specifies multiple media resources for the `<picture>`,
+     * the `<audio>` element, or the `<video>` element.
+     *
+     * If the $type parameter is a picture media supported attribute content,
+     * The src attribute changes to srcset while type to media.
+     *
+     * @param string              $src        The URL of the resource
+     * @param bool                $type       The MIME media type of the resource, optionally with a codecs parameter
+     * @param array<string,mixed> $attributes Attributes for the element
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/source
+     */
+    function source(string $src, string $type, array $attributes = []): string
+    {
+        $attributes += ('(' === @$type[0] ? ['srcset' => $src, 'media' => $type] : ['type' => $type, 'src' => $src]);
+
+        return createElement('source', $attributes, true);
     }
 
     /**
