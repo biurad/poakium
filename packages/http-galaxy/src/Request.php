@@ -146,7 +146,7 @@ class Request implements RequestInterface, \Stringable
         $new->uri = $uri;
 
         $new->message = \Closure::bind(static function (HttpFoundationRequest $request) use ($uri, $preserveHost): HttpFoundationRequest {
-            $request->requestUri = \substr((string) $uri, \strpos((string) $uri, '://'));
+            $request->requestUri = (false !== $pos = \strpos((string) $uri, '//')) ? \substr((string) $uri, $pos) : (string) $uri;
 
             if ('' !== $uriQuery = $uri->getQuery()) {
                 $request->server->set('QUERY_STRING', $request::normalizeQueryString($uriQuery));
