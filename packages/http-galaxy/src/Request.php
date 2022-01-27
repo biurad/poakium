@@ -86,18 +86,7 @@ class Request implements RequestInterface, \Stringable
      */
     public function getRequestTarget(): string
     {
-        if (null !== $this->requestTarget) {
-            return $this->requestTarget;
-        }
-
-        if ('' === $target = $this->message->getPathInfo()) {
-            $target = '/';
-        }
-        if (!empty($uriQuery = $this->message->getQueryString())) {
-            $target .= '?' . $uriQuery;
-        }
-
-        return $target;
+        return $this->requestTarget ?? $this->message->getRequestUri();
     }
 
     /**
@@ -143,7 +132,7 @@ class Request implements RequestInterface, \Stringable
      */
     public function getUri(): UriInterface
     {
-        return $this->uri ?? $this->uri = new Uri($this->message->getUri());
+        return $this->uri ?? $this->uri = new Uri($this->message->getSchemeAndHttpHost() . $this->message->getRequestUri());
     }
 
     /**
@@ -156,15 +145,35 @@ class Request implements RequestInterface, \Stringable
         $new = clone $this;
         $new->uri = $uri;
 
-        if (!$preserveHost || !$new->message->headers->has('Host')) {
-            if ('' === $host = $new->message->getHttpHost()) {
-                return $new;
+        $new->message = \Closure::bind(static function (HttpFoundationRequest $request) use ($uri, $preserveHost): HttpFoundationRequest {
+            $request->requestUri = \substr((string) $uri, \strpos((string) $uri, '://'));
+
+            if ('' !== $uriQuery = $uri->getQuery()) {
+                $request->server->set('QUERY_STRING', $request::normalizeQueryString($uriQuery));
             }
 
-            // Ensure Host is the first header.
-            // See: http://tools.ietf.org/html/rfc7230#section-5.4
-            $new->message->headers->replace(['HOST' => $host] + $this->message->headers->all());
-        }
+            if ('https' === $uri->getScheme()) {
+                $request->server->set('HTTPS', 'on');
+            }
+
+            if (!$preserveHost || !$request->headers->has('Host')) {
+                if ('' === $requestHost = $uri->getHost()) {
+                    return $request;
+                }
+
+                if ('' !== $uri->getScheme()) {
+                    $requestHost = $uri->getScheme() . '://' . $requestHost;
+                }
+
+                if (!\in_array($uri->getPort(), [null, '', 80, 443], true)) {
+                    $requestHost .= ':' . $uri->getPort();
+                }
+
+                $request->headers->set('HOST', $requestHost);
+            }
+
+            return $request;
+        }, null, $this->message)($this->message);
 
         return $new;
     }
