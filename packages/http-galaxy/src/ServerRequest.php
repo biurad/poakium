@@ -26,9 +26,6 @@ use Psr\Http\Message\UriInterface;
  */
 class ServerRequest extends Request implements ServerRequestInterface
 {
-    /** @var array|object|null */
-    private $parsedBody;
-
     /**
      * @param string                               $method       HTTP method
      * @param string|UriInterface                  $uri          URI
@@ -71,7 +68,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getParsedBody()
     {
-        return $this->parsedBody;
+        return 0 === $this->message->request->count() ? $this->message->request->all() : null;
     }
 
     /**
@@ -136,12 +133,18 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function withParsedBody($data): self
     {
-        if (!\is_array($data) && !\is_object($data) && null !== $data) {
-            throw new \InvalidArgumentException('First parameter to withParsedBody MUST be object, array or null');
+        if ($data instanceof \JsonSerializable) {
+            $data = $data->jsonSerialize();
+        } elseif ($data instanceof \stdClass) {
+            $data = (array) $data;
+        } elseif ($data instanceof \Traversable) {
+            $data = \iterator_to_array($data);
+        } elseif (!\is_array($data)) {
+            throw new \InvalidArgumentException('Parsed body must be an array, an object implementing ArrayAccess, stdClass object, or a JsonSerializable object.');
         }
 
         $new = clone $this;
-        $new->parsedBody = $data;
+        $new->message->request->replace($data);
 
         return $new;
     }
