@@ -1,3 +1,9 @@
+/.idea/
+/.vscode/
+/.phpcs-cache
+/.php_cs.dist.php
+/.phpunit.result.cache
+/build/
 composer.lock
-phpunit.xml.dist
-vendor/
+composer.phar
+/vendor/
