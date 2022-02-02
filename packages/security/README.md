@@ -1,6 +1,6 @@
 <div align="center">
 
-# The PHP Rade Framework
+# The Biurad PHP Security
 
 [![PHP Version](https://img.shields.io/packagist/php-v/biurad/security.svg?style=flat-square&colorB=%238892BF)](http://php.net)
 [![Latest Version](https://img.shields.io/packagist/v/biurad/security.svg?style=flat-square)](https://packagist.org/packages/biurad/security)
