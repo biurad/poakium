@@ -1,25 +1,24 @@
-<?php /** @noinspection PhpUndefinedMethodInspection */
+<?php
 
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  SecurityManager
+ * PHP version 7.4 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/securitymanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
  */
 
-namespace BiuradPHP\Security\Commands;
+namespace Biurad\Security\Commands;
 
-use BiuradPHP\Security\User\UserFirewall;
+use Biurad\Security\Interfaces\UserStatusInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,7 +29,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use BiuradPHP\Security\Interfaces\CredentialsHolderInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
-use Throwable;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 /**
  * Get a user's status.
@@ -40,27 +40,24 @@ use Throwable;
 class UserStatusCommand extends Command
 {
     protected static $defaultName = 'security:user-status';
+    private UserProviderInterface $provider;
 
-    private $firewall;
-    private $provider;
-
-    public function __construct(UserProviderInterface $provider, UserFirewall $firewall)
+    public function __construct(UserProviderInterface $provider)
     {
-        $this->firewall = $firewall;
         $this->provider = $provider;
-
         parent::__construct();
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDescription('Check a registered user\'s status')
             ->addArgument('user', InputArgument::OPTIONAL, 'The User\'s identity that can be access in the website')
-            ->setHelp(<<<EOF
+            ->setHelp(
+                <<<EOF
 
 The <info>%command.name%</info> command shows a registered user's status according to your
 security configuration. This command is mainly used to view user's account status.
@@ -76,51 +73,57 @@ EOF
 
     /**
      * {@inheritdoc}
-     * @throws Throwable
+     *
+     * @throws \Throwable
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        $errorIo = $output instanceof ConsoleOutputInterface ? new SymfonyStyle($input, $output->getErrorOutput()) : $io;
+        $errorIo = new SymfonyStyle($input, $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output);
+        $input->isInteractive() ? $errorIo->title('Biurad User Utility') : $errorIo->newLine();
 
-        $input->isInteractive() ? $errorIo->title('BiuradPHP User Utility') : $errorIo->newLine();
-
-        $identity = $input->getArgument('user');
-
-        if (!$identity) {
+        if (!$identity = $input->getArgument('user')) {
             if (!$input->isInteractive()) {
                 $errorIo->error('The user\'s username or email should be provided and must not be empty.');
 
-                return 1;
+                return self::FAILURE;
             }
 
             $identityQuestion = $this->createIdentityQuestion();
             $identity = $errorIo->askQuestion($identityQuestion);
         }
 
-        if (is_string($user = $this->firewall->checkUserExistence($this->provider, $identity))) {
-            $errorIo->note($user);
-            return 1;
+        try {
+            $user = $this->provider->loadUserByIdentifier($identity);
+        } catch (UserNotFoundException $e) {
+            $errorIo->note($e->getMessage());
+
+            return self::FAILURE;
         }
 
         $rows = [
-            ['Username', $user->getUsername() ?? 'Not provided'],
-            ['Status', $user->isEnabled() ? 'enabled' : 'disabled'],
+            ['Username', $user->getUserIdentifier()],
         ];
 
         if ($user instanceof CredentialsHolderInterface) {
-            $rows[] = ['Fullname', $user->getFullName()];
-            $rows[] = ['Email', $user->getEmail()];
-            $rows[] = ['Encoded password', $user->getPassword()];
-            $rows[] = ['IP address', $user->getIpaddress() ?? 'No record'];
-            $rows[] = ['Last login', $user->getLastLogin() ?? 'No record'];
-        } else {
-            $rows[] = ['Plain password', $user->getPassword()];
+            $rows[] = ['Fullname', $user->getFullName() ?? 'No record'];
+            $rows[] = ['Email', $user->getEmail() ?? 'No record'];
+            $rows[] = ['Password', $user->getPassword() ?? 'No record'];
+            $rows[] = ['Status', $user->isEnabled() ? 'enabled' : 'disabled'];
+        } elseif ($user instanceof PasswordAuthenticatedUserInterface) {
+            $rows[] = ['Password', $user->getPassword() ?? 'No record'];
         }
 
-        $io->table(['User', 'Credentials'], $rows);
+        if ($user instanceof UserStatusInterface) {
+            $rows[] = ['Created at', $user->getCreatedAt()->format('Y-m-d H:i:s')];
+            $rows[] = ['Updated at', $user->getUpdatedAt() ? $user->getUpdatedAt()->format('Y-m-d H:i:s') : 'No record'];
+            $rows[] = ['Last login', $user->getLastLogin() ? $user->getLastLogin()->format('Y-m-d H:i:s') : 'No record'];
+            $rows[] = ['Location', $user->getLocation() ?? 'No record'];
+            $rows[] = ['Locked', $user->isLocked() ? 'Yes' : 'No'];
+        }
 
-        return 0;
+        $errorIo->table(['User', 'Credentials'], $rows);
+
+        return self::SUCCESS;
     }
 
     /**
@@ -131,7 +134,7 @@ EOF
         $identityQuestion = new Question('Type in a username or email to proceed');
 
         return $identityQuestion->setValidator(function ($value) {
-            if ('' === trim($value)) {
+            if ('' === \trim($value)) {
                 throw new InvalidArgumentException('The user\'s identity must not be empty.');
             }
 

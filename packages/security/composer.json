@@ -19,6 +19,7 @@
         "php": "^7.4 || ^8.0",
         "biurad/http-galaxy": "1.*",
         "psr/log": "^1|^2|^3",
+        "symfony/console": "^5.4 || ^6.0",
         "symfony/property-access": "^5.4 || ^6.0",
         "symfony/security-core": "^5.4 || ^6.0"
     },

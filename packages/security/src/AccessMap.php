@@ -3,42 +3,42 @@
 declare(strict_types=1);
 
 /*
- * This code is under BSD 3-Clause "New" or "Revised" License.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @category  SecurityManager
+ * PHP version 7.4 and above required
  *
  * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
  * @copyright 2019 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
- * @link      https://www.biurad.com/projects/securitymanager
- * @since     Version 0.1
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
  */
 
-namespace BiuradPHP\Security;
+namespace Biurad\Security;
 
-use BiuradPHP\Http\Interfaces\RequestMatcherInterface;
-use BiuradPHP\Security\Interfaces\AccessMapInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Biurad\Http\ServerRequest;
+use Biurad\Security\Interfaces\AccessMapInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\RequestMatcherInterface;
 
 /**
  * AccessMap allows configuration of different access control rules for
  * specific parts of the website.
  *
- * @author Fabien Potencier <fabien@symfony.com>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class AccessMap implements AccessMapInterface
 {
-    private $map = [];
+    /** @var array<int,mixed> */
+    private array $map = [];
 
     /**
-     * @param RequestMatcherInterface $requestMatcher
-     * @param array $attributes An array of attributes to pass to the access decision manager (like roles)
-     * @param string|null $channel The channel to enforce (http, https, or null)
+     * @param array       $attributes An array of attributes to pass to the access decision manager (like roles)
+     * @param string|null $channel    The channel to enforce (http, https, or null)
      */
-    public function add(RequestMatcherInterface $requestMatcher, array $attributes = [], string $channel = null)
+    public function add(RequestMatcherInterface $requestMatcher, array $attributes = [], string $channel = null): void
     {
         $this->map[] = [$requestMatcher, $attributes, $channel];
     }
@@ -46,11 +46,19 @@ class AccessMap implements AccessMapInterface
     /**
      * {@inheritdoc}
      */
-    public function getPatterns(Request $request)
+    public function getPatterns(ServerRequestInterface $request): array
     {
-        foreach ($this->map as $elements) {
-            if (null === $elements[0] || $elements[0]->matches($request)) {
-                return [$elements[1], $elements[2]];
+        if (!$request instanceof ServerRequest) {
+            throw new \InvalidArgumentException(\sprintf('The request must be an instance of %s.', ServerRequest::class));
+        }
+
+        if ([] !== $this->map) {
+            $request = $request->getRequest();
+
+            foreach ($this->map as [$requestMatcher, $attributes, $channel]) {
+                if ($requestMatcher->matches($request)) {
+                    return [$attributes, $channel];
+                }
             }
         }
 
