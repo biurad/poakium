@@ -26,7 +26,10 @@ $ composer require biurad/security 1.*
 Here is a simple example of how to use this library in your project:
 
 ```php
+use Biurad\Security\Authenticator;
+use Biurad\Security\Authenticator\FormLoginAuthenticator;
 use Biurad\Security\Token\CacheableTokenStorage;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;
 use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolver;
@@ -65,7 +68,7 @@ $authenticators = [
 ];
 
 $request = \Biurad\Http\Factory\Psr17Factory::fromGlobalRequest();
-$authenticator = new Authenticator($authenticators, $accessDecisionManager);
+$authenticator = new Authenticator($authenticators, $tokenStorage, $accessDecisionManager);
 
 // The parameters which should be fetched from request ...
 $credentials = ['_username', '_password'];
