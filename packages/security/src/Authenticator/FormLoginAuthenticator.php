@@ -24,7 +24,6 @@ use Biurad\Security\Interfaces\AuthenticatorInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
@@ -63,7 +62,6 @@ class FormLoginAuthenticator implements AuthenticatorInterface
         $this->rememberMeHandler = $rememberMeHandler;
         $this->session = $session;
         $this->eraseCredentials = $eraseCredentials;
-        PasswordHasherFactory::class;
     }
 
     /**
