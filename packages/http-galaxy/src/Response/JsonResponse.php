@@ -19,7 +19,6 @@ namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
 use Biurad\Http\Exception;
-use Biurad\Http\Traits\InjectContentTypeTrait;
 use Symfony\Component\HttpFoundation\JsonResponse as HttpFoundationJsonResponse;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -28,8 +27,6 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  */
 class JsonResponse extends Response
 {
-    use InjectContentTypeTrait;
-
     /**
      * Create a JSON response with the given data.
      *

@@ -18,8 +18,6 @@ declare(strict_types=1);
 namespace Biurad\Http\Response;
 
 use Biurad\Http\Response;
-use Biurad\Http\Traits\InjectContentTypeTrait;
-use Biurad\Http\Exception;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -27,19 +25,15 @@ use Psr\Http\Message\StreamInterface;
  */
 class HtmlResponse extends Response
 {
-    use InjectContentTypeTrait;
-
     /**
      * Produces an HTML response with a Content-Type of text/html and a default status of 200.
      *
      * @param StreamInterface|string $html    HTML or stream for the message body
      * @param int                    $status  integer status code for the response; 200 by default
      * @param array                  $headers array of headers to use at initialization
-     *
-     * @throws Exception\InvalidArgumentException if $html is neither a string or stream
      */
     public function __construct($html, int $status = 200, array $headers = [])
     {
-        parent::__construct($status, $this->injectContentType('text/html; charset=utf-8', $headers), $html);
+        parent::__construct($status, ['content-type' => ['text/html; charset=utf-8']] + $headers, $html);
     }
 }
