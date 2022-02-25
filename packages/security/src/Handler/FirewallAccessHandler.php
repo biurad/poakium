@@ -16,7 +16,7 @@ declare(strict_types=1);
  *
  */
 
-namespace Biurad\Security;
+namespace Biurad\Security\Handler;
 
 use Biurad\Security\Interfaces\AccessMapInterface;
 use Psr\Http\Message\ServerRequestInterface;
