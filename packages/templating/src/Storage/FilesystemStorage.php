@@ -30,11 +30,7 @@ class FilesystemStorage implements StorageInterface
     /** @var LoggerInterface|null */
     protected $logger;
 
-    /**
-     * The array of active view paths.
-     *
-     * @var string[]
-     */
+    /** @var array<int,string> */
     protected $paths;
 
     /**
@@ -57,7 +53,7 @@ class FilesystemStorage implements StorageInterface
     /**
      * {@inheritdoc}
      */
-    public function load(string $template): ?string
+    public function load(string $template, array $namespaces): ?string
     {
         $fileFailures = [];
 
@@ -69,7 +65,7 @@ class FilesystemStorage implements StorageInterface
             return $template;
         }
 
-        foreach ($this->paths as $path) {
+        foreach (($namespaces ?: $this->paths) as $path) {
             if (\file_exists($found = $path . '/' . $template)) {
                 if (null !== $this->logger) {
                     $this->logger->debug('Loaded template file.', ['file' => $template]);

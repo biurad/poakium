@@ -19,8 +19,8 @@ namespace Biurad\UI\Renders;
 
 use Biurad\UI\Exceptions\LoaderException;
 use Biurad\UI\Interfaces\CacheInterface as RenderCacheInterface;
-use Biurad\UI\Interfaces\TemplateInterface;
 use Biurad\UI\Interfaces\RenderInterface;
+use Biurad\UI\Template;
 use Twig;
 use Twig\Cache\FilesystemCache;
 use Twig\Extension\ExtensionInterface;
@@ -69,7 +69,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     /**
      * {@inheritdoc}
      */
-    public function withLoader(TemplateInterface $loader): RenderInterface
+    public function withLoader(Template $loader): RenderInterface
     {
         $this->environment->addFunction(
             new Twig\TwigFunction(

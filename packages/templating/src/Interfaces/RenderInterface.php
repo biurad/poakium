@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Interfaces;
 
+use Biurad\UI\Template;
+
 /**
  * A fluent interface for building renders.
  *
@@ -27,7 +29,7 @@ interface RenderInterface
     /**
      * Includes the template resolver into render.
      */
-    public function withLoader(TemplateInterface $loader): RenderInterface;
+    public function withLoader(Template $loader): RenderInterface;
 
     /**
      * Set the render's file extension(s).

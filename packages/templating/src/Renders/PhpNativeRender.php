@@ -21,7 +21,7 @@ use Biurad\UI\Exceptions\RenderException;
 use Biurad\UI\Helper\EscaperHelper;
 use Biurad\UI\Helper\SlotsHelper;
 use Biurad\UI\Interfaces\HelperInterface;
-use Biurad\UI\Interfaces\TemplateInterface;
+use Biurad\UI\Template;
 
 /**
  * A PHP native template render based.
@@ -210,7 +210,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
         $this->parents[$this->current] = function (array $parameters) use ($template): string {
             $templateRender = $this->loader;
 
-            if (!$templateRender instanceof TemplateInterface) {
+            if (!$templateRender instanceof Template) {
                 throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template, TemplateInterface::class));
             }
 

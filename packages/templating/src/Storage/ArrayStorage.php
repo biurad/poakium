@@ -49,9 +49,9 @@ class ArrayStorage implements StorageInterface
     /**
      * {@inheritdoc}
      */
-    public function load(string $template): ?string
+    public function load(string $template, array $namespaces): ?string
     {
-        $loadedTemplate = $this->templates[$template] ?? null;
+        $loadedTemplate = $namespaces[$template] ?? $this->templates[$template] ?? null;
 
         if ($loadedTemplate instanceof \Stringable || \is_string($loadedTemplate)) {
             return (string) $loadedTemplate;

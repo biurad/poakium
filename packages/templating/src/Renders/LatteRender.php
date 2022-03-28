@@ -18,10 +18,9 @@ declare(strict_types=1);
 namespace Biurad\UI\Renders;
 
 use Biurad\UI\Interfaces\CacheInterface;
-use Biurad\UI\Interfaces\TemplateInterface;
 use Biurad\UI\Interfaces\RenderInterface;
+use Biurad\UI\Template;
 use Latte;
-use Latte\Loaders\FileLoader;
 
 /**
  * Render for Latte templating.
@@ -61,7 +60,7 @@ final class LatteRender extends AbstractRender implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function withLoader(TemplateInterface $loader): RenderInterface
+    public function withLoader(Template $loader): RenderInterface
     {
         $this->latte->addFunction('template', static function (string $template, array $parameters = []) use ($loader): string {
             return $loader->render($template, $parameters);
@@ -76,7 +75,7 @@ final class LatteRender extends AbstractRender implements CacheInterface
     public function render(string $template, array $parameters): string
     {
         if (\file_exists($template)) {
-            $templateLoader = new FileLoader();
+            $templateLoader = new Latte\Loaders\FileLoader();
         } else {
             $templateId = \substr(\md5($template), 0, 7);
             $templateLoader = new StringLoader([$templateId => (\file_exists($this->latte->getCacheFile($templateId)) ? '' : self::loadHtml($template) ?? $template)]);

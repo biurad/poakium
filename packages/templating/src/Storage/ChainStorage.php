@@ -67,10 +67,10 @@ class ChainStorage implements StorageInterface
     /**
      * {@inheritdoc}
      */
-    public function load(string $template): ?string
+    public function load(string $template, array $namespaces): ?string
     {
         foreach ($this->loaders as $loader) {
-            if (null !== $storage = $loader->load($template)) {
+            if (null !== $storage = $loader->load($template, $namespaces)) {
                 return $storage;
             }
         }

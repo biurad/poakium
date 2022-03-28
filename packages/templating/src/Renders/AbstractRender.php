@@ -20,7 +20,7 @@ namespace Biurad\UI\Renders;
 use Biurad\UI\Exceptions\RenderException;
 use Biurad\UI\Interfaces\HtmlInterface;
 use Biurad\UI\Interfaces\RenderInterface;
-use Biurad\UI\Interfaces\TemplateInterface;
+use Biurad\UI\Template;
 
 /**
  * Render engine with ability to switch environment and loader.
@@ -34,13 +34,13 @@ abstract class AbstractRender implements RenderInterface
     /** @var string[] */
     protected $extensions;
 
-    /** @var TemplateInterface|null */
+    /** @var Template|null */
     protected $loader;
 
     /**
      * {@inheritdoc}
      */
-    public function withLoader(TemplateInterface $loader): RenderInterface
+    public function withLoader(Template $loader): RenderInterface
     {
         $this->loader = $loader;
 

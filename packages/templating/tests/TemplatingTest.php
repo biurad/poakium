@@ -38,8 +38,6 @@ class TemplatingTest extends TestCase
     public function testConstructor(): void
     {
         $template = new Template(new ArrayStorage(['hello.php' => 'Hello World']));
-
-        $this->assertInstanceOf(TemplateInterface::class, $template);
         $this->assertNull($template->find('hello.php'));
         $this->assertEmpty($template->getRenders());
 
@@ -56,7 +54,7 @@ class TemplatingTest extends TestCase
     {
         $dir = __DIR__ . '/Fixtures';
         $fileStorage = new FilesystemStorage([$dir . '/templates']);
-        $arrayStorage = new ArrayStorage(['hello_array.latte' => '{template(\'hello_twig\', [\'firstname\' => $firstname])|noEscape}']);
+        $arrayStorage = new ArrayStorage(['hello_array.latte' => '{template(\'hello_twig.twig\', [\'firstname\' => $firstname])|noEscape}']);
         $storage = new ChainStorage([$fileStorage, $arrayStorage]);
 
         $template = new Template($storage, __DIR__ . '/caches');
@@ -77,10 +75,10 @@ class TemplatingTest extends TestCase
         $template = new Template($fileStorage);
         $phpRender = new PhpNativeRender(['php', 'phtml']);
 
-        $template->addGlobal('firstname', 'Divine');
+        $template->globals['firstname'] = 'Divine';
         $template->addNamespace('Extended', __DIR__ . '/Fixtures/Bundles');
         $template->addRender($phpRender, new TwigRender(), new LatteRender());
-        $this->assertEquals(['firstname' => 'Divine'], $template->getGlobal());
+        $this->assertEquals(['firstname' => 'Divine'], $template->globals);
 
         $this->assertNull($template->renderTemplates(['hello_array'], []));
         $this->assertStringEqualsFile(__DIR__ . '/Fixtures/template2.txt', $template->renderTemplates(['hello_twig'], []));
@@ -130,7 +128,7 @@ class TemplatingTest extends TestCase
         }
 
         try {
-            $arrayStorage->load('hello_page');
+            $arrayStorage->load('hello_page', []);
         } catch (LoaderException $e) {
             $this->assertEquals('Failed to load "hello_page" as it\'s source isn\'t stringable.', $e->getMessage());
         }
@@ -138,7 +136,7 @@ class TemplatingTest extends TestCase
         try {
             $template->render('namespaced');
         } catch (LoaderException $e) {
-            $this->assertEquals('No hint path(s) defined for [Extended] namespace.', $e->getMessage());
+            $this->assertEquals('No hint source(s) defined for [Extended] namespace.', $e->getMessage());
         }
     }
 
