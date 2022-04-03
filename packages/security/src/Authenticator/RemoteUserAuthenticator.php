@@ -24,6 +24,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -114,12 +115,20 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
      */
     public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
     {
-        if (\count($credentials) > 0) {
-            throw new AuthenticationException('User credentials are already fetched remotely.');
+        if (!empty($credentials)) {
+            return null;
         }
         $user = $this->userProvider->loadUserByIdentifier($this->userKey);
 
-        return new PreAuthenticatedToken($user, 'main', $user->getRoles());
+        if ($request->hasHeader('AUTH-SWITCH-USER')) {
+            $token = $this->tokenStorage->getToken();
+
+            if ($token && $this->userKey !== $token->getUserIdentifier()) {
+                $token = new SwitchUserToken($user, 'main', $user->getRoles(), $token, (string) $request->getUri());
+            }
+        }
+
+        return $token ?? new PreAuthenticatedToken($user, 'main', $user->getRoles());
     }
 
     /**
@@ -135,7 +144,7 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
     private function clearToken(?TokenInterface $token, AuthenticationException $exception = null): void
     {
         if ($token instanceof PreAuthenticatedToken) {
-            $this->tokenStorage->setToken(null);
+            $this->tokenStorage->setToken();
 
             if (null !== $this->logger) {
                 if (null === $exception) {
