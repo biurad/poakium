@@ -17,52 +17,30 @@ declare(strict_types=1);
 
 namespace Biurad\Http;
 
+use Biurad\Http\Exception\InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
-use Symfony\Component\Debug\ErrorHandler as SymfonyLegacyErrorHandler;
-use Symfony\Component\ErrorHandler\ErrorHandler as SymfonyErrorHandler;
 
 /**
  * Describes a data stream.
  *
- * @author Michael Dowling and contributors to guzzlehttp/psr7
- * @author Tobias Nyholm <tobias.nyholm@gmail.com>
- * @author Martijn van der Ven <martijn@vanderven.se>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class Stream implements StreamInterface
 {
-    /** @var resource|null A resource reference */
-    private $stream;
+    /** @var bool|null */
+    private $resource;
 
-    /** @var bool */
-    private $seekable;
-
-    /** @var bool */
-    private $readable;
-
-    /** @var bool */
-    private $writable;
-
-    /** @var array|mixed|void|bool|null */
-    private $uri;
-
-    /** @var int|null */
+    /** @var bool|null */
     private $size;
 
-    /** @var array Hash of readable and writable stream types */
-    private const READ_WRITE_HASH = [
-        'read' => [
-            'r' => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
-            'rb' => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
-            'c+b' => true, 'rt' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a+' => true,
-        ],
-        'write' => [
-            'w' => true, 'w+' => true, 'rw' => true, 'r+' => true, 'x+' => true,
-            'c+' => true, 'wb' => true, 'w+b' => true, 'r+b' => true,
-            'x+b' => true, 'c+b' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true,
-        ],
-    ];
+    /** @var bool|null */
+    private $seekable;
+
+    /** @var bool|null */
+    private $writable;
+
+    /** @var bool|null */
+    private $readable;
 
     /**
     * Creates a new PSR-7 stream.
@@ -71,31 +49,25 @@ class Stream implements StreamInterface
     *
     * @throws \InvalidArgumentException
     */
-    public function __construct($body = '')
+    public function __construct($stream = 'php://temp', string $mode = 'wb+')
     {
-        if ($body instanceof StreamInterface) {
-            return $body;
+        if (\is_string($stream)) {
+            $stream = '' === $stream ? false : @\fopen($stream, $mode);
+
+            if (false === $stream) {
+                throw new \RuntimeException('The stream or file cannot be opened.');
+            }
         }
 
-        if (\is_string($body)) {
-            $resource = \fopen('php://temp', 'rw+');
-            \fwrite($resource, $body);
-            $body = $resource;
+        if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
+            throw new InvalidArgumentException('Invalid stream provided. It must be a string stream identifier or stream resource.');
         }
 
-        if (!\is_resource($body)) {
-            throw new \InvalidArgumentException('First argument to Stream must be a string, resource or StreamInterface.');
-        }
-
-        $this->stream = $body;
-        $meta = \stream_get_meta_data($this->stream);
-        $this->seekable = $meta['seekable'] && 0 === \fseek($this->stream, 0, \SEEK_CUR);
-        $this->readable = isset(self::READ_WRITE_HASH['read'][$meta['mode']]);
-        $this->writable = isset(self::READ_WRITE_HASH['write'][$meta['mode']]);
+        $this->resource = $stream;
     }
 
     /**
-     * Closes the stream when the destructed.
+     * Closes the stream and any underlying resources when the instance is destructed.
      */
     public function __destruct()
     {
@@ -103,191 +75,233 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
-    public function __toString()
+    public function __toString(): string
     {
-        try {
-            if ($this->isSeekable()) {
-                $this->seek(0);
-            }
-
-            return $this->getContents();
-        } catch (\Throwable $e) {
-            if (\PHP_VERSION_ID >= 70400) {
-                throw $e;
-            }
-
-            if (\is_array($errorHandler = \set_error_handler('var_dump'))) {
-                $errorHandler = $errorHandler[0] ?? null;
-            }
-            \restore_error_handler();
-
-            if ($e instanceof \Error || $errorHandler instanceof SymfonyErrorHandler || $errorHandler instanceof SymfonyLegacyErrorHandler) {
-                return \trigger_error((string) $e, \E_USER_ERROR);
-            }
-
-            return '';
+        if ($this->isSeekable()) {
+            $this->rewind();
         }
+
+        return $this->getContents();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function close(): void
     {
-        if (isset($this->stream)) {
-            if (\is_resource($this->stream)) {
-                \fclose($this->stream);
-            }
-            $this->detach();
+        if ($this->resource) {
+            $resource = $this->detach();
+            \fclose($resource);
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function detach()
     {
-        if (!isset($this->stream)) {
-            return null;
-        }
-
-        $result = $this->stream;
-        unset($this->stream);
-        $this->size = $this->uri = null;
-        $this->readable = $this->writable = $this->seekable = false;
-
-        return $result;
+        $resource = $this->resource;
+        $this->resource = $this->size = null;
+        $this->seekable = $this->writable = $this->readable = false;
+        return $resource;
     }
 
-    private function getUri()
-    {
-        if (false !== $this->uri) {
-            $this->uri = $this->getMetadata('uri') ?? false;
-        }
-
-        return $this->uri;
-    }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getSize(): ?int
     {
-        if (null !== $this->size) {
-            return $this->size;
-        }
-
-        if (!isset($this->stream)) {
+        if ($this->resource === null) {
             return null;
         }
 
-        // Clear the stat cache if the stream has a URI
-        if ($uri = $this->getUri()) {
-            \clearstatcache(true, $uri);
-        }
-
-        $stats = \fstat($this->stream);
-        if (isset($stats['size'])) {
-            $this->size = $stats['size'];
-
+        if ($this->size !== null) {
             return $this->size;
         }
 
-        return null;
+        $stats = \fstat($this->resource);
+        return $this->size = isset($stats['size']) ? (int) $stats['size'] : null;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function tell(): int
     {
-        if (false === $result = \ftell($this->stream)) {
-            throw new \RuntimeException('Unable to determine stream position');
+        if (!$this->resource) {
+            throw new \RuntimeException('No resource available. Cannot tell position');
+        }
+
+        if (($result = \ftell($this->resource)) === false) {
+            throw new \RuntimeException('Error occurred during tell operation');
         }
 
         return $result;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function eof(): bool
     {
-        return !$this->stream || \feof($this->stream);
+        return (!$this->resource || \feof($this->resource));
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isSeekable(): bool
     {
-        return $this->seekable;
+        if ($this->seekable !== null) {
+            return $this->seekable;
+        }
+
+        return $this->seekable = ($this->resource && $this->getMetadata('seekable'));
     }
 
-    public function seek($offset, $whence = \SEEK_SET): void
+    /**
+     * {@inheritdoc}
+     */
+    public function seek($offset, $whence = SEEK_SET): void
     {
-        if (!$this->seekable) {
-            throw new \RuntimeException('Stream is not seekable');
+        if (!$this->resource) {
+            throw new \RuntimeException('No resource available. Cannot seek position.');
         }
 
-        if (-1 === \fseek($this->stream, $offset, $whence)) {
-            throw new \RuntimeException('Unable to seek to stream position "' . $offset . '" with whence ' . \var_export($whence, true));
+        if (!$this->isSeekable()) {
+            throw new \RuntimeException('Stream is not seekable.');
+        }
+
+        if (\fseek($this->resource, $offset, $whence) !== 0) {
+            throw new \RuntimeException('Error seeking within stream.');
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function rewind(): void
     {
         $this->seek(0);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isWritable(): bool
     {
-        return $this->writable;
+        if ($this->writable !== null) {
+            return $this->writable;
+        }
+
+        if (!\is_string($mode = $this->getMetadata('mode'))) {
+            return $this->writable = false;
+        }
+
+        return $this->writable = (
+            \strpos($mode, 'w') !== false
+            || \strpos($mode, '+') !== false
+            || \strpos($mode, 'x') !== false
+            || \strpos($mode, 'c') !== false
+            || \strpos($mode, 'a') !== false
+        );
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function write($string): int
     {
-        if (!$this->writable) {
-            throw new \RuntimeException('Cannot write to a non-writable stream');
+        if (!$this->resource) {
+            throw new \RuntimeException('No resource available. Cannot write.');
         }
 
-        // We can't know the size after writing anything
+        if (!$this->isWritable()) {
+            throw new \RuntimeException('Stream is not writable.');
+        }
+
         $this->size = null;
 
-        if (false === $result = \fwrite($this->stream, $string)) {
-            throw new \RuntimeException('Unable to write to stream');
+        if (($result = \fwrite($this->resource, $string)) === false) {
+            throw new \RuntimeException('Error writing to stream.');
         }
 
         return $result;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function isReadable(): bool
     {
-        return $this->readable;
-    }
-
-    public function read($length): string
-    {
-        if (!$this->readable) {
-            throw new \RuntimeException('Cannot read from non-readable stream');
+        if ($this->readable !== null) {
+            return $this->readable;
         }
 
-        if (false === $result = \fread($this->stream, $length)) {
-            throw new \RuntimeException('Unable to read from stream');
+        if (!\is_string($mode = $this->getMetadata('mode'))) {
+            return $this->readable = false;
+        }
+
+        return $this->readable = (\strpos($mode, 'r') !== false || \strpos($mode, '+') !== false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function read($length): string
+    {
+        if (!$this->resource) {
+            throw new \RuntimeException('No resource available. Cannot read.');
+        }
+
+        if (!$this->isReadable()) {
+            throw new \RuntimeException('Stream is not readable.');
+        }
+
+        if (($result = \fread($this->resource, $length)) === false) {
+            throw new \RuntimeException('Error reading stream.');
         }
 
         return $result;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getContents(): string
     {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Unable to read stream contents');
+        if (!$this->isReadable()) {
+            throw new \RuntimeException('Stream is not readable.');
         }
 
-        if (false === $contents = \stream_get_contents($this->stream)) {
-            throw new \RuntimeException('Unable to read stream contents');
+        if (($result = \stream_get_contents($this->resource)) === false) {
+            throw new \RuntimeException('Error reading stream.');
         }
 
-        return $contents;
+        return $result;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getMetadata($key = null)
     {
-        if (!isset($this->stream)) {
+        if (!$this->resource) {
             return $key ? null : [];
         }
 
-        $meta = \stream_get_meta_data($this->stream);
+        $metadata = \stream_get_meta_data($this->resource);
 
-        if (null === $key) {
-            return $meta;
+        if ($key === null) {
+            return $metadata;
         }
 
-        return $meta[$key] ?? null;
+        if (\array_key_exists($key, $metadata)) {
+            return $metadata[$key];
+        }
+
+        return null;
     }
 }
