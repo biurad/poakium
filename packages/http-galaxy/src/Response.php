@@ -109,6 +109,10 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
      */
     public function withStatus($code, $reasonPhrase = ''): self
     {
+        if ($code < 100 || $code > 599) {
+            throw new InvalidArgumentException(\sprintf('Response status code "%d" is not valid. It must be in 100..599 range.', $statusCode));
+        }
+
         $new = clone $this;
         $new->message = $this->message->setStatusCode($code, !empty($reasonPhrase) ? $reasonPhrase : null);
 
@@ -283,10 +287,6 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
     {
         if ($stream instanceof StreamInterface) {
             return $stream;
-        }
-
-        if (!\is_string($stream) && !\is_resource($stream)) {
-            throw new InvalidArgumentException('Stream must be a string stream resource identifier, an actual stream resource, or a Psr\Http\Message\StreamInterface implementation');
         }
 
         return new Stream($stream);
