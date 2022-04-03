@@ -19,10 +19,13 @@ namespace Biurad\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
  * Class ServerRequest.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class ServerRequest extends Request implements ServerRequestInterface
 {
@@ -68,7 +71,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getParsedBody()
     {
-        return 0 === $this->message->request->count() ? $this->message->request->all() : null;
+        return $this->message->request->count() > 0 ? $this->message->request->all() : null;
     }
 
     /**
@@ -92,7 +95,9 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getUploadedFiles()
     {
-        return $this->message->files->all();
+        return \array_map(function (\Symfony\Component\HttpFoundation\File\UploadedFile $v) {
+            return new UploadedFile($v->getUploadedFile()->getPath(), $v->getSize(), $v->getError(), $v->getClientFilename(), $v->getClientMediaType());
+        }, $this->message->files->all());
     }
 
     /**
@@ -123,7 +128,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withCookieParams(array $cookies): self
     {
         $new = clone $this;
-        $new->message->cookies->add($cookies);
+        $new->message->cookies->replace($cookies);
 
         return $new;
     }
@@ -155,7 +160,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withQueryParams(array $query): self
     {
         $new = clone $this;
-        $new->message->query->add($query);
+        $new->message->query->replace($query);
 
         return $new;
     }
@@ -165,8 +170,21 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function withUploadedFiles(array $uploadedFiles): self
     {
+        foreach ($uploadedFiles as $offset => $uploadedFile) {
+            if ($uploadedFile instanceof UploadedFile) {
+                $uploadedFiles[$offset] = $uploadedFile->getUploadedFile();
+                continue;
+            }
+            $uploadedFiles[$offset] = [
+                'error' => $uploadedFile->getError(),
+                'name' => $uploadedFile->getClientFilename(),
+                'type' => $uploadedFile->getClientMediaType(),
+                'tmp_name' => $uploadedFile->getStream()->getMetadata('uri'),
+                'size' => $uploadedFile->getSize(),
+            ];
+        }
         $new = clone $this;
-        $new->message->files->add($uploadedFiles);
+        $new->message->files->replace($uploadedFiles);
 
         return $new;
     }
