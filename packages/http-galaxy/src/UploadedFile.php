@@ -32,13 +32,19 @@ class UploadedFile implements UploadedFileInterface
     /** @var int|null */
     private $size;
 
+
+    /** @var bool */
+    private $isMoved = false;
+
     /**
      * @param resource|StreamInterface|string $streamOrFile
      */
     public function __construct($streamOrFile, ?int $size, int $errorStatus = null, string $clientFilename = null, string $clientMediaType = null)
     {
-        if ($streamOrFile instanceof StreamInterface) {
-            $streamOrFile = $streamOrFile->detach();
+        if (is_resource($streamOrFile)) {
+            $streamOrFile = \stream_get_meta_data($streamOrFile)['uri'];
+        } elseif ($streamOrFile instanceof StreamInterface) {
+            $streamOrFile = $streamOrFile->getMetadata('uri');
         }
 
         $this->size = $size;
@@ -48,7 +54,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Exchanges the underlying uploadedFile with another.
      */
-    public function withUploadFile(FileUploadedFile $uploadedFile): UploadedFileInterface
+    public function withUploadedFile(FileUploadedFile $uploadedFile): UploadedFileInterface
     {
         $new = clone $this;
         $new->uploadedFile = $uploadedFile;
@@ -59,16 +65,28 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
+    public function getUploadedFile(): FileUploadedFile
+    {
+        return $this->uploadedFile;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getStream(): StreamInterface
     {
+        if ($this->isMoved) {
+            throw new \RuntimeException('The stream is not available because it has been moved.');
+        }
+
         if (null !== $this->stream) {
             return $this->stream;
         }
 
         try {
-            return $this->stream = new Stream(\fopen($this->uploadedFile->getPath(), 'r'));
+            return $this->stream = new Stream($this->uploadedFile->getPath());
         } catch (\Throwable $e) {
-            throw new \RuntimeException(\sprintf('The file "%s" cannot be opened.', $this->file));
+            throw new \RuntimeException(\sprintf('The file "%s" cannot be opened.', $this->uploadedFile->getPath()));
         }
     }
 
@@ -77,7 +95,12 @@ class UploadedFile implements UploadedFileInterface
      */
     public function moveTo($targetPath): void
     {
+        if ($this->isMoved) {
+            throw new \RuntimeException('The file cannot be moved because it has already been moved.');
+        }
+
         $this->uploadedFile->move($targetPath);
+        $this->isMoved = true;
     }
 
     /**
