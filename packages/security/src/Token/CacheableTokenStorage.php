@@ -42,7 +42,7 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
     public function __construct(object $storage)
     {
         $this->storage = function (string $key, TokenInterface $token = null) use ($storage): ?TokenInterface {
-            if (\func_num_args() > 1) {
+            if (1 === \func_num_args()) {
                 return $this->safelyUnserialize($storage instanceof CacheItemPoolInterface ? $storage->getItem($key)->get() : $storage->get($key));
             }
 
@@ -55,7 +55,11 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
             } else {
                 $item = $storage->getItem($key);
                 $item->set($token);
-                $storage->save($item->expiresAt(new \DateTime('+1 day')));
+
+                if (null !== $token) {
+                    $expiry = $token->hasAttribute('expire') ? $token->getAttribute('expire') : new \DateTime('+1 day');
+                }
+                $storage->save($item->expiresAt($expiry ?? new \DateTime('+1 minute')));
             }
 
             return null;
@@ -83,7 +87,7 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
      */
     public function reset(): void
     {
-        $this->setToken(null);
+        $this->setToken();
     }
 
     private function safelyUnserialize(?string $serializedToken): ?TokenInterface
@@ -94,7 +98,7 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
 
         $token = null;
         $prevUnserializeHandler = \ini_set('unserialize_callback_func', __CLASS__ . '::handleUnserializeCallback');
-        $prevErrorHandler = \set_error_handler(function ($type, $msg, $file, $line, $context = []) use (&$prevErrorHandler) {
+        $prevErrorHandler = \set_error_handler(static function ($type, $msg, $file, $line, $context = []) use (&$prevErrorHandler) {
             if (__FILE__ === $file) {
                 throw new \ErrorException($msg, 0x37313BC, $type, $file, $line);
             }
