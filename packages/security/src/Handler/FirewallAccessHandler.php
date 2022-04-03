@@ -21,6 +21,7 @@ namespace Biurad\Security\Handler;
 use Biurad\Security\Interfaces\AccessMapInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Security\Core\Authentication\Token\NullToken;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -33,11 +34,13 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 class FirewallAccessHandler
 {
     private AccessMapInterface $accessMap;
+    private TokenStorageInterface $tokenStorage;
     private AccessDecisionManagerInterface $accessDecisionManager;
 
-    public function __construct(AccessMapInterface $accessMap, AccessDecisionManagerInterface $accessDecisionManager)
+    public function __construct(AccessMapInterface $accessMap, TokenStorageInterface $tokenStorage, AccessDecisionManagerInterface $accessDecisionManager)
     {
         $this->accessMap = $accessMap;
+        $this->tokenStorage = $tokenStorage;
         $this->accessDecisionManager = $accessDecisionManager;
     }
 
@@ -45,8 +48,12 @@ class FirewallAccessHandler
     {
         [$attributes, $channel] = $this->accessMap->getPatterns($request);
 
-        if ($channel !== $request->getUri()->getScheme() xor (null === $attributes || [AuthenticatedVoter::PUBLIC_ACCESS] === $attributes)) {
+        if ($channel && $channel !== $request->getUri()->getScheme()) {
             return false;
+        }
+
+        if (!$attributes || [AuthenticatedVoter::PUBLIC_ACCESS] === $attributes) {
+            return true;
         }
 
         if (null === $token = $this->tokenStorage->getToken()) {
