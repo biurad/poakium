@@ -20,6 +20,7 @@ namespace Biurad\Security\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\Security\Core\Authentication\RememberMe\InMemoryTokenProvider;
 use Symfony\Component\Security\Core\Authentication\RememberMe\PersistentToken;
 use Symfony\Component\Security\Core\Authentication\RememberMe\TokenProviderInterface;
 use Symfony\Component\Security\Core\Authentication\RememberMe\TokenVerifierInterface;
@@ -40,6 +41,7 @@ class RememberMeHandler
 {
     public const COOKIE_DELIMITER = ':';
     public const REMEMBER_ME = '_security.remember_me';
+    public const USERS_ID = '_remember_user_id';
 
     private ?TokenProviderInterface $tokenProvider;
     private ?TokenVerifierInterface $tokenVerifier;
@@ -58,8 +60,8 @@ class RememberMeHandler
     ) {
         $this->secret = $secret;
         $this->parameterName = $requestParameter;
-        $this->tokenProvider = $tokenProvider;
-        $this->tokenVerifier = $tokenVerifier;
+        $this->tokenProvider = $tokenProvider ?? new InMemoryTokenProvider();
+        $this->tokenVerifier = $tokenVerifier ?? ($this->tokenProvider instanceof TokenVerifierInterface ? $this->tokenProvider : null);
         $this->signatureHasher = $signatureHasher;
         $this->cookie = new Cookie(
             $options['name'] ?? 'REMEMBER_ME',
@@ -97,11 +99,7 @@ class RememberMeHandler
             throw new AuthenticationException('The cookie is incorrectly formatted.');
         }
 
-        $user = $userProvider->loadUserByIdentifier($$identifier);
-
-        if (!$user instanceof UserInterface) {
-            throw new \LogicException(\sprintf('The UserProviderInterface implementation must return an instance of UserInterface, but returned "%s".', \get_debug_type($user)));
-        }
+        $user = $userProvider->loadUserByIdentifier($identifier);
 
         if (null !== $this->signatureHasher) {
             try {
@@ -158,7 +156,7 @@ class RememberMeHandler
             ->withExpires($expires);
 
         return \Closure::bind(function (Cookie $cookie) use ($user) {
-            $cookie->name = $cookie->name . $user->getUserIdentifier();
+            $cookie->name .= $user->getUserIdentifier();
 
             return $cookie;
         }, $cookie, $cookie)($cookie);
@@ -170,7 +168,7 @@ class RememberMeHandler
             $cookie = $request->getCookieParams()[$this->cookie->getName()] ?? null;
 
             if (null === $cookie) {
-                return $cookie;
+                return null;
             }
 
             $rememberMeDetails = self::fromRawCookie($cookie);
