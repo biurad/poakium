@@ -80,7 +80,7 @@ class Helper
     {
         if ($data instanceof ServerRequestInterface) {
             if ($data instanceof Request) {
-                $getter = [$data->getRequest()->getSession(), 'get'];
+                $getter = [$data->getRequest(), 'get'];
             } else {
                 $getter = static function (string $value) use ($data) {
                     $data = $data->getAttributes()[$value] ?? $data->getQueryParams()[$value] ?? null;
