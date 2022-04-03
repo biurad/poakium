@@ -59,6 +59,16 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
+    public function setToken(?TokenInterface $token): void
+    {
+        if (null !== $token) {
+            $this->tokenStorage->setToken($token);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function supports(ServerRequestInterface $request): bool
     {
         $token = $this->tokenStorage->getToken();

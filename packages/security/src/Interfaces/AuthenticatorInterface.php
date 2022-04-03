@@ -26,16 +26,19 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 interface AuthenticatorInterface
 {
     /**
+     * Set a previously created token.
+     */
+    public function setToken(?TokenInterface $token): void;
+
+    /**
      * Does the authenticator support the given Request?
      *
      * If this returns true, authenticate() will be called. If false, the authenticator will be skipped.
-     *
-     * Returning null means authenticate() can be called lazily when accessing the token storage.
      */
     public function supports(ServerRequestInterface $request): bool;
 
     /**
-     * Create a passport for the current request.
+     * Create a token for the current request.
      *
      * The passport contains the user, token and any additional information
      * that has to be checked by the Symfony Security system. For example, a login

@@ -25,7 +25,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -42,7 +41,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 class FormLoginAuthenticator implements AuthenticatorInterface
 {
     private UserProviderInterface $provider;
-    private TokenStorageInterface $tokenStorage;
+    private ?TokenInterface $token = null;
     private PasswordHasherFactoryInterface $hasherFactory;
     private ?RememberMeHandler $rememberMeHandler;
     private ?SessionInterface $session;
@@ -50,14 +49,12 @@ class FormLoginAuthenticator implements AuthenticatorInterface
 
     public function __construct(
         UserProviderInterface $provider,
-        TokenStorageInterface $tokenStorage,
         PasswordHasherFactoryInterface $hasherFactory,
         RememberMeHandler $rememberMeHandler = null,
         SessionInterface $session = null,
         bool $eraseCredentials = true
     ) {
         $this->provider = $provider;
-        $this->tokenStorage = $tokenStorage;
         $this->hasherFactory = $hasherFactory;
         $this->rememberMeHandler = $rememberMeHandler;
         $this->session = $session;
@@ -67,10 +64,17 @@ class FormLoginAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
+    public function setToken(?TokenInterface $token): void
+    {
+        $this->token = $token;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function supports(ServerRequestInterface $request): bool
     {
-        // do not overwrite already stored tokens (i.e. from the remember me session)
-        if (null !== $this->tokenStorage->getToken()) {
+        if (null !== $this->token) {
             // allows a user to impersonate another one temporarily (like the Unix su command).
             return $request->hasHeader('AUTH-SWITCH-USER');
         }

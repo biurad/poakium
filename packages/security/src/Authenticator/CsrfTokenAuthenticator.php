@@ -33,6 +33,14 @@ class CsrfTokenAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
+    public function setToken(?TokenInterface $token): void
+    {
+        // This authenticator does not use a token.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function supports(ServerRequestInterface $request): bool
     {
         return 'POST' === $request->getMethod();

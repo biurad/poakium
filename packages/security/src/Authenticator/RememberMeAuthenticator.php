@@ -39,14 +39,26 @@ use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 class RememberMeAuthenticator implements AuthenticatorInterface
 {
     private RememberMeHandler $rememberMeHandler;
-    private TokenStorageInterface $tokenStorage;
+    private UserProviderInterface $userProvider;
+    private ?TokenInterface $token = null;
     private ?LoggerInterface $logger;
 
-    public function __construct(RememberMeHandler $rememberMeHandler, TokenStorageInterface $tokenStorage, LoggerInterface $logger = null)
-    {
+    public function __construct(
+        RememberMeHandler $rememberMeHandler,
+        UserProviderInterface $userProvider,
+        LoggerInterface $logger = null
+    ) {
         $this->logger = $logger;
-        $this->tokenStorage = $tokenStorage;
+        $this->userProvider = $userProvider;
         $this->rememberMeHandler = $rememberMeHandler;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setToken(?TokenInterface $token): void
+    {
+        $this->token = $token;
     }
 
     /**
@@ -54,12 +66,7 @@ class RememberMeAuthenticator implements AuthenticatorInterface
      */
     public function supports(ServerRequestInterface $request): bool
     {
-        // do not overwrite already stored tokens (i.e. from the session)
-        if (null !== $this->tokenStorage->getToken()) {
-            return false;
-        }
-
-        return \array_key_exists($this->rememberMeHandler->getCookieName(), $request->getCookieParams());
+        return null === $this->token && 'GET' === $request->getMethod();
     }
 
     /**

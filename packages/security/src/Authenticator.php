@@ -144,6 +144,8 @@ class Authenticator implements AuthorizationCheckerInterface
      */
     public function authenticate(ServerRequestInterface $request, array $credentials)
     {
+        $previousToken = $this->tokenStorage->getToken();
+
         if ([] !== $credentials) {
             if (\str_contains($request->getHeaderLine('CONTENT_TYPE'), 'json')) {
                 $data = \json_decode((string) $request->getBody());
@@ -168,6 +170,8 @@ class Authenticator implements AuthorizationCheckerInterface
         }
 
         foreach ($this->authenticators as $authenticator) {
+            $authenticator->setToken($previousToken);
+
             if (!$authenticator->supports($request)) {
                 continue;
             }
@@ -189,7 +193,10 @@ class Authenticator implements AuthorizationCheckerInterface
                 if ($throttling) {
                     $this->limiter->reset($request->getRequest());
                 }
-                $this->tokenStorage->setToken($token);
+
+                if ($token !== $previousToken) {
+                    $this->tokenStorage->setToken($token);
+                }
                 $this->userChecker->checkPostAuth($token->getUser());
 
                 return true;
