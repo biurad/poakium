@@ -22,8 +22,8 @@ use Biurad\Http\Request;
 use Biurad\Security\Event\AuthenticationFailureEvent;
 use Biurad\Security\Interfaces\AuthenticatorInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\RateLimiter\RequestRateLimiterInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\NullToken;
@@ -154,9 +154,11 @@ class Authenticator implements AuthorizationCheckerInterface
      * Convenience method to programmatically authenticate a user and return
      * true if any success or a Response on failure.
      *
-     * @param array<int,string> $credentials
+     * @param array<int,string> $credentials The credentials to use
      *
-     * @return ResponseInterface|bool
+     * @throw AuthenticationException if the authentication fails
+     *
+     * @return ResponseInterface|bool The response of the authentication
      */
     public function authenticate(ServerRequestInterface $request, array $credentials)
     {
@@ -167,7 +169,7 @@ class Authenticator implements AuthorizationCheckerInterface
             $limit = $this->limiter->consume($request->getRequest());
 
             if (!$limit->isAccepted()) {
-                throw new TooManyLoginAttemptsAuthenticationException(\ceil(($limit->getRetryAfter()->getTimestamp() - \time()) / 60));
+                throw new TooManyLoginAttemptsAuthenticationException((int) \ceil(($limit->getRetryAfter()->getTimestamp() - \time()) / 60));
             }
         }
 
@@ -216,7 +218,11 @@ class Authenticator implements AuthorizationCheckerInterface
                     $response = $event->getResponse();
                 }
 
-                return $response ?? false;
+                if (!$response instanceof ResponseInterface) {
+                    throw $e;
+                }
+
+                return $response;
             }
         }
 
