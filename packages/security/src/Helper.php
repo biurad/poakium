@@ -79,38 +79,28 @@ class Helper
     public static function getParameterValue(object $data, string $path, PropertyAccessorInterface $propertyAccessor = null)
     {
         if ($data instanceof ServerRequestInterface) {
-            if ($data instanceof Request) {
-                $getter = [$data->getRequest(), 'get'];
-            } else {
-                $getter = static function (string $value) use ($data) {
-                    $data = $data->getAttributes()[$value] ?? $data->getQueryParams()[$value] ?? null;
+            $getter = static function (string $value) use ($data) {
+                if ($data instanceof Request) {
+                    $requestedValue = $data->getRequest()->get($value);
+                } else {
+                    $requestedValue = $data->getAttributes()[$value] ?? $data->getQueryParams()[$value] ?? null;
+                }
 
-                    if (null === $data) {
-                        if (null === $parsedBody = $data->getParsedBody()) {
-                            return null;
-                        }
+                if (null === $requestedValue) {
+                    $data = (array) ($data->getParsedBody() ?? \json_decode(((string) $data->getBody()) ?: '', true));
+                    $requestedValue = $data[$value] ?? null;
+                }
 
-                        if ($parsedBody instanceof \stdClass) {
-                            return $parsedBody->{$value} ?? null;
-                        }
-
-                        $data = $parsedBody[$value] ?? null;
-                    }
-
-                    return $data;
-                };
-            }
+                return $requestedValue;
+            };
 
             if (false === $pos = \strpos($path, '[')) {
                 return $getter($path);
             }
 
-            $root = \substr($path, 0, $pos);
-
-            if (null === $data = $getter($root)) {
+            if (null === $data = $getter(\substr($path, 0, $pos))) {
                 return null;
             }
-
             $path = \substr($path, $pos);
         }
 
