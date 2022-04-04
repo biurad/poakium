@@ -88,7 +88,17 @@ class Authenticator implements AuthorizationCheckerInterface
 
     public function add(AuthenticatorInterface $authenticator): void
     {
-        $this->authenticators[] = $authenticator;
+        $this->authenticators[\get_class($authenticator)] = $authenticator;
+    }
+
+    public function has(string $authenticatorClass): bool
+    {
+        return isset($this->authenticators[$authenticatorClass]);
+    }
+
+    public function getTokenStorage(): TokenStorageInterface
+    {
+        return $this->tokenStorage;
     }
 
     /**
