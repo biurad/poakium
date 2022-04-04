@@ -110,7 +110,7 @@ $rememberMeCookies = Helper::createRememberMeCookie($token, $request);
 // The $rememberMeCookies is an array of cookies, which can be used to set the cookies into the response.
 ```
 
-After the above example codes are executed, If a user is not in session, the user's token should be fetched
+When the above examples are followed and executed, If a user is not in session, the user's token should be fetched
 from the remember me cookies and set into the token storage. Here is an example:
 
 ```php
