@@ -52,10 +52,12 @@ class Stream implements StreamInterface
     public function __construct($stream = 'php://temp', string $mode = 'wb+')
     {
         if (\is_string($stream)) {
-            $stream = '' === $stream ? false : @\fopen($stream, $mode);
-
-            if (false === $stream) {
-                throw new \RuntimeException('The stream or file cannot be opened.');
+            if (\file_exists($stream)) {
+                $stream = @\fopen($stream, $mode);
+            } else {
+                $resource = \fopen('php://temp', 'rw+');
+                \fwrite($resource, $stream);
+                $stream = $resource;
             }
         }
 
