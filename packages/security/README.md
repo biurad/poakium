@@ -117,7 +117,7 @@ from the remember me cookies and set into the token storage. Here is an example:
 use Biurad\Security\Authenticator\RememberMeAuthenticator;
 
 if (null === $token = $tokenStorage->getToken()) {
-    $rememberAuth = new RememberMeAuthenticator($remember, $userProvider, true);
+    $rememberAuth = new RememberMeAuthenticator($rememberMeHandler, $userProvider, true);
 
     if ($rememberAuth->supports($request)) {
         $token = $rememberAuth->authenticate($request, []);
