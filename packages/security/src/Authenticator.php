@@ -145,23 +145,9 @@ class Authenticator implements AuthorizationCheckerInterface
     public function authenticate(ServerRequestInterface $request, array $credentials)
     {
         $previousToken = $this->tokenStorage->getToken();
+        $credentials = Helper::getParameterValues($request, $credentials, $this->propertyAccessor);
 
-        if ([] !== $credentials) {
-            if (\str_contains($request->getHeaderLine('CONTENT_TYPE'), 'json')) {
-                $data = \json_decode((string) $request->getBody());
-
-                if (!$data instanceof \stdClass) {
-                    throw new BadRequestException('Invalid JSON.');
-                }
-            }
-
-            foreach ($credentials as $offset => $key) {
-                unset($credentials[$offset]);
-                $credentials[$key] = Helper::getParameterValue($data ?? $request, $key, $this->propertyAccessor);
-            }
-        }
-
-        if ($throttling = null !== $this->limiter && $request instanceof Request) {
+        if ($throttling = (null !== $this->limiter && $request instanceof Request)) {
             $limit = $this->limiter->consume($request->getRequest());
 
             if (!$limit->isAccepted()) {

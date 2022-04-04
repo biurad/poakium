@@ -112,4 +112,25 @@ class Helper
             return null;
         }
     }
+
+    /**
+     * Fetch the form data from the request.
+     *
+     * @param array<int,string> $parameterKeys
+     *
+     * @return array<int,mixed>
+     */
+    public static function getParameterValues(ServerRequestInterface $request, array $parameterKeys, PropertyAccessorInterface $propertyAccessor = null): array
+    {
+        if (empty($parameterKeys)) {
+            return [];
+        }
+
+        foreach ($parameterKeys as $offset => $key) {
+            unset($parameterKeys[$offset]);
+            $parameterKeys[$key] = self::getParameterValue($request, $key, $propertyAccessor);
+        }
+
+        return $parameterKeys;
+    }
 }
