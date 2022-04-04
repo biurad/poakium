@@ -64,7 +64,7 @@ class PdoTokenProvider implements TokenProviderInterface, TokenVerifierInterface
         if ($stmt->rowCount() > 0) {
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            return new PersistentToken($row['class'], $row['username'], $series, $row['value'], new \DateTime($row['last_used']));
+            return new PersistentToken($row['class'], $row['identifier'], $series, $row['value'], new \DateTime($row['last_used']));
         }
 
         throw new TokenNotFoundException('No token found.');
