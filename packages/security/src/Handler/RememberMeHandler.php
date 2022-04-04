@@ -91,14 +91,18 @@ class RememberMeHandler
         return $this->cookie->getName();
     }
 
-    public function consumeRememberMeCookie(string $rawCookie, UserProviderInterface $userProvider): UserInterface
+    /**
+     * Returns the user and for every 2 minutes a new remember me cookie is included.
+     *
+     * @return UserInterface|array $user
+     */
+    public function consumeRememberMeCookie(string $rawCookie, UserProviderInterface $userProvider): array
     {
         [, $identifier, $expires, $value] = self::fromRawCookie($rawCookie);
 
         if (!\str_contains($value, ':')) {
             throw new AuthenticationException('The cookie is incorrectly formatted.');
         }
-
         $user = $userProvider->loadUserByIdentifier($identifier);
 
         if (null !== $this->signatureHasher) {
@@ -126,14 +130,28 @@ class RememberMeHandler
             if ($persistentToken->getLastUsed()->getTimestamp() + $this->cookie->getExpiresTime() < \time()) {
                 throw new AuthenticationException('The cookie has expired.');
             }
+
+            // if a token was regenerated less than 2 minutes ago, there is no need to regenerate it
+            // if multiple concurrent requests reauthenticate a user we do not want to update the token several times
+            if ($persistentToken->getLastUsed()->getTimestamp() + (60 * 2) < \time()) {
+                $tokenValue = $this->generateHash();
+                $tokenLastUsed = new \DateTime();
+
+                if ($this->tokenVerifier) {
+                    $this->tokenVerifier->updateExistingToken($persistentToken, $tokenValue, $tokenLastUsed);
+                }
+                $this->tokenProvider->updateToken($series, $tokenValue, $tokenLastUsed);
+
+                return [$user, $this->createRememberMeCookie($user, $series . ':' . $tokenValue)];
+            }
         } else {
             throw new \LogicException(\sprintf('Expected one of %s or %s class.', TokenProviderInterface::class, SignatureHasher::class));
         }
 
-        return $user;
+        return [$user, null];
     }
 
-    public function createRememberMeCookie(UserInterface $user, bool $secure): Cookie
+    public function createRememberMeCookie(UserInterface $user, string $value = null): Cookie
     {
         $expires = \time() + $this->cookie->getExpiresTime();
         $class = \get_class($user);
@@ -141,42 +159,53 @@ class RememberMeHandler
 
         if (null !== $this->signatureHasher) {
             $value = $this->signatureHasher->computeSignatureHash($user, $expires);
-        } elseif (null !== $this->tokenProvider) {
+        } elseif (null === $value) {
+            if (null === $this->tokenProvider) {
+                throw new \LogicException(\sprintf('Expected one of %s or %s class.', TokenProviderInterface::class, SignatureHasher::class));
+            }
+
             $series = \base64_encode(\random_bytes(64));
-            $tokenValue = \hash_hmac('sha256', \base64_encode(\random_bytes(64)), $this->secret);
+            $tokenValue = $this->generateHash();
             $this->tokenProvider->createNewToken($token = new PersistentToken($class, $identifier, $series, $tokenValue, new \DateTime()));
             $value = $token->getSeries() . ':' . $token->getTokenValue();
-        } else {
-            throw new \LogicException(\sprintf('Expected one of %s or %s class.', TokenProviderInterface::class, SignatureHasher::class));
         }
 
-        $cookie = $this->cookie
-            ->withSecure($secure)
+        $cookie = clone $this->cookie
             ->withValue(\base64_encode(\implode(self::COOKIE_DELIMITER, [$class, \base64_encode($identifier), $expires, $value])))
             ->withExpires($expires);
 
-        return \Closure::bind(function (Cookie $cookie) use ($user) {
-            $cookie->name .= $user->getUserIdentifier();
-
-            return $cookie;
-        }, $cookie, $cookie)($cookie);
+        return $this->setCookieName($cookie, $user->getUserIdentifier());
     }
 
-    public function clearRememberMeCookie(ServerRequestInterface $request): ?Cookie
+    /**
+     * @return array<int,Cookie>
+     */
+    public function clearRememberMeCookies(ServerRequestInterface $request): array
     {
-        if (null !== $this->tokenProvider) {
-            $cookie = $request->getCookieParams()[$this->cookie->getName()] ?? null;
+        $cookies = [];
+        $identifiers = urldecode($request->getCookieParams()[self::USERS_ID] ?? '');
 
-            if (null === $cookie) {
-                return null;
-            }
-
-            $rememberMeDetails = self::fromRawCookie($cookie);
-            [$series, ] = \explode(':', $rememberMeDetails[3]);
-            $this->tokenProvider->deleteTokenBySeries($series);
+        if (\str_contains($identifiers, '|')) {
+            $identifiers = \explode('|', $identifiers);
         }
 
-        return $this->cookie->withExpires(1)->withValue(null);
+        foreach ((array) $identifiers as $identifier) {
+            $clearCookie = $this->cookie;
+
+            if (null === $cookie = $request->getCookieParams()[$clearCookie->getName() . $identifier] ?? null) {
+                continue;
+            }
+
+            if (null !== $this->tokenProvider) {
+                $rememberMeDetails = self::fromRawCookie($cookie);
+                [$series, ] = \explode(':', $rememberMeDetails[3]);
+                $this->tokenProvider->deleteTokenBySeries($series);
+            }
+
+            $cookies[] = $this->setCookieName($clearCookie->withExpires(1)->withValue(null), $identifier);
+        }
+
+        return $cookies;
     }
 
     private static function fromRawCookie(string $rawCookie): array
@@ -192,5 +221,19 @@ class RememberMeHandler
         }
 
         return $cookieParts;
+    }
+
+    private function setCookieName(Cookie $cookie, string $userId): Cookie
+    {
+        return \Closure::bind(function (Cookie $cookie) use ($userId) {
+            $cookie->name .= $userId;
+
+            return $cookie;
+        }, $cookie, $cookie)($cookie);
+    }
+
+    private function generateHash(): string
+    {
+        return hash_hmac('sha256', \base64_encode(\random_bytes(64)), $this->secret);
     }
 }

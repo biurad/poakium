@@ -23,13 +23,16 @@ use Biurad\Security\Interfaces\AuthenticatorInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\RememberMeToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CookieTheftException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
  * The RememberMe *Authenticator* performs remember me authentication.
@@ -42,15 +45,18 @@ class RememberMeAuthenticator implements AuthenticatorInterface
     private UserProviderInterface $userProvider;
     private ?TokenInterface $token = null;
     private ?LoggerInterface $logger;
+    private bool $allowMultipleRememberMeTokens;
 
     public function __construct(
         RememberMeHandler $rememberMeHandler,
         UserProviderInterface $userProvider,
+        bool $allowMultipleRememberMeTokens = false,
         LoggerInterface $logger = null
     ) {
         $this->logger = $logger;
         $this->userProvider = $userProvider;
         $this->rememberMeHandler = $rememberMeHandler;
+        $this->allowMultipleRememberMeTokens = $allowMultipleRememberMeTokens;
     }
 
     /**
@@ -74,20 +80,48 @@ class RememberMeAuthenticator implements AuthenticatorInterface
      */
     public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
     {
-        if (
-            null === ($rememberMe = $credentials[$this->rememberMeHandler->getParameterName()] ?? null) ||
-            !($rememberMe = 'true' === $rememberMe || 'on' === $rememberMe || '1' === $rememberMe || 'yes' === $rememberMe || true === $rememberMe)
-        ) {
-            return null;
+        $loadedUsers = $cookies = [];
+        $identifiers = urldecode($request->getCookieParams()[RememberMeHandler::USERS_ID] ?? '');
+
+        if (\str_contains($identifiers, '|')) {
+            $identifiers = \explode('|', $identifiers);
         }
 
-        if (!\str_contains($rawCookie = $request->getCookieParams()[$this->rememberMeHandler->getCookieName()], ':')) {
-            throw new AuthenticationException('The cookie is incorrectly formatted.');
+        foreach ((array) $identifiers as $identifier) {
+            $rawCookie = $request->getCookieParams()[$this->rememberMeHandler->getCookieName() . $identifier] ?? null;
+
+            if (null !== $rawCookie) {
+                [$loadedUser, $cookie] = $this->rememberMeHandler->consumeRememberMeCookie($rawCookie, $this->userProvider);
+                $loadedUsers[] = $loadedUser;
+
+                if (null !== $cookie) {
+                    $cookies[] = $cookie->withSecure('https' === $request->getUri()->getScheme());
+                }
+            }
         }
 
-        $user = $this->rememberMeHandler->consumeRememberMeCookie($rawCookie, $this->provider);
+        if (!empty($loadedUsers)) {
+            $firstUser = \array_shift($loadedUsers);
+            $token = new RememberMeToken($firstUser, 'main', $this->rememberMeHandler->getSecret());
 
-        return new RememberMeToken($user, 'main', $this->rememberMeHandler->getSecret());
+            if (\count($loadedUsers) > 0) {
+                if (!$this->allowMultipleRememberMeTokens) {
+                    throw new CookieTheftException('Multiple remember me tokens were received, but multiple tokens are not allowed.');
+                }
+
+                foreach ($loadedUsers as $user) {
+                    $token = new SwitchUserToken($user, 'main', $user->getRoles(), $token);
+                }
+            }
+
+            if (\count($cookies) > 0) {
+                $token->setAttribute(RememberMeHandler::REMEMBER_ME, $cookies);
+            }
+
+            return $token;
+        }
+
+        return null;
     }
 
     /**
@@ -106,5 +140,15 @@ class RememberMeAuthenticator implements AuthenticatorInterface
         }
 
         return null;
+    }
+
+    /**
+     * List of cookie which should be cleared if a user is logged out.
+     *
+     * @return array<int,Cookie>
+     */
+    public function clearCookies(ServerRequestInterface $request): array
+    {
+        return $this->rememberMeHandler->clearRememberMeCookies($request);
     }
 }

@@ -19,11 +19,15 @@ declare(strict_types=1);
 namespace Biurad\Security;
 
 use Biurad\Http\Request;
+use Biurad\Security\Handler\RememberMeHandler;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PropertyAccess\Exception\AccessException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
@@ -132,5 +136,32 @@ class Helper
         }
 
         return $parameterKeys;
+    }
+
+    /**
+     * Creates remember me cookies from token.
+     *
+     * @return array<int,Cookie>
+     */
+    public static function createRememberMeCookie(?TokenInterface $fromToken, ServerRequestInterface $request): array
+    {
+        if (null === $fromToken || !$fromToken->hasAttribute($cookieR = RememberMeHandler::REMEMBER_ME)) {
+            return [];
+        }
+
+        $cookieId = RememberMeHandler::USERS_ID;
+        $cookieUserId = \rawurldecode($request->getCookieParams()[$cookieId] ?? '');
+
+        if (!\str_contains($cookieUserId, $userId = $fromToken->getUserIdentifier())) {
+            $cookieUserId = empty($cookieUserId) ? $userId : $cookieUserId . '|' . $userId;
+        }
+
+        if (!\is_array($tokenCookies = $fromToken->getAttribute($cookieR))) {
+            $tokenCookies = [$tokenCookies];
+        }
+
+        $tokenCookies[] = new Cookie($cookieId, $cookieUserId, $tokenCookies[0]->getExpiresTime());
+
+        return $tokenCookies;
     }
 }
