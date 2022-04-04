@@ -108,9 +108,9 @@ class Authenticator implements AuthorizationCheckerInterface
      */
     public function getUser(bool $current = true)
     {
-        $token = $this->getToken();
+        $token = $this->getToken($current);
 
-        if ($current || !\is_array($token)) {
+        if (!\is_array($token)) {
             return null !== $token ? $token->getUser() : $token;
         }
         $users = [];
@@ -131,17 +131,23 @@ class Authenticator implements AuthorizationCheckerInterface
     {
         $token = $this->tokenStorage->getToken();
 
-        if ($current || !$token instanceof SwitchUserToken) {
+        if ($current) {
             return $token;
         }
-        $users = [];
+        $tokens = [];
+        $tokenExist = -1;
 
         do {
-            $users[] = $token; // Include the token, it contain's a user.
-            $users[] = $token = $token->getOriginalToken();
+            if (-1 === $tokenExist || $token !== $tokens[$tokenExist]) {
+                $tokens[++$tokenExist] = $token;
+            }
+
+            if ($token instanceof SwitchUserToken) {
+                $tokens[++$tokenExist] = $token = $token->getOriginalToken();
+            }
         } while ($token instanceof SwitchUserToken);
 
-        return $users;
+        return \array_filter($tokens);
     }
 
     /**
