@@ -58,32 +58,35 @@ class SessionMiddleware implements MiddlewareInterface
     {
         if ($request instanceof HttpRequest) {
             if (!$request->getRequest()->hasSession(true)) {
-                // This variable prevents calling `$this->getSession()` twice in case the Request (and the below factory) is cloned
-                $sess = null;
-                $request->getRequest()->setSessionFactory(function () use (&$sess, $request) {
-                    if (!$sess) {
-                        $sess = ($this->session)();
+                // This variable prevents calling `$this->session` twice in case the Request (and the below factory) is cloned
+                $session = null;
+                $request->getRequest()->setSessionFactory(function () use (&$session, $request) {
+                    if (!$session) {
+                        $session = ($this->session)();
                     }
 
                     /*
                     * For supporting sessions in php runtime with runners like roadrunner or swoole the session
                     * cookie need read from the cookie bag and set on the session storage.
                     */
-                    if ($sess && !$sess->isStarted()) {
-                        $sessionId = $request->getCookieParams()[$sess->getName()] ?? '';
-                        $sess->setId($sessionId);
+                    if (!$session->isStarted() && $sessionId = ($request->getCookieParams()[$session->getName()] ?? '')) {
+                        $session->setId($sessionId);
                     }
 
-                    return $sess;
+                    return $session;
                 });
+            } else {
+                $session = $request->getRequest()->getSession();
             }
-
-            $session = $request->getRequest()->getSession();
         } elseif (null === $session = $request->getAttribute(Session::class)) {
             $request = $request->withAttribute(static::ATTRIBUTE, $session = ($this->session)());
         }
 
         $response = $handler->handle($request);
+
+        if (null === $session) {
+            $session = $request instanceof HttpRequest ? $request->getRequest()->getSession() : $request->getAttribute(Session::class);
+        }
 
         if ($session->isStarted()) {
             /*
@@ -128,24 +131,19 @@ class SessionMiddleware implements MiddlewareInterface
             SessionUtils::popSessionCookie($sessionName, $sessionId);
             $requestSessionCookieId = $request->getCookieParams()[$sessionName] ?? null;
 
-            if ($requestSessionCookieId && ($session instanceof Session ? $session->isEmpty() : empty($session->all()))) {
+            if ($requestSessionCookieId && $session->isEmpty()) {
                 $cookie = new Cookie(
                     $sessionName,
                     null,
                     1,
-                    $requestSessionCookieId,
                     $sessionCookiePath,
                     $sessionCookieDomain,
                     $sessionCookieSecure,
                     $sessionCookieHttpOnly,
+                    false,
                     $sessionCookieSameSite
                 );
-
-                if ($response instanceof Response) {
-                    $response = $response->withCookie($cookie);
-                } else {
-                    $response = $response->withAddedHeader('Set-Cookie', (string) $cookie);
-                }
+                $response = $response instanceof Response ? $response->withCookie($cookie) : $response->withAddedHeader('Set-Cookie', (string) $cookie);
             } elseif ($sessionId !== $requestSessionCookieId) {
                 $expire = 0;
                 $lifetime = $sessionOptions['cookie_lifetime'] ?? null;
