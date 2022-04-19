@@ -39,11 +39,9 @@ namespace Biurad\UI\Html {
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
      */
-    function script($src, string $type = null, array $attributes = []): string
+    function script(string $src, bool $external = true, array $attributes = []): string
     {
-        $attributes += (\is_string($src) && 'j' === $src[-2] ? ['src' => $src, 'type' => $type] : ['children' => $src]);
-
-        return createElement('script', $attributes);
+        return createElement('script', $attributes + [$external ? 'src' : 'children' => $src]);
     }
 
     /**
@@ -70,9 +68,7 @@ namespace Biurad\UI\Html {
      */
     function html(array $children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('!Doctype html', [], false) . createElement('html', $attributes);
+        return createElement('!Doctype html', [], false) . createElement('html', $attributes + ['children' => $children]);
     }
 
     /**
@@ -85,9 +81,7 @@ namespace Biurad\UI\Html {
      */
     function head(array $children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('head', $attributes);
+        return createElement('head', $attributes + ['children' => $children]);
     }
 
     /**
@@ -103,9 +97,7 @@ namespace Biurad\UI\Html {
      */
     function base(string $href, array $attributes = []): string
     {
-        $attributes += ['target' => '__self', 'href' => $href];
-
-        return createElement('base', $attributes, false);
+        return createElement('base', $attributes + ['target' => '__self', 'href' => $href], false);
     }
 
     /**
@@ -118,9 +110,7 @@ namespace Biurad\UI\Html {
      */
     function title(string $content, array $attributes = []): string
     {
-        $attributes['children'] = $content;
-
-        return createElement('title', $attributes);
+        return createElement('title', $attributes + ['children' => $content]);
     }
 
     /**
@@ -133,9 +123,7 @@ namespace Biurad\UI\Html {
      */
     function link(string $href, array $attributes = []): string
     {
-        $attributes += ['href' => $href, 'rel' => 'stylesheet'];
-
-        return createElement('link', $attributes, false);
+        return createElement('link', $attributes +['href' => $href, 'rel' => 'stylesheet'], false);
     }
 
     /**
@@ -150,9 +138,7 @@ namespace Biurad\UI\Html {
      */
     function meta(string $content, array $attributes = []): string
     {
-        $attributes[empty($attributes) ? 'charset' : 'content'] = $content;
-
-        return createElement('meta', $attributes, false);
+        return createElement('meta', $attributes + [empty($attributes) ? 'charset' : 'content' => $content], false);
     }
 
     /**
@@ -171,10 +157,7 @@ namespace Biurad\UI\Html {
             $children = \file_get_contents($children);
         }
 
-        $attributes['children'] = $children;
-        $attributes += ['type' => 'text/javascript'];
-
-        return createElement('style', $attributes);
+        return createElement('style', $attributes + ['children' => $children]);
     }
 
     /**
@@ -187,9 +170,7 @@ namespace Biurad\UI\Html {
      */
     function body(array $children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('body', $attributes);
+        return createElement('body', $attributes + ['children' => $children]);
     }
 
     /**
@@ -203,9 +184,7 @@ namespace Biurad\UI\Html {
      */
     function address($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('address', $attributes);
+        return createElement('address', $attributes + ['children' => $children]);
     }
 
     /**
@@ -220,9 +199,7 @@ namespace Biurad\UI\Html {
      */
     function article($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('article', $attributes);
+        return createElement('article', $attributes + ['children' => $children]);
     }
 
     /**
@@ -236,9 +213,7 @@ namespace Biurad\UI\Html {
      */
     function aside($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('aside', $attributes);
+        return createElement('aside', $attributes + ['children' => $children]);
     }
 
     /**
@@ -252,9 +227,7 @@ namespace Biurad\UI\Html {
      */
     function header($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('header', $attributes);
+        return createElement('header', $attributes + ['children' => $children]);
     }
 
     /**
@@ -268,9 +241,7 @@ namespace Biurad\UI\Html {
      */
     function footer($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('footer', $attributes);
+        return createElement('footer', $attributes + ['children' => $children]);
     }
 
     /**
@@ -283,9 +254,7 @@ namespace Biurad\UI\Html {
      */
     function h6($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h6', $attributes);
+        return createElement('h6', $attributes + ['children' => $children]);
     }
 
     /**
@@ -298,9 +267,7 @@ namespace Biurad\UI\Html {
      */
     function h5($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h5', $attributes);
+        return createElement('h5', $attributes + ['children' => $children]);
     }
 
     /**
@@ -313,9 +280,7 @@ namespace Biurad\UI\Html {
      */
     function h4($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h4', $attributes);
+        return createElement('h4', $attributes + ['children' => $children]);
     }
 
     /**
@@ -328,9 +293,7 @@ namespace Biurad\UI\Html {
      */
     function h3($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h3', $attributes);
+        return createElement('h3', $attributes + ['children' => $children]);
     }
 
     /**
@@ -343,9 +306,7 @@ namespace Biurad\UI\Html {
      */
     function h2($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h2', $attributes);
+        return createElement('h2', $attributes + ['children' => $children]);
     }
 
     /**
@@ -358,9 +319,7 @@ namespace Biurad\UI\Html {
      */
     function h1($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('h1', $attributes);
+        return createElement('h1', $attributes + ['children' => $children]);
     }
 
     /**
@@ -374,9 +333,7 @@ namespace Biurad\UI\Html {
      */
     function nav($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('nav', $attributes);
+        return createElement('nav', $attributes + ['children' => $children]);
     }
 
     /**
@@ -389,9 +346,7 @@ namespace Biurad\UI\Html {
      */
     function main($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('main', $attributes);
+        return createElement('main', $attributes + ['children' => $children]);
     }
 
     /**
@@ -405,9 +360,7 @@ namespace Biurad\UI\Html {
      */
     function section($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('section', $attributes);
+        return createElement('section', $attributes + ['children' => $children]);
     }
 
     /**
@@ -420,9 +373,7 @@ namespace Biurad\UI\Html {
      */
     function blockquote($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('blockquote', $attributes);
+        return createElement('blockquote', $attributes + ['children' => $children]);
     }
 
     /**
@@ -436,9 +387,7 @@ namespace Biurad\UI\Html {
      */
     function dd($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('dd', $attributes);
+        return createElement('dd', $attributes + ['children' => $children]);
     }
 
     /**
@@ -451,9 +400,7 @@ namespace Biurad\UI\Html {
      */
     function div($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('div', $attributes);
+        return createElement('div', $attributes + ['children' => $children]);
     }
 
     /**
@@ -466,9 +413,7 @@ namespace Biurad\UI\Html {
      */
     function dl($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('dl', $attributes);
+        return createElement('dl', $attributes + ['children' => $children]);
     }
 
     /**
@@ -482,9 +427,7 @@ namespace Biurad\UI\Html {
      */
     function dt($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('dt', $attributes);
+        return createElement('dt', $attributes + ['children' => $children]);
     }
 
     /**
@@ -498,9 +441,7 @@ namespace Biurad\UI\Html {
      */
     function figcaption($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('figcaption', $attributes);
+        return createElement('figcaption', $attributes + ['children' => $children]);
     }
 
     /**
@@ -514,9 +455,7 @@ namespace Biurad\UI\Html {
      */
     function figure($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('figure', $attributes);
+        return createElement('figure', $attributes + ['children' => $children]);
     }
 
     /**
@@ -541,9 +480,7 @@ namespace Biurad\UI\Html {
      */
     function li($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('li', $attributes);
+        return createElement('li', $attributes + ['children' => $children]);
     }
 
     /**
@@ -556,9 +493,7 @@ namespace Biurad\UI\Html {
      */
     function ol($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('ol', $attributes);
+        return createElement('ol', $attributes + ['children' => $children]);
     }
 
     /**
@@ -571,9 +506,7 @@ namespace Biurad\UI\Html {
      */
     function p($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('p', $attributes);
+        return createElement('p', $attributes + ['children' => $children]);
     }
     /**
      * The <pre> HTML element represents preformatted text which is to be presented exactly as written in the HTML file.
@@ -585,9 +518,7 @@ namespace Biurad\UI\Html {
      */
     function pre($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('pre', $attributes);
+        return createElement('pre', $attributes + ['children' => $children]);
     }
 
     /**
@@ -600,9 +531,7 @@ namespace Biurad\UI\Html {
      */
     function ul($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('ul', $attributes);
+        return createElement('ul', $attributes + ['children' => $children]);
     }
 
     /**
@@ -616,9 +545,7 @@ namespace Biurad\UI\Html {
      */
     function a(string $href, $children = [], array $attributes = []): string
     {
-        $attributes += ['href' => $href, 'children' => $children];
-
-        return createElement('a', $attributes);
+        return createElement('a', $attributes + ['href' => $href, 'children' => $children]);
     }
 
     /**
@@ -633,13 +560,7 @@ namespace Biurad\UI\Html {
      */
     function abbr($children = [], string $title = null, array $attributes = []): string
     {
-        if (null !== $title) {
-            $attributes['title'] = $title;
-        }
-
-        $attributes['children'] = $children;
-
-        return createElement('abbr', $attributes);
+        return createElement('abbr', $attributes + ['title' => $title, 'children' => $children]);
     }
 
     /**
@@ -653,9 +574,7 @@ namespace Biurad\UI\Html {
      */
     function b($children = [], array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('b', $attributes);
+        return createElement('b', $attributes + ['children' => $children]);
     }
 
     /**
@@ -669,9 +588,7 @@ namespace Biurad\UI\Html {
      */
     function bdi($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('bdi', $attributes);
+        return createElement('bdi', $attributes + ['children' => $children]);
     }
 
     /**
@@ -685,9 +602,7 @@ namespace Biurad\UI\Html {
      */
     function bdo($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('bdo', $attributes);
+        return createElement('bdo', $attributes + ['children' => $children]);
     }
 
     /**
@@ -713,9 +628,7 @@ namespace Biurad\UI\Html {
      */
     function cite($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('cite', $attributes);
+        return createElement('cite', $attributes + ['children' => $children]);
     }
 
     /**
@@ -729,9 +642,7 @@ namespace Biurad\UI\Html {
      */
     function code($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('code', $attributes);
+        return createElement('code', $attributes + ['children' => $children]);
     }
 
     /**
@@ -748,9 +659,7 @@ namespace Biurad\UI\Html {
     function data(string $value, $children, array $attributes = []): string
     {
         $attributes['value'] = $value;
-        $attributes['children'] = $children;
-
-        return createElement('data', $attributes);
+        return createElement('data', $attributes + ['children' => $children]);
     }
 
     /**
@@ -766,13 +675,7 @@ namespace Biurad\UI\Html {
      */
     function dfn($children, string $title = null, array $attributes = []): string
     {
-        if (null !== $title) {
-            $attributes['title'] = $title;
-        }
-
-        $attributes['children'] = $children;
-
-        return createElement('dfn', $attributes);
+        return createElement('dfn', $attributes + ['title' => $title, 'children' => $children]);
     }
 
     /**
@@ -785,9 +688,7 @@ namespace Biurad\UI\Html {
      */
     function em($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('em', $attributes);
+        return createElement('em', $attributes + ['children' => $children]);
     }
 
     /**
@@ -801,9 +702,7 @@ namespace Biurad\UI\Html {
      */
     function i($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('i', $attributes);
+        return createElement('i', $attributes + ['children' => $children]);
     }
 
     /**
@@ -817,9 +716,7 @@ namespace Biurad\UI\Html {
      */
     function kbd($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('kbd', $attributes);
+        return createElement('kbd', $attributes + ['children' => $children]);
     }
 
     /**
@@ -833,9 +730,7 @@ namespace Biurad\UI\Html {
      */
     function mark($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('mark', $attributes);
+        return createElement('mark', $attributes + ['children' => $children]);
     }
 
     /**
@@ -848,9 +743,7 @@ namespace Biurad\UI\Html {
      */
     function q($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('q', $attributes);
+        return createElement('q', $attributes + ['children' => $children]);
     }
     /**
      * The  `<rp>` HTML element is used to provide fall-back parentheses for browsers
@@ -863,9 +756,7 @@ namespace Biurad\UI\Html {
      */
     function rp($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('rp', $attributes);
+        return createElement('rp', $attributes + ['children' => $children]);
     }
     /**
      * The `<rt>` HTML element specifies the ruby text component of a ruby annotation,
@@ -879,9 +770,7 @@ namespace Biurad\UI\Html {
      */
     function rt($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('rt', $attributes);
+        return createElement('rt', $attributes + ['children' => $children]);
     }
     /**
      * The `<ruby>` HTML element represents small annotations that are rendered above, below,
@@ -894,9 +783,7 @@ namespace Biurad\UI\Html {
      */
     function ruby($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('ruby', $attributes);
+        return createElement('ruby', $attributes + ['children' => $children]);
     }
     /**
      * The `<s>` HTML element renders text with a strikethrough, or a line through it.
@@ -908,9 +795,7 @@ namespace Biurad\UI\Html {
      */
     function s($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('s', $attributes);
+        return createElement('s', $attributes + ['children' => $children]);
     }
     /**
      * The `<samp>` HTML element is used to enclose inline text which represents
@@ -923,9 +808,7 @@ namespace Biurad\UI\Html {
      */
     function samp($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('samp', $attributes);
+        return createElement('samp', $attributes + ['children' => $children]);
     }
     /**
      * The `<small>` HTML element represents side-comments and small print,
@@ -938,9 +821,7 @@ namespace Biurad\UI\Html {
      */
     function small($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('small', $attributes);
+        return createElement('small', $attributes + ['children' => $children]);
     }
 
     /**
@@ -954,9 +835,7 @@ namespace Biurad\UI\Html {
      */
     function span($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('span', $attributes);
+        return createElement('span', $attributes + ['children' => $children]);
     }
 
     /**
@@ -969,9 +848,7 @@ namespace Biurad\UI\Html {
      */
     function strong($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('strong', $attributes);
+        return createElement('strong', $attributes + ['children' => $children]);
     }
 
     /**
@@ -985,9 +862,7 @@ namespace Biurad\UI\Html {
      */
     function sub($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('sub', $attributes);
+        return createElement('sub', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1001,9 +876,7 @@ namespace Biurad\UI\Html {
      */
     function sup($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('sub', $attributes);
+        return createElement('sub', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1016,10 +889,7 @@ namespace Biurad\UI\Html {
      */
     function time(string $datetime, $children, array $attributes = []): string
     {
-        $attributes['datetime'] = $datetime;
-        $attributes['children'] = $children;
-
-        return createElement('time', $attributes);
+        return createElement('time', $attributes + ['datetime' => $datetime, 'children' => $children]);
     }
 
     /**
@@ -1032,9 +902,7 @@ namespace Biurad\UI\Html {
      */
     function u($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('u', $attributes);
+        return createElement('u', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1047,9 +915,7 @@ namespace Biurad\UI\Html {
      */
     function _var($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('var', $attributes);
+        return createElement('var', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1076,9 +942,7 @@ namespace Biurad\UI\Html {
      */
     function area(string $shape, string $coord = null, array $attributes = []): string
     {
-        $attributes += ['shape' => $shape, 'coord' => $coord];
-
-        return createElement('area', $attributes, true);
+        return createElement('area', $attributes + ['shape' => $shape, 'coord' => $coord], true);
     }
 
     /**
@@ -1091,9 +955,7 @@ namespace Biurad\UI\Html {
      */
     function audio($children, array $attributes = []): string
     {
-        $attributes['children'] = $children;
-
-        return createElement('audio', $attributes);
+        return createElement('audio', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1107,9 +969,7 @@ namespace Biurad\UI\Html {
      */
     function img(string $src, string $alt = '', array $attributes = []): string
     {
-        $attributes += ['src' => $src, 'alt' => $alt];
-
-        return createElement('img', $attributes, true);
+        return createElement('img', $attributes + ['src' => $src, 'alt' => $alt], true);
     }
 
     /**
@@ -1123,9 +983,7 @@ namespace Biurad\UI\Html {
      */
     function map(string $name, $children, array $attributes = []): string
     {
-        $attributes += ['name' => $name, 'children' => $children];
-
-        return createElement('map', $attributes);
+        return createElement('map', $attributes + ['name' => $name, 'children' => $children]);
     }
 
     /**
@@ -1133,16 +991,13 @@ namespace Biurad\UI\Html {
      *
      * @param string              $src        Address of the track (.vtt file). Must be a valid URL
      * @param string              $kind       How the text track is meant to be used
-     * @param bool                $default    indicates that the track should be enabled
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track
      */
-    function track(string $src, string $kind, bool $default = true, array $attributes = []): string
+    function track(string $src, string $kind, array $attributes = []): string
     {
-        $attributes += ['default' => $default, 'kind' => $kind, 'src' => $src];
-
-        return createElement('track', $attributes, true);
+        return createElement('track', $attributes + ['default' => true, 'kind' => $kind, 'src' => $src], true);
     }
 
     /**
@@ -1154,11 +1009,9 @@ namespace Biurad\UI\Html {
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video
      */
-    function video(string $src, $children, bool $autoplay = true, array $attributes = []): string
+    function video(string $src, $children, array $attributes = []): string
     {
-        $attributes += ['src' => $src, 'children' => $children, 'autoplay' => $autoplay ? 'true' : 'false'];
-
-        return createElement('video', $attributes);
+        return createElement('video', $attributes + ['src' => $src, 'children' => $children, 'autoplay' => 'true']);
     }
 
     /**
@@ -1172,9 +1025,7 @@ namespace Biurad\UI\Html {
      */
     function embed(string $src, string $type, array $attributes = []): string
     {
-        $attributes += ['type' => $type, 'src' => $src];
-
-        return createElement('embed', $attributes, true);
+        return createElement('embed', $attributes + ['type' => $type, 'src' => $src], true);
     }
 
     /**
@@ -1188,9 +1039,7 @@ namespace Biurad\UI\Html {
      */
     function iframe(string $src = 'about:blank', array $attributes = []): string
     {
-        $attributes += ['src' => $src];
-
-        return createElement('iframe', $attributes);
+        return createElement('iframe', $attributes + ['src' => $src]);
     }
 
     /**
@@ -1205,9 +1054,7 @@ namespace Biurad\UI\Html {
      */
     function object(string $data, string $type, $children, array $attributes = []): string
     {
-        $attributes += ['data' => $data, 'children' => $children, 'type' => $type];
-
-        return createElement('object', $attributes);
+        return createElement('object', $attributes + ['data' => $data, 'children' => $children, 'type' => $type]);
     }
 
     /**
@@ -1221,9 +1068,7 @@ namespace Biurad\UI\Html {
      */
     function param(string $name, string $value, array $attributes = []): string
     {
-        $attributes += ['name' => $name, 'value' => $value];
-
-        return createElement('param', $attributes, true);
+        return createElement('param', $attributes + ['name' => $name, 'value' => $value], true);
     }
 
     /**
@@ -1237,9 +1082,7 @@ namespace Biurad\UI\Html {
      */
     function picture($children, array $attributes = []): string
     {
-        $attributes += ['children' => $children];
-
-        return createElement('picture', $attributes);
+        return createElement('picture', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1272,9 +1115,7 @@ namespace Biurad\UI\Html {
      */
     function del($children, array $attributes = []): string
     {
-        $attributes += ['children' => $children];
-
-        return createElement('del', $attributes);
+        return createElement('del', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1289,7 +1130,7 @@ namespace Biurad\UI\Html {
     {
         $attributes += ['children' => $children];
 
-        return createElement('ins', $attributes);
+        return createElement('ins', $attributes + ['children' => $children]);
     }
 
     /**
@@ -1469,29 +1310,25 @@ namespace Biurad\UI\Html {
     /**
      * Create an HTML element.
      *
-     * @param array<string,mixed> $attributes Attributes for the element
+     * @param \Stringable|string|array<string,mixed> $attributes Attributes for the element
      */
     function createElement(string $tag, $attributes = [], bool $selfClosing = null): string
     {
         $html = '<' . $tag;
 
-        if (!empty($attributes)) {
-            if (\is_string($attributes)) {
-                $attributes = ['children' => $attributes];
+        if (\is_array($attributes)) {
+            if (\is_array($children = $attributes['children'] ?? '')) {
+                $children = \implode('', $children);
             }
 
-            $children = $attributes['children'] ?? '';
             unset($attributes['children']);
-
             $html .= HtmlElement::renderAttributes($attributes);
+        } elseif (\is_string($attributes) || $attributes instanceof \Stringable) {
+            $children = (string) $attributes;
         }
 
         if (null !== $selfClosing) {
             return $html . ($selfClosing ? '/' : '') . '>';
-        }
-
-        if (isset($children)) {
-            $children = (\is_array($children) ? \implode('', $children) : $children);
         }
 
         return $html . '>' . ($children ?? null) . '</' . $tag . '>';

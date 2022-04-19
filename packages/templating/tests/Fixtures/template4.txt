@@ -6,7 +6,7 @@
             Biurad World
         </title>
         <meta charset="UTF-8">
-        <style type="text/javascript">
+        <style>
             .home { background: #fefefe; } article div p { font-size: 1.2rem; } @media only screen and (max-width: 500px) { p > button#btn { border: 1px solid grey; } ul li a { font-size: 22px; padding-top: 20px; } }
         </style>
     </head>
