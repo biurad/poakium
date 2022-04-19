@@ -31,8 +31,6 @@ final class LatteRender extends AbstractRender implements CacheInterface
 {
     protected const EXTENSIONS = ['latte'];
 
-    protected const DEFAULT_TEMPLATE = 'hello.latte';
-
     /** @var Latte\Engine */
     protected $latte;
 
@@ -74,18 +72,15 @@ final class LatteRender extends AbstractRender implements CacheInterface
      */
     public function render(string $template, array $parameters): string
     {
-        if (\file_exists($template)) {
-            $templateLoader = new Latte\Loaders\FileLoader();
-        } else {
-            $templateId = \substr(\md5($template), 0, 7);
-            $templateLoader = new StringLoader([$templateId => (\file_exists($this->latte->getCacheFile($templateId)) ? '' : self::loadHtml($template) ?? $template)]);
+        $source = self::loadHtml($template) ?? $template;
 
-            $template = $templateId;
+        if ($source !== $template || !\file_exists($template)) {
+            $templateLoader = new Latte\Loaders\StringLoader([$template => $source]);
         }
 
-        $this->latte->setLoader($templateLoader);
+        $latte = $this->latte->setLoader($templateLoader ?? new Latte\Loaders\FileLoader());
 
-        return $this->latte->renderToString($template, $parameters);
+        return $latte->renderToString($template, $parameters);
     }
 
     /**
@@ -156,21 +151,5 @@ final class LatteRender extends AbstractRender implements CacheInterface
         $this->latte->setExceptionHandler($callback);
 
         return $this;
-    }
-}
-
-/**
- * Latte Template loader.
- */
-class StringLoader extends \Latte\Loaders\StringLoader
-{
-    /**
-     * {@inheritdoc}
-     *
-     * @param string $name
-     */
-    public function getUniqueId($name): string
-    {
-        return $name;
     }
 }
