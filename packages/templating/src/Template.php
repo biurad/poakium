@@ -135,11 +135,13 @@ final class Template
      */
     public function renderTemplates(array $templates, array $parameters): ?string
     {
+        $renderLoader = null;
+
         foreach ($templates as $template) {
-            try {
-                return $this->render($template, $parameters);
-            } catch (LoaderException $e) {
-                continue;
+            $loadedTemplate = $this->find($template, $renderLoader);
+
+            if (!empty($loadedTemplate)) {
+                return $renderLoader->render($loadedTemplate, \array_merge($this->globals, $parameters));
             }
         }
 
