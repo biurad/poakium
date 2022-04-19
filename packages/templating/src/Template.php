@@ -120,7 +120,7 @@ final class Template
     {
         $loadedTemplate = $this->find($template, $renderLoader);
 
-        if (null === $loadedTemplate) {
+        if (!isset($loadedTemplate, $renderLoader)) {
             throw new LoaderException(\sprintf('Unable to load template for "%s", file does not exist.', $template));
         }
 
@@ -140,7 +140,7 @@ final class Template
         foreach ($templates as $template) {
             $loadedTemplate = $this->find($template, $renderLoader);
 
-            if (!empty($loadedTemplate)) {
+            if (isset($loadedTemplate, $renderLoader)) {
                 return $renderLoader->render($loadedTemplate, \array_merge($this->globals, $parameters));
             }
         }
@@ -203,7 +203,7 @@ final class Template
             }
         }
 
-        if (isset($loadedTemplate)) {
+        if (isset($loadedTemplate, $renderLoader, $offset)) {
             $cachedTemplate = [$loadedTemplate = ($requestHtml ?? null) . $loadedTemplate, $offset];
 
             if (2 === \func_num_args()) {

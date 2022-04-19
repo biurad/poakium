@@ -351,7 +351,8 @@ final class HtmlElement
 
     private static function doParseNode(Node\AbstractNode $tagNode, int $offset, array &$elementNodes, array &$resolvedNodes): void
     {
-        $previousNode = $elementNodes[\array_key_last($elementNodes)] ?? null;
+        $lastKey = \array_key_last($elementNodes);
+        $previousNode = null !== $lastKey ? $elementNodes[$lastKey] : null;
 
         if ($previousNode instanceof Node\ElementNode) {
             if ($tagNode instanceof Node\ElementNode) {

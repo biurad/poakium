@@ -27,7 +27,7 @@ class SelfCloseNode extends AbstractNode
     /** @var array<int,AttributeNode> */
     public $attributes;
 
-    /** @var self|null */
+    /** @var AbstractNode|null */
     public $next;
 
     /** @var ElementNode|null */

@@ -50,7 +50,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
      */
     public function __construct(Twig\Environment $environment = null, array $extensions = self::EXTENSIONS)
     {
-        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader([], true));
+        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader());
         $this->extensions = $extensions;
     }
 
@@ -97,7 +97,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
             $loader = new ArrayLoader([$template => $source]);
         } else {
             $loader = new FilesystemLoader([\dirname($template)]);
-            $template = \substr($template, strripos($template, '/'));
+            $template = \substr($template, \strripos($template, '/'));
         }
 
         $this->addLoader($loader);

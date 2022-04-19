@@ -211,7 +211,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
             $templateRender = $this->loader;
 
             if (!$templateRender instanceof Template) {
-                throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template, TemplateInterface::class));
+                throw new RenderException(\sprintf('Extending template with hash "%s" to "%s" failed. Required %s instance.', $this->current, $template, Template::class));
             }
 
             return $templateRender->render($template, $parameters);
@@ -262,7 +262,7 @@ final class PhpNativeRender extends AbstractRender implements \ArrayAccess
      *
      * @throws \InvalidArgumentException
      *
-     * @return bool|string The evaluated template,or false if the engine is unable to render the template
+     * @return false|string The evaluated template,or false if the engine is unable to render the template
      */
     protected function evaluate(string $template, array $parameters = [])
     {

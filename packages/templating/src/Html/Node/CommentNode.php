@@ -19,6 +19,9 @@ namespace Biurad\UI\Html\Node;
 
 class CommentNode extends AbstractNode
 {
+    /** @var AbstractNode|null */
+    public $next;
+
     /** @var string */
     protected $content;
 

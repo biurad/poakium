@@ -34,8 +34,8 @@ namespace Biurad\UI\Html {
     /**
      * The `<script>` HTML element is used to embed executable code or data.
      *
-     * @param string|array<int,string> $src        The internal/external scripts to apply
-     * @param array<string,mixed>      $attributes The attributes for script tag
+     * @param string $src         The internal/external scripts to apply
+     * @param array<string,mixed> $attributes The attributes for script tag
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
      */
@@ -123,7 +123,7 @@ namespace Biurad\UI\Html {
      */
     function link(string $href, array $attributes = []): string
     {
-        return createElement('link', $attributes +['href' => $href, 'rel' => 'stylesheet'], false);
+        return createElement('link', $attributes + ['href' => $href, 'rel' => 'stylesheet'], false);
     }
 
     /**
@@ -659,6 +659,7 @@ namespace Biurad\UI\Html {
     function data(string $value, $children, array $attributes = []): string
     {
         $attributes['value'] = $value;
+
         return createElement('data', $attributes + ['children' => $children]);
     }
 
@@ -1018,7 +1019,7 @@ namespace Biurad\UI\Html {
      * The `<embed>` HTML element represents external content at the specified point in the document.
      *
      * @param string              $src        The URL of the resource being embedded
-     * @param bool                $type       The MIME type to use to select the plug-in to instantiate
+     * @param string              $type       The MIME type to use to select the plug-in to instantiate
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed
@@ -1046,7 +1047,7 @@ namespace Biurad\UI\Html {
      * The `<object>` HTML element represents an external resource treated as image.
      *
      * @param string                   $data       The address of the resource as a valid URL
-     * @param bool                     $type       The content type of the resource specified by data
+     * @param string                   $type       The content type of the resource specified by data
      * @param string|array<int,string> $children   The Element children (only param, del and ins tags)
      * @param array<string,mixed>      $attributes Attributes for the element
      *
@@ -1061,7 +1062,7 @@ namespace Biurad\UI\Html {
      * The `<param>` HTML element defines parameters for an object element.
      *
      * @param string              $name       Name of the parameter
-     * @param bool                $value      Name of the parameter
+     * @param string              $value      Name of the parameter
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
@@ -1093,7 +1094,7 @@ namespace Biurad\UI\Html {
      * The src attribute changes to srcset while type to media.
      *
      * @param string              $src        The URL of the resource
-     * @param bool                $type       The MIME media type of the resource, optionally with a codecs parameter
+     * @param string              $type       The MIME media type of the resource, optionally with a codecs parameter
      * @param array<string,mixed> $attributes Attributes for the element
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/source
@@ -1270,6 +1271,8 @@ namespace Biurad\UI\Html {
 
     /**
      * Create a grouped.
+     *
+     * @param array<int,string|\Stringable> $children
      */
     function elements(array $children): string
     {

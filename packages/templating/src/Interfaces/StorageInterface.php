@@ -31,7 +31,7 @@ interface StorageInterface
     /**
      * Loads the fully qualified template from storage provided.
      *
-     * @param array<int,string> $namespaces If empty, template will be loaded from default paths
+     * @param array<int|string,string> $namespaces If empty, template will be loaded from default paths
      *
      * @return string|null null if the template cannot be loaded, a string of file or content otherwise
      */
