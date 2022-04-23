@@ -31,7 +31,7 @@ interface CredentialsHolderInterface extends UserInterface, PasswordAuthenticate
     /**
      * Get the name of the unique identifier for the user.
      */
-    public function getId(): string;
+    public function getId(): ?int;
 
     /**
      * Checks whether the user is enabled.
