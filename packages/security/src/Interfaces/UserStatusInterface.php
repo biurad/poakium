@@ -1,5 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
+/*
+ * This file is part of Biurad opensource projects.
+ *
+ * PHP version 7.4 and above required
+ *
+ * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
+ * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @license   https://opensource.org/licenses/BSD-3-Clause License
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ */
+
 namespace Biurad\Security\Interfaces;
 
 /**
@@ -25,7 +41,7 @@ interface UserStatusInterface
     public function getLastLogin(): ?\DateTimeInterface;
 
     /**
-     * Get the location of the user's last login. (eg: ip address)
+     * Get the location of the user's last login. (eg: ip address).
      */
     public function getLocation(): ?string;
 

@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Biurad\Security\Commands;
 
 use Biurad\Security\Interfaces\UserStatusInterface;
+use Biurad\Security\Interfaces\CredentialsHolderInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,7 +27,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use BiuradPHP\Security\Interfaces\CredentialsHolderInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
