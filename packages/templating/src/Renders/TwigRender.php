@@ -73,15 +73,8 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
      */
     public function withLoader(Template $loader): RenderInterface
     {
-        $this->environment->addFunction(
-            new Twig\TwigFunction(
-                'template',
-                static function (string $template, array $parameters = []) use ($loader): string {
-                    return $loader->render($template, $parameters);
-                },
-                ['is_safe' => ['all']]
-            )
-        );
+        $this->environment->addFilter(new Twig\TwigFilter('template', [$loader, 'find'], ['is_safe' => ['all']]));
+        $this->environment->addFunction(new Twig\TwigFunction('template', [$loader, 'render'], ['is_safe' => ['all']]));
 
         return parent::withLoader($loader);
     }
@@ -96,7 +89,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
         if ($source !== $template || !\file_exists($template)) {
             $loader = new ArrayLoader([$template => $source]);
         } else {
-            $loader = new FilesystemLoader([\dirname($template)]);
+            $loader = new FilesystemLoader([\dirname($template), \dirname($template, 2)]);
             $template = \substr($template, \strripos($template, '/'));
         }
 
