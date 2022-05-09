@@ -35,6 +35,7 @@
         "vimeo/psalm": "^4.7"
     },
     "suggest": {
+        "ext-json": "For loading JSON parsed templates to ArrayStorage",
         "latte/latte": "For a intuitive and fast template engine",
         "twig/twig": "A flexible, fast, and secure template language for PHP"
     },

@@ -43,7 +43,11 @@ class ArrayStorage implements StorageInterface
      */
     public function addLocation(string $location): void
     {
-        throw new LoaderException(\sprintf('Cannot use [%s] for templates loading.', $location));
+        if (!$templates = \json_decode($location)) {
+            throw new LoaderException(\sprintf('Cannot use [%s] for templates loading.', $location));
+        }
+
+        $this->templates = \array_merge($this->templates, $templates);
     }
 
     /**
