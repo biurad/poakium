@@ -41,15 +41,14 @@ class ChainStorage implements StorageInterface
     /**
      * {@inheritdoc}
      */
-    public function addLocation(string $location): void
+    public function addLocation(string $location, string $loaderClassName = null): void
     {
-        foreach ($this->loaders as $storage) {
-            try {
-                $storage->addLocation($location);
-
-                return;
-            } catch (LoaderException $e) {
-                continue;
+        if (null !== $loaderClassName) {
+            foreach ($this->loaders as $loader) {
+                if ($loaderClassName === \get_class($loader)) {
+                    $loader->addLocation($location);
+                    return;
+                }
             }
         }
 
