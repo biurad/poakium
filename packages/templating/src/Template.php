@@ -21,6 +21,7 @@ use Biurad\UI\Exceptions\LoaderException;
 use Biurad\UI\Interfaces\CacheInterface;
 use Biurad\UI\Interfaces\RenderInterface;
 use Biurad\UI\Interfaces\StorageInterface;
+use Biurad\UI\Storage\ChainStorage;
 
 /**
  * The template render resolver.
@@ -67,6 +68,29 @@ final class Template
             $hints = [$hints];
         }
         $this->namespaces[$namespace] = \array_merge($this->namespaces[$namespace] ?? [], $hints);
+    }
+
+    /**
+     * Adds a new storage system to templating.
+     * 
+     * This can be useful as e.g. cached templates may be fetched
+     * from database and used in runtime.
+     */
+    public function addStorage(StorageInterface $storage): void
+    {
+        if ($this->storage instanceof ChainStorage) {
+            $this->storage->addStorage($storage);
+        } else {
+            $this->storage = new ChainStorage([$this->storage, $storage]);
+        }
+    }
+
+    /**
+     * Get the storage system used.
+     */
+    public function getStorage(): StorageInterface
+    {
+        return $this->storage;
     }
 
     /**
