@@ -165,7 +165,7 @@ class Authenticator implements AuthorizationCheckerInterface
      *
      * @return ResponseInterface|bool The response of the authentication
      */
-    public function authenticate(ServerRequestInterface $request, array $credentials)
+    public function authenticate(ServerRequestInterface $request, array $credentials, array $onlyCheck = [])
     {
         $previousToken = $this->tokenStorage->getToken();
         $credentials = Helper::getParameterValues($request, $credentials, $this->propertyAccessor);
@@ -178,7 +178,10 @@ class Authenticator implements AuthorizationCheckerInterface
             }
         }
 
-        foreach ($this->authenticators as $authenticator) {
+        foreach ($this->authenticators as $offset => $authenticator) {
+            if (!empty($onlyCheck) && !\in_array($offset, $onlyCheck, true)) {
+                continue;
+            }
             $authenticator->setToken($previousToken);
 
             if (!$authenticator->supports($request)) {
