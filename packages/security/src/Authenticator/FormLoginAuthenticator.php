@@ -36,6 +36,8 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
  * This authenticator authenticates a user via form request.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class FormLoginAuthenticator implements AuthenticatorInterface
 {
@@ -146,6 +148,10 @@ class FormLoginAuthenticator implements AuthenticatorInterface
      */
     public function failure(ServerRequestInterface $request, AuthenticationException $exception): ?ResponseInterface
     {
+        if (null !== $this->session) {
+            $this->session->set(Security::AUTHENTICATION_ERROR, $exception);
+        }
+
         return null;
     }
 
