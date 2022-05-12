@@ -25,7 +25,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\Security\Core\Authentication\Token\RememberMeToken;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -81,13 +80,9 @@ class RememberMeAuthenticator implements AuthenticatorInterface
     public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
     {
         $loadedUsers = $cookies = [];
-        $identifiers = urldecode($request->getCookieParams()[RememberMeHandler::USERS_ID] ?? '');
+        $identifiers = \explode('|', \urldecode($request->getCookieParams()[$this->rememberMeHandler->getUsersIdCookie()] ?? '')) ?: [];
 
-        if (\str_contains($identifiers, '|')) {
-            $identifiers = \explode('|', $identifiers);
-        }
-
-        foreach ((array) $identifiers as $identifier) {
+        foreach ($identifiers as $identifier) {
             $rawCookie = $request->getCookieParams()[$this->rememberMeHandler->getCookieName() . $identifier] ?? null;
 
             if (null !== $rawCookie) {
@@ -115,7 +110,10 @@ class RememberMeAuthenticator implements AuthenticatorInterface
             }
 
             if (\count($cookies) > 0) {
-                $token->setAttribute(RememberMeHandler::REMEMBER_ME, $cookies);
+                $token->setAttributes([
+                    RememberMeHandler::REMEMBER_ME => $cookies,
+                    RememberMeHandler::USERS_ID => $this->rememberMeHandler->getUsersIdCookie()
+                ]);
             }
 
             return $token;
@@ -150,5 +148,10 @@ class RememberMeAuthenticator implements AuthenticatorInterface
     public function clearCookies(ServerRequestInterface $request): array
     {
         return $this->rememberMeHandler->clearRememberMeCookies($request);
+    }
+
+    public function getRememberMeHandler(): RememberMeHandler
+    {
+        return $this->rememberMeHandler;
     }
 }

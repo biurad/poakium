@@ -26,7 +26,6 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PropertyAccess\Exception\AccessException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
@@ -149,7 +148,7 @@ class Helper
             return [];
         }
 
-        $cookieId = RememberMeHandler::USERS_ID;
+        $cookieId = $fromToken->getAttribute(RememberMeHandler::USERS_ID);
         $cookieUserId = \rawurldecode($request->getCookieParams()[$cookieId] ?? '');
 
         if (!\str_contains($cookieUserId, $userId = $fromToken->getUserIdentifier())) {

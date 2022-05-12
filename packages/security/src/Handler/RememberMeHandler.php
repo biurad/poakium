@@ -47,8 +47,7 @@ class RememberMeHandler
     private ?TokenVerifierInterface $tokenVerifier;
     private ?SignatureHasher $signatureHasher;
     private Cookie $cookie;
-    private string $secret;
-    private string $parameterName;
+    private string $secret, $parameterName, $usersIdCookie;
 
     public function __construct(
         string $secret,
@@ -56,9 +55,11 @@ class RememberMeHandler
         TokenVerifierInterface $tokenVerifier = null,
         SignatureHasher $signatureHasher = null,
         string $requestParameter = '_remember_me',
+        string $usersIdCookie = '_remember_user_id',
         array $options = []
     ) {
         $this->secret = $secret;
+        $this->usersIdCookie = $usersIdCookie;
         $this->parameterName = $requestParameter;
         $this->tokenProvider = $tokenProvider ?? new InMemoryTokenProvider();
         $this->tokenVerifier = $tokenVerifier ?? ($this->tokenProvider instanceof TokenVerifierInterface ? $this->tokenProvider : null);
@@ -91,10 +92,15 @@ class RememberMeHandler
         return $this->cookie->getName();
     }
 
+    public function getUsersIdCookie(): string
+    {
+        return $this->usersIdCookie;
+    }
+
     /**
      * Returns the user and for every 2 minutes a new remember me cookie is included.
      *
-     * @return UserInterface|array $user
+     * @return array $user {0: UserInterface, 1: Cookie|null}
      */
     public function consumeRememberMeCookie(string $rawCookie, UserProviderInterface $userProvider): array
     {
@@ -183,13 +189,9 @@ class RememberMeHandler
     public function clearRememberMeCookies(ServerRequestInterface $request): array
     {
         $cookies = [];
-        $identifiers = urldecode($request->getCookieParams()[self::USERS_ID] ?? '');
+        $identifiers = \explode('|', \urldecode($request->getCookieParams()[$this->usersIdCookie] ?? '')) ?: [];
 
-        if (\str_contains($identifiers, '|')) {
-            $identifiers = \explode('|', $identifiers);
-        }
-
-        foreach ((array) $identifiers as $identifier) {
+        foreach ($identifiers as $identifier) {
             $clearCookie = $this->cookie;
 
             if (null === $cookie = $request->getCookieParams()[$clearCookie->getName() . $identifier] ?? null) {
