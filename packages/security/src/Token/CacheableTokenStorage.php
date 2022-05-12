@@ -38,28 +38,28 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
 
     /**
      * @param SessionInterface|CacheItemPoolInterface $storage
+     * @param int|\DateTime                           $expiry
      */
-    public function __construct(object $storage)
+    public function __construct(object $storage, $expiry = 60 * 60 * 24 * 30)
     {
-        $this->storage = function (string $key, TokenInterface $token = null) use ($storage): ?TokenInterface {
+        $this->storage = function (string $key, TokenInterface $token = null) use ($storage, $expiry): ?TokenInterface {
             if (1 === \func_num_args()) {
                 return $this->safelyUnserialize($storage instanceof CacheItemPoolInterface ? $storage->getItem($key)->get() : $storage->get($key));
             }
 
-            if (null !== $token) {
-                $token = \serialize($token);
-            }
-
-            if ($storage instanceof SessionInterface) {
-                $storage->set($key, $token);
+            if (null === $token) {
+                if ($storage instanceof CacheItemPoolInterface) {
+                    $storage->deleteItem($key);
+                } else {
+                    $storage->remove($key);
+                }
+            } elseif ($storage instanceof SessionInterface) {
+                $storage->set($key, \serialize([$token, $expiry]));
             } else {
                 $item = $storage->getItem($key);
-                $item->set($token);
+                $item->set(\serialize($token));
 
-                if (null !== $token) {
-                    $expiry = $token->hasAttribute('expire') ? $token->getAttribute('expire') : new \DateTime('+1 day');
-                }
-                $storage->save($item->expiresAt($expiry ?? new \DateTime('+1 minute')));
+                $storage->save($item->expiresAfter(\is_int($expiry) ? $expiry : $expiry->getTimestamp()));
             }
 
             return null;
@@ -107,7 +107,15 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
         });
 
         try {
-            $token = \unserialize($serializedToken);
+            if (\is_array($token = \unserialize($serializedToken))) {
+                [$token, $expiry] = $token;
+
+                if (\time() > $expiry) {
+                    $this->setToken();
+
+                    return null; // token has expired
+                }
+            }
         } catch (\ErrorException $e) {
             if (0x37313BC !== $e->getCode()) {
                 throw $e;
