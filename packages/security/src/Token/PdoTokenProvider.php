@@ -116,7 +116,7 @@ class PdoTokenProvider implements TokenProviderInterface, TokenVerifierInterface
             return false;
         }
 
-        if ($pToken->getLastUsed()->getTimestamp() + 60 < time()) {
+        if ($pToken->getLastUsed()->getTimestamp() + 60 < \time()) {
             return false;
         }
 
@@ -138,27 +138,27 @@ class PdoTokenProvider implements TokenProviderInterface, TokenVerifierInterface
             $this->connection->commit();
         } catch (\Exception $e) {
             $this->connection->rollBack();
+
             throw $e;
         }
     }
 
     protected function createPdoFromDsm(string $connection): \PDO
     {
-        if (!\str_contains($connection, 'username=')) {
-            throw new \InvalidArgumentException('The DSN must contain a username.');
+        if (!\is_array($connectionData = \parse_url($connection))) {
+            throw new \InvalidArgumentException(\sprintf('Invalid connection string "%s".', $connection));
         }
 
-        if (!\str_contains($connection, 'password=')) {
-            throw new \InvalidArgumentException('The DSN must contain a password.');
+        $dsn = \sprintf('%s:host=%s;dbname=%s', $connectionData['scheme'], $connectionData['host'], $connectionData['path']);
+
+        if (isset($connectionData['port'])) {
+            $dsn .= \sprintf(';port=%d', (int) $connectionData['port']);
         }
 
-        [$connection, $username] = \explode('username=', $connection);
-        [,$password] = \explode('password=', $username);
-
-        if (\str_ends_with($password, ';')) {
-            throw new \InvalidArgumentException('The DSN must not contain a ; after the password.');
+        if ('null' === $password = ($connectionData['pass'] ?? null)) {
+            $password = null;
         }
 
-        return new \PDO($connection, \substr($username, 0, \strpos($username, ';')), $password);
+        return new \PDO($dsn, $connectionData['user'] ?? null, $password);
     }
 }
