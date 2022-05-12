@@ -96,6 +96,11 @@ class Authenticator implements AuthorizationCheckerInterface
         return isset($this->authenticators[$authenticatorClass]);
     }
 
+    public function remove(string $authenticatorClass): void
+    {
+        unset($this->authenticators[$authenticatorClass]);
+    }
+
     public function getTokenStorage(): TokenStorageInterface
     {
         return $this->tokenStorage;
