@@ -157,13 +157,15 @@ class Authenticator implements AuthorizationCheckerInterface
 
     /**
      * Convenience method to programmatically authenticate a user and return
-     * true if any success or a Response on failure.
+     * true if any success, else an exception or response on failure.
      *
      * @param array<int,string> $credentials The credentials to use
+     * @param array<int,string> $onlyCheck   The class names list of authenticators to check
      *
-     * @throw AuthenticationException if the authentication fails
+     * @throws AuthenticationException if the authentication fails or credentials are invalid
+     * @throws TooManyLoginAttemptsAuthenticationException if the authentication fails because of too many attempts
      *
-     * @return ResponseInterface|bool The response of the authentication
+     * @return ResponseInterface|true The response of the authentication
      */
     public function authenticate(ServerRequestInterface $request, array $credentials, array $onlyCheck = [])
     {
@@ -209,9 +211,9 @@ class Authenticator implements AuthorizationCheckerInterface
                 if ($token !== $previousToken) {
                     $this->tokenStorage->setToken($token);
                 }
-                $this->userChecker->checkPostAuth($token->getUser());
 
-                return true;
+                $this->userChecker->checkPostAuth($token->getUser());
+                break;
             } catch (AuthenticationException $e) {
                 // Avoid leaking error details in case of invalid user (e.g. user not found or invalid account status)
                 // to prevent user enumeration via response content comparison
@@ -224,6 +226,7 @@ class Authenticator implements AuthorizationCheckerInterface
                 if (null !== $this->eventDispatcher) {
                     $this->eventDispatcher->dispatch($event = new AuthenticationFailureEvent($e, $authenticator, $request, $response));
                     $response = $event->getResponse();
+                    $e = $event->getException();
                 }
 
                 if (!$response instanceof ResponseInterface) {
@@ -234,7 +237,7 @@ class Authenticator implements AuthorizationCheckerInterface
             }
         }
 
-        return false;
+        return true;
     }
 
     /**
