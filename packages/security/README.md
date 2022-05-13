@@ -38,7 +38,7 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleHierarchyVoter;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Role\RoleHierarchy;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Symfony\Component\Security\Core\User\InMemoryUserProvider;
@@ -48,9 +48,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $accessDecisionManager = new AccessDecisionManager([
     new AuthenticatedVoter(new AuthenticationTrustResolver()),
     new RoleVoter(),
-    new RoleHierarchyVoter(new RoleHierarchy([
-        'ROLE_ADMIN' => ['ROLE_USER'],
-    ]))
+    new RoleHierarchyVoter(new RoleHierarchy(['ROLE_ADMIN' => ['ROLE_USER']]))
 ]);
 $userProvider = new InMemoryUserProvider([
     'divine' => [
@@ -61,74 +59,38 @@ $userProvider = new InMemoryUserProvider([
 ]);
 $hasherFactory = new PasswordHasherFactory([
     InMemoryUser::class => ['algorithm' => 'plaintext'],
-    'common' => ['algorithm' => 'bcrypt'],
-    'memory-hard' => ['algorithm' => 'sodium'],
+    // Can more than one algorithm be used?
 ]);
 $tokenStorage = new CacheableTokenStorage($session = new Session());
+$tokenProvider = new PdoTokenProvider('mysql://root:password@localhost:3306/test');
 $authenticators = [
+    // You can add the csrf authenticator
     new FormLoginAuthenticator($userProvider, $hasherFactory, null, $session),
+    new RememberMeAuthenticator(new RememberMeHandler('cookie-secret', $tokenProvider), $userProvider, true),
 ];
 
 $request = \Biurad\Http\Factory\Psr17Factory::fromGlobalRequest();
 $authenticator = new Authenticator($authenticators, $tokenStorage, $accessDecisionManager);
 
 // The parameters which should be fetched from request ...
-$credentials = ['_identifier', '_password'];
+$credentials = ['_identifier', '_password', '_remember_me'];
 
-// To authenticate a user has logged in,
-if (true !== $response = $authenticator->authenticate($request, $credentials)) {
+try {
+    $response = $authenticator->authenticate($request, $credentials);
+
+    // This means an error was caught by transformed into response
     if ($response instanceof ResponseInterface) {
         // ... You can emit response to the browser.
     }
-
-    throw new AccessDeniedException();
+} catch (AuthenticationException $e) {
+    // You choose how you want to handle exception
 }
 
 // The token is ready for use
 $token = $authenticator->getToken();
 
-```
-
-All authenticators can be used without the authenticator class. The remember me authenticator usage is abit different from how symfony's remember me works.
-From the example above, In order to use the remember me authenticator, a remember me handler needs has to be passed into the form login authenticator.
-
-```php
-use Biurad\Security\Handler\RememberMeHandler;
-use Biurad\Security\Token\PdoTokenProvider;
-
-$tokenProvider = new PdoTokenProvider('mysql:host=localhost;dbname=testing;username=root;password=password');
-$rememberMeHandler = new RememberMeHandler('cookie-secret', $tokenProvider);
-```
-
-After passing the remember me handler into the form login authenticator, remember to fetch the remember me
-cookies from the authenticated token. The following example shows how to fetch the remember me cookies:
-
-```php
-use Biurad\Security\Helper;
-
+// This is an array of cookies which can be used to set into the browser's response.
 $rememberMeCookies = Helper::createRememberMeCookie($token, $request);
-// The $rememberMeCookies is an array of cookies, which can be used to set the cookies into the response.
-```
-
-When the above examples are followed and executed, If a user is not in session, the user's token should be fetched
-from the remember me cookies and set into the token storage. Here is an example:
-
-```php
-use Biurad\Security\Authenticator\RememberMeAuthenticator;
-
-if (null === $token = $tokenStorage->getToken()) {
-    $rememberAuth = new RememberMeAuthenticator($rememberMeHandler, $userProvider, true);
-
-    if ($rememberAuth->supports($request)) {
-        $token = $rememberAuth->authenticate($request, []);
-        $tokenStorage->setToken($token);
-
-        $rememberMeCookies = Helper::createRememberMeCookie($token, $request);
-        // Incase cookies exists, set the cookies into the response.
-    }
-}
-
-// The token is ready for use
 
 ```
 
