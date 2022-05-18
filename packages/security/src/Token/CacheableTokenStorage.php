@@ -38,7 +38,7 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
 
     /**
      * @param SessionInterface|CacheItemPoolInterface $storage
-     * @param int|\DateTime                           $expiry
+     * @param int|\DateTime|null                      $expiry
      */
     public function __construct(object $storage, $expiry = 60 * 60 * 24 * 30)
     {
@@ -54,12 +54,15 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
                     $storage->remove($key);
                 }
             } elseif ($storage instanceof SessionInterface) {
-                $storage->set($key, \serialize([$token, $expiry]));
+                if ($expiry instanceof \DateTimeInterface) {
+                    $expiry = $expiry->getTimestamp();
+                }
+                $storage->set($key, \serialize($expiry ? [$token, $expiry] : $token));
             } else {
                 $item = $storage->getItem($key);
                 $item->set(\serialize($token));
 
-                $storage->save($item->expiresAfter(\is_int($expiry) ? $expiry : $expiry->getTimestamp()));
+                $storage->save(\is_int($expiry) ? $item->expiresAfter(new \DateInterval('PT'.$expiry.'S')) : $item->expiresAt($expiry));
             }
 
             return null;
