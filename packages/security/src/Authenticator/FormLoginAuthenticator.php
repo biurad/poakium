@@ -31,6 +31,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -112,14 +113,17 @@ class FormLoginAuthenticator implements AuthenticatorInterface
         }
 
         $user = $this->provider->loadUserByIdentifier($username);
-        $userHasher = $this->hasherFactory->getPasswordHasher($user);
 
-        if (!$userHasher->verify($user->getPassword(), $password)) {
-            throw new BadCredentialsException('The presented password is invalid.');
-        }
+        if ($user instanceof PasswordAuthenticatedUserInterface) {
+            $userHasher = $this->hasherFactory->getPasswordHasher($user);
 
-        if ($this->provider instanceof PasswordUpgraderInterface && $userHasher->needsRehash($password)) {
-            $this->provider->passwordUpgrade($user, $userHasher->hash($password));
+            if (!$userHasher->verify($user->getPassword(), $password)) {
+                throw new BadCredentialsException('The presented password is invalid.');
+            }
+
+            if ($this->provider instanceof PasswordUpgraderInterface && $userHasher->needsRehash($password)) {
+                $this->provider->upgradePassword($user, $userHasher->hash($password));
+            }
         }
 
         if ($this->eraseCredentials) {
