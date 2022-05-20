@@ -22,11 +22,7 @@ use Biurad\UI\Interfaces\CacheInterface as RenderCacheInterface;
 use Biurad\UI\Interfaces\RenderInterface;
 use Biurad\UI\Template;
 use Twig;
-use Twig\Cache\FilesystemCache;
 use Twig\Extension\ExtensionInterface;
-use Twig\Loader\ArrayLoader;
-use Twig\Loader\ChainLoader;
-use Twig\Loader\FilesystemLoader;
 use Twig\Loader\LoaderInterface;
 use Twig\NodeVisitor\NodeVisitorInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
@@ -50,7 +46,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
      */
     public function __construct(Twig\Environment $environment = null, array $extensions = self::EXTENSIONS)
     {
-        $this->environment = $environment ?? new Twig\Environment(new ArrayLoader());
+        $this->environment = $environment ?? new Twig\Environment(new Twig\Loader\ArrayLoader());
         $this->extensions = $extensions;
     }
 
@@ -64,7 +60,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
                 throw new LoaderException('The Twig render has an existing cache implementation which must be removed.');
             }
 
-            $this->environment->setCache(new FilesystemCache($cacheDir));
+            $this->environment->setCache(new Twig\Cache\FilesystemCache($cacheDir));
         }
     }
 
@@ -87,12 +83,50 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
         $source = self::loadHtml($template) ?? $template;
 
         if ($source !== $template || !\file_exists($template)) {
-            $loader = new ArrayLoader([$template => $source]);
+            $loader = new Twig\Loader\ArrayLoader([$template => $source]);
         } else {
-            $loader = new FilesystemLoader([\dirname($template), \dirname($template, 2)]);
-            $template = \substr($template, \strripos($template, '/'));
-        }
+            $loader = new class ($this->loader) extends Twig\Loader\FilesystemLoader {
+                /** @var Template */
+                private $loader;
 
+                public function __construct(Template $loader, $paths = [], string $rootPath = null)
+                {
+                    $this->loader = $loader;
+                    parent::__construct($paths, $rootPath);
+                }
+
+                protected function findTemplate(string $name, bool $throw = true): string
+                {
+                    if (isset($this->cache[$name])) {
+                        return $this->cache[$name];
+                    }
+
+                    if (isset($this->errorCache[$name])) {
+                        if (!$throw) {
+                            return null;
+                        }
+
+                        throw new Twig\Error\LoaderError($this->errorCache[$name]);
+                    }
+
+                    if (!\is_file($name)) {
+                        $name = $this->loader->find($name);
+
+                        if (null === $name) {
+                            $this->errorCache[$name] = \sprintf('The template "%s" is not a valid file path.', $name);
+
+                            if (!$throw) {
+                                return null;
+                            }
+
+                            throw new Twig\Error\LoaderError($this->errorCache[$name]);
+                        }
+                    }
+
+                    return $this->cache[$name] = $name;
+                }
+            };
+        }
         $this->addLoader($loader);
 
         return $this->environment->load($template)->render($parameters);
@@ -107,16 +141,16 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
     {
         $templateLoader = $this->environment->getLoader();
 
-        if ($templateLoader instanceof ChainLoader) {
+        if ($templateLoader instanceof Twig\Loader\ChainLoader) {
             $templateLoader->addLoader($loader);
 
             return;
         }
 
-        if ($loader instanceof ChainLoader) {
+        if ($loader instanceof Twig\Loader\ChainLoader) {
             $loader->addLoader($templateLoader);
-        } elseif (!$templateLoader instanceof ArrayLoader) {
-            $loader = new ChainLoader([$loader, $templateLoader]);
+        } elseif (!$templateLoader instanceof Twig\Loader\ArrayLoader) {
+            $loader = new Twig\Loader\ChainLoader([$loader, $templateLoader]);
         }
 
         $this->environment->setLoader($loader);

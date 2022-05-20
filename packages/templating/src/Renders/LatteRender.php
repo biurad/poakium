@@ -76,7 +76,29 @@ final class LatteRender extends AbstractRender implements CacheInterface
             $templateLoader = new Latte\Loaders\StringLoader([$template => $source]);
         }
 
-        $latte = $this->latte->setLoader($templateLoader ?? new Latte\Loaders\FileLoader());
+        $latte = $this->latte->setLoader($templateLoader ?? new class($this->loader) extends Latte\Loaders\FileLoader {
+            /** @var Template */
+            private $loader;
+
+            public function __construct(Template $loader, ?string $baseDir = null)
+            {
+                $this->loader = $loader;
+                parent::__construct($baseDir);
+            }
+
+            public function getContent($fileName): string
+            {
+                if (!\is_file($fileName)) {
+                    $fileName = $this->loader->find($fileName);
+
+                    if (null === $fileName) {
+                        throw new Latte\RuntimeException(\sprintf('Missing template file \'%s\'.', $fileName));
+                    }
+                }
+
+                return parent::getContent($fileName);
+            }
+        });
 
         return $latte->renderToString($template, $parameters);
     }
