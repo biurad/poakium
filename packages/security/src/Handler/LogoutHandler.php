@@ -32,13 +32,13 @@ use Symfony\Component\Security\Csrf\TokenStorage\ClearableTokenStorageInterface;
 class LogoutHandler
 {
     private TokenStorageInterface $tokenStorage;
-    private ClearableTokenStorageInterface $csrfTokenStorage;
+    private ?ClearableTokenStorageInterface $csrfTokenStorage;
     private ?SessionInterface $session;
     private ?RememberMeHandler $rememberMeHandler;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
-        ClearableTokenStorageInterface $csrfTokenStorage,
+        ClearableTokenStorageInterface $csrfTokenStorage = null,
         RememberMeHandler $rememberMeHandler = null,
         SessionInterface $session = null
     )
@@ -55,13 +55,16 @@ class LogoutHandler
      * - clearing the token storage
      * - clearing the CSRF token storage
      * - clearing the remember me cookie if needed.
-     * 
+     *
      * @return array<int,Cookie> The remember me clearing cookies if any.
      */
     public function handle(ServerRequestInterface $request): array
     {
         $this->tokenStorage->setToken();
-        $this->csrfTokenStorage->clear();
+
+        if (null !== $this->csrfTokenStorage) {
+            $this->csrfTokenStorage->clear();
+        }
 
         if (null === $this->session && $request instanceof Request && $request->getRequest()->hasSession()) {
             $this->session = $request->getRequest()->getSession();
