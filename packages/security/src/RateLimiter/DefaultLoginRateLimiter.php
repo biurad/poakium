@@ -18,10 +18,10 @@ declare(strict_types=1);
 
 namespace Biurad\Security\RateLimiter;
 
-use Symfony\Component\HttpFoundation\RateLimiter\AbstractRequestRateLimiter;
-use Symfony\Component\HttpFoundation\Request;
+use Biurad\Http\Request as HttpRequest;
+use Biurad\Security\Helper;
+use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Security\Core\Security;
 
 /**
  * A default login throttling limiter.
@@ -30,25 +30,35 @@ use Symfony\Component\Security\Core\Security;
  * a limit on username+IP and a (higher) limit on IP.
  *
  * @author Wouter de Jong <wouter@wouterj.nl>
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 final class DefaultLoginRateLimiter extends AbstractRequestRateLimiter
 {
     private RateLimiterFactory $globalFactory;
     private RateLimiterFactory $localFactory;
+    private string $userParameter;
 
-    public function __construct(RateLimiterFactory $globalFactory, RateLimiterFactory $localFactory)
+    public function __construct(RateLimiterFactory $globalFactory, RateLimiterFactory $localFactory, string $userId = '_identifier')
     {
         $this->globalFactory = $globalFactory;
         $this->localFactory = $localFactory;
+        $this->userParameter = $userId;
     }
 
-    protected function getLimiters(Request $request): array
+    protected function getLimiters(ServerRequestInterface $request): array
     {
-        $limiters = [$this->globalFactory->create($request->getClientIp())];
+        if ($request instanceof HttpRequest) {
+            $ip = $request->getRequest()->getClientIp();
+            $username = $request->getRequest()->get($this->userParameter);
+        } else {
+            $username = Helper::getParameterValue($request, $this->userParameter);
+        }
 
-        if (null !== $username = $request->attributes->get(Security::LAST_USERNAME)) {
+        $limiters = [$this->globalFactory->create($ip ?? $request->getServerParams()['REMOTE_ADDR'])];
+
+        if (!empty($username)) {
             $username = \preg_match('//u', $username) ? \mb_strtolower($username, 'UTF-8') : \strtolower($username);
-            $limiters[] = $this->localFactory->create($username . '-' . $request->getClientIp());
+            $limiters[] = $this->localFactory->create($username . '-' . $ip ?? $request->getServerParams()['REMOTE_ADDR']);
         }
 
         return $limiters;

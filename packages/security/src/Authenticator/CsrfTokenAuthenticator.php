@@ -19,11 +19,9 @@ declare(strict_types=1);
 namespace Biurad\Security\Authenticator;
 
 use Biurad\Security\Interfaces\AuthenticatorInterface;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
@@ -49,14 +47,6 @@ class CsrfTokenAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
-    public function setToken(?TokenInterface $token): void
-    {
-        // This authenticator does not use a token.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function supports(ServerRequestInterface $request): bool
     {
         return 'POST' === $request->getMethod();
@@ -65,7 +55,7 @@ class CsrfTokenAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
-    public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
+    public function authenticate(ServerRequestInterface $request, array $credentials, string $firewallName): ?TokenInterface
     {
         if (empty($csrfToken = $credentials[$this->csrfParameter] ?? null)) {
             return null;
@@ -77,18 +67,10 @@ class CsrfTokenAuthenticator implements AuthenticatorInterface
 
         $csrfToken = new CsrfToken($this->csrfTokenId, $csrfToken);
 
-        if (false === $this->csrfTokenManager->isTokenValid($csrfToken)) {
+        if (!$this->csrfTokenManager->isTokenValid($csrfToken)) {
             throw new InvalidCsrfTokenException('Invalid CSRF token.');
         }
 
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function failure(ServerRequestInterface $request, AuthenticationException $exception): ?ResponseInterface
-    {
         return null;
     }
 }

@@ -18,12 +18,10 @@ declare(strict_types=1);
 
 namespace Biurad\Security\Authenticator;
 
-use Biurad\Http\Request;
 use Biurad\Security\Handler\RememberMeHandler;
 use Biurad\Security\Interfaces\AuthenticatorInterface;
-use Psr\Http\Message\ResponseInterface;
+use Biurad\Security\Interfaces\RequireTokenInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -40,27 +38,26 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class FormLoginAuthenticator implements AuthenticatorInterface
+class FormLoginAuthenticator implements AuthenticatorInterface, RequireTokenInterface
 {
     private UserProviderInterface $provider;
     private ?TokenInterface $token = null;
     private PasswordHasherFactoryInterface $hasherFactory;
     private ?RememberMeHandler $rememberMeHandler;
-    private ?SessionInterface $session;
-    private bool $eraseCredentials;
+    private string $userParameter, $passwordParameter;
 
     public function __construct(
         UserProviderInterface $provider,
         PasswordHasherFactoryInterface $hasherFactory,
         RememberMeHandler $rememberMeHandler = null,
-        SessionInterface $session = null,
-        bool $eraseCredentials = true
+        string $userParameter = '_identifier',
+        string $passwordParameter = '_password'
     ) {
         $this->provider = $provider;
         $this->hasherFactory = $hasherFactory;
         $this->rememberMeHandler = $rememberMeHandler;
-        $this->session = $session;
-        $this->eraseCredentials = $eraseCredentials;
+        $this->userParameter = $userParameter;
+        $this->passwordParameter = $passwordParameter;
     }
 
     /**
@@ -76,25 +73,20 @@ class FormLoginAuthenticator implements AuthenticatorInterface
      */
     public function supports(ServerRequestInterface $request): bool
     {
-        if (null !== $this->token) {
-            // allows a user to impersonate another one temporarily (like the Unix su command).
-            return $request->hasHeader('AUTH-SWITCH-USER');
-        }
-
         return 'POST' === $request->getMethod();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
+    public function authenticate(ServerRequestInterface $request, array $credentials, $firewallName): ?TokenInterface
     {
         if (empty($credentials)) {
             return null;
         }
 
-        $username = $credentials['_identifier'] ?? $credentials['identifier'] ?? null;
-        $password = $credentials['_password'] ?? $credentials['password'] ?? null;
+        $username = $credentials[$this->userParameter] ?? null;
+        $password = $credentials[$this->passwordParameter] ?? null;
 
         if (empty($username) xor empty($password)) {
             throw new BadCredentialsException('The presented username or password cannot be empty.');
@@ -102,14 +94,6 @@ class FormLoginAuthenticator implements AuthenticatorInterface
 
         if (!\is_string($username) || \strlen($username) > Security::MAX_USERNAME_LENGTH) {
             throw new BadCredentialsException('Invalid username.');
-        }
-
-        if (null !== $this->session) {
-            $this->session->set(Security::LAST_USERNAME, $username);
-        }
-
-        if ($request instanceof Request) {
-            $request->getRequest()->attributes->set(Security::LAST_USERNAME, $username);
         }
 
         $user = $this->provider->loadUserByIdentifier($username);
@@ -126,47 +110,22 @@ class FormLoginAuthenticator implements AuthenticatorInterface
             }
         }
 
-        if ($this->eraseCredentials) {
-            $user->eraseCredentials();
-        }
-
-        if ($request->hasHeader('AUTH-SWITCH-USER')) {
-            $token = $this->token;
-
-            if ($token && $username !== $token->getUserIdentifier()) {
-                $token = new SwitchUserToken($user, 'main', $user->getRoles(), $token, (string) $request->getUri());
+        if ($request->hasHeader('X-Switch-User') && $oldToken = $this->token) {
+            if ($username === $oldToken->getUserIdentifier()) {
+                throw new AuthenticationException('The current user is already authenticated.');
             }
+            $token = new SwitchUserToken($user, $firewallName, $user->getRoles(), $oldToken, (string) $request->getUri());
+        } else {
+            $token = new UsernamePasswordToken($user, $firewallName, $user->getRoles());
         }
-
-        $token ??= new UsernamePasswordToken($user, 'main', $user->getRoles());
 
         if (null !== $this->rememberMeHandler) {
-            $token = $this->rememberMeCookie($this->rememberMeHandler, $token, $request, $credentials[$this->rememberMeHandler->getParameterName()] ?? false);
-        }
+            $rememberMe = $credentials[$this->rememberMeHandler->getParameterName()] ?? false;
 
-        return $token;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function failure(ServerRequestInterface $request, AuthenticationException $exception): ?ResponseInterface
-    {
-        if (null !== $this->session) {
-            $this->session->set(Security::AUTHENTICATION_ERROR, $exception);
-        }
-
-        return null;
-    }
-
-    /**
-     * @param string|int|bool $rememberMe
-     */
-    protected function rememberMeCookie(RememberMeHandler $rememberMeHandler, TokenInterface $token, ServerRequestInterface $request, $rememberMe): TokenInterface
-    {
-        if ('true' === $rememberMe || 'on' === $rememberMe || '1' === $rememberMe || 'yes' === $rememberMe || true === $rememberMe) {
-            $rememberMeCookie = $rememberMeHandler->createRememberMeCookie($token->getUser());
-            $token->setAttribute(RememberMeHandler::REMEMBER_ME, $rememberMeCookie->withSecure('https' === $request->getUri()->getScheme()));
+            if ('true' === $rememberMe || 'on' === $rememberMe || '1' === $rememberMe || 'yes' === $rememberMe || true === $rememberMe) {
+                $rememberMeCookie = $this->rememberMeHandler->createRememberMeCookie($token->getUser());
+                $token->setAttribute(RememberMeHandler::REMEMBER_ME, $rememberMeCookie->withSecure('https' === $request->getUri()->getScheme()));
+            }
         }
 
         return $token;

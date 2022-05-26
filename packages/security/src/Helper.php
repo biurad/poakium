@@ -19,14 +19,11 @@ declare(strict_types=1);
 namespace Biurad\Security;
 
 use Biurad\Http\Request;
-use Biurad\Security\Handler\RememberMeHandler;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PropertyAccess\Exception\AccessException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
@@ -45,7 +42,7 @@ class Helper
         bool $fromReferer = false
     ): ?string {
         if ($targetUrl = self::getParameterValue($request, $parameter)) {
-            goto targetUrl;
+            return $targetUrl;
         }
 
         if (null === $session && ($request instanceof Request && $request->getRequest()->hasSession())) {
@@ -54,15 +51,12 @@ class Helper
 
         if (null !== $session && $targetUrl = $session->get($parameter)) {
             $session->remove($parameter);
-        }
+        } elseif ($fromReferer && $targetUrl = $request->getHeaderLine('Referer')) {
+            $pos = \strpos($targetUrl, '?');
 
-        targetUrl:
-        if ($fromReferer && $targetUrl = ($targetUrl ?? $request->getHeaderLine('Referer'))) {
-            if (false !== $pos = \strpos($targetUrl, '?')) {
+            if (false !== $pos) {
                 $targetUrl = \substr($targetUrl, 0, $pos);
             }
-
-            return $targetUrl;
         }
 
         return $targetUrl ?: null;
@@ -135,32 +129,5 @@ class Helper
         }
 
         return $parameterKeys;
-    }
-
-    /**
-     * Creates remember me cookies from token.
-     *
-     * @return array<int,Cookie>
-     */
-    public static function createRememberMeCookie(?TokenInterface $fromToken, ServerRequestInterface $request): array
-    {
-        if (null === $fromToken || !$fromToken->hasAttribute($cookieR = RememberMeHandler::REMEMBER_ME)) {
-            return [];
-        }
-
-        $cookieId = $fromToken->getAttribute(RememberMeHandler::USERS_ID);
-        $cookieUserId = \rawurldecode($request->getCookieParams()[$cookieId] ?? '');
-
-        if (!\str_contains($cookieUserId, $userId = $fromToken->getUserIdentifier())) {
-            $cookieUserId = empty($cookieUserId) ? $userId : $cookieUserId . '|' . $userId;
-        }
-
-        if (!\is_array($tokenCookies = $fromToken->getAttribute($cookieR))) {
-            $tokenCookies = [$tokenCookies];
-        }
-
-        $tokenCookies[] = new Cookie($cookieId, $cookieUserId, $tokenCookies[0]->getExpiresTime());
-
-        return $tokenCookies;
     }
 }

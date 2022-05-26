@@ -18,13 +18,14 @@ declare(strict_types=1);
 
 namespace Biurad\Security;
 
-use Biurad\Http\Request;
 use Biurad\Security\Event\AuthenticationFailureEvent;
 use Biurad\Security\Interfaces\AuthenticatorInterface;
+use Biurad\Security\Interfaces\FailureHandlerInterface;
+use Biurad\Security\Interfaces\RequireTokenInterface;
+use Biurad\Security\RateLimiter\AbstractRequestRateLimiter;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\HttpFoundation\RateLimiter\RequestRateLimiterInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\NullToken;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
@@ -39,6 +40,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationCredentialsNotFoundE
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
+use Symfony\Component\Security\Core\Exception\ProviderNotFoundException;
 use Symfony\Component\Security\Core\Exception\TooManyLoginAttemptsAuthenticationException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\InMemoryUserChecker;
@@ -56,9 +58,10 @@ class Authenticator implements AuthorizationCheckerInterface
     private AccessDecisionManagerInterface $accessDecisionManager;
     private UserCheckerInterface $userChecker;
     private ?PropertyAccessorInterface $propertyAccessor;
-    private ?RequestRateLimiterInterface $limiter;
+    private ?AbstractRequestRateLimiter $limiter;
     private ?EventDispatcherInterface $eventDispatcher;
-    private bool $hideUserNotFoundExceptions;
+    private bool $hideUserNotFoundExceptions, $eraseCredentials;
+    private string $firewallName;
 
     /** @var array<int,Interfaces\AuthenticatorInterface> */
     private array $authenticators;
@@ -71,11 +74,14 @@ class Authenticator implements AuthorizationCheckerInterface
         TokenStorageInterface $tokenStorage,
         AccessDecisionManagerInterface $accessDecisionManager,
         UserCheckerInterface $userChecker = null,
-        RequestRateLimiterInterface $limiter = null,
+        AbstractRequestRateLimiter $limiter = null,
         EventDispatcherInterface $eventDispatcher = null,
         PropertyAccessorInterface $propertyAccessor = null,
-        bool $hideUserNotFoundExceptions = true
+        bool $hideUserNotFoundExceptions = true,
+        bool $eraseCredentials = true,
+        string $firewallName = 'main'
     ) {
+        $this->firewallName = $firewallName;
         $this->authenticators = $authenticators;
         $this->tokenStorage = $tokenStorage;
         $this->accessDecisionManager = $accessDecisionManager;
@@ -83,6 +89,7 @@ class Authenticator implements AuthorizationCheckerInterface
         $this->limiter = $limiter;
         $this->eventDispatcher = $eventDispatcher;
         $this->propertyAccessor = $propertyAccessor;
+        $this->eraseCredentials = $eraseCredentials;
         $this->hideUserNotFoundExceptions = $hideUserNotFoundExceptions;
     }
 
@@ -169,51 +176,40 @@ class Authenticator implements AuthorizationCheckerInterface
      */
     public function authenticate(ServerRequestInterface $request, array $credentials, array $onlyCheck = [])
     {
+        if (empty($authenticators = $this->authenticators)) {
+            throw new ProviderNotFoundException('No authenticator found.');
+        }
+
         $previousToken = $this->tokenStorage->getToken();
         $credentials = Helper::getParameterValues($request, $credentials, $this->propertyAccessor);
 
-        if ($throttling = (null !== $this->limiter && $request instanceof Request)) {
-            $limit = $this->limiter->consume($request->getRequest());
+        if (null !== $this->limiter) {
+            $limit = $this->limiter->consume($request);
 
             if (!$limit->isAccepted()) {
                 throw new TooManyLoginAttemptsAuthenticationException((int) \ceil(($limit->getRetryAfter()->getTimestamp() - \time()) / 60));
             }
         }
 
-        foreach ($this->authenticators as $offset => $authenticator) {
+        foreach ($authenticators as $offset => $authenticator) {
             if (!empty($onlyCheck) && !\in_array($offset, $onlyCheck, true)) {
                 continue;
             }
-            $authenticator->setToken($previousToken);
+
+            if ($authenticator instanceof RequireTokenInterface) {
+                $authenticator->setToken($previousToken);
+            }
 
             if (!$authenticator->supports($request)) {
                 continue;
             }
 
             try {
-                if (null === $token = $authenticator->authenticate($request, $credentials)) {
-                    continue; // Allow an authenticator without a token.
-                }
+                $token = $this->executeAuthenticator($authenticator, $request, $credentials);
 
-                if (!$token instanceof PreAuthenticatedToken) {
-                    $this->userChecker->checkPreAuth($token->getUser());
-                }
-
-                if (null !== $this->eventDispatcher) {
-                    $this->eventDispatcher->dispatch($event = new AuthenticationSuccessEvent($token));
-                    $token = $event->getAuthenticationToken();
-                }
-
-                if ($throttling) {
-                    $this->limiter->reset($request->getRequest());
-                }
-
-                if ($token !== $previousToken) {
+                if (null !== $token) {
                     $this->tokenStorage->setToken($token);
                 }
-
-                $this->userChecker->checkPostAuth($token->getUser());
-                break;
             } catch (AuthenticationException $e) {
                 // Avoid leaking error details in case of invalid user (e.g. user not found or invalid account status)
                 // to prevent user enumeration via response content comparison
@@ -221,7 +217,7 @@ class Authenticator implements AuthorizationCheckerInterface
                     $e = new BadCredentialsException('Bad credentials.', 0, $e);
                 }
 
-                $response = $authenticator->failure($request, $e);
+                $response = $authenticator instanceof FailureHandlerInterface ? $authenticator->failure($request, $e) : null;
 
                 if (null !== $this->eventDispatcher) {
                     $this->eventDispatcher->dispatch($event = new AuthenticationFailureEvent($e, $authenticator, $request, $response));
@@ -256,5 +252,33 @@ class Authenticator implements AuthorizationCheckerInterface
         }
 
         return $this->accessDecisionManager->decide($token, [$attribute], $subject);
+    }
+
+    protected function executeAuthenticator(AuthenticatorInterface $authenticator, ServerRequestInterface $request, array $credentials): ?TokenInterface
+    {
+        $token = $authenticator->authenticate($request, $credentials, $this->firewallName);
+
+        if (null !== $token) {
+            if (null !== $this->limiter) {
+                $this->limiter->reset($request);
+            }
+
+            if (!$token instanceof PreAuthenticatedToken) {
+                $this->userChecker->checkPreAuth($token->getUser());
+            }
+
+            if (null !== $this->eventDispatcher) {
+                $this->eventDispatcher->dispatch($event = new AuthenticationSuccessEvent($token));
+                $token = $event->getAuthenticationToken();
+            }
+
+            $this->userChecker->checkPostAuth($token->getUser());
+
+            if ($this->eraseCredentials) {
+                $token->eraseCredentials();
+            }
+        }
+
+        return $token;
     }
 }

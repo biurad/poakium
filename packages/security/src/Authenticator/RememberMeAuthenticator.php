@@ -20,6 +20,8 @@ namespace Biurad\Security\Authenticator;
 
 use Biurad\Security\Handler\RememberMeHandler;
 use Biurad\Security\Interfaces\AuthenticatorInterface;
+use Biurad\Security\Interfaces\FailureHandlerInterface;
+use Biurad\Security\Interfaces\RequireTokenInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -38,7 +40,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class RememberMeAuthenticator implements AuthenticatorInterface
+class RememberMeAuthenticator implements AuthenticatorInterface, RequireTokenInterface, FailureHandlerInterface
 {
     private RememberMeHandler $rememberMeHandler;
     private UserProviderInterface $userProvider;
@@ -77,27 +79,26 @@ class RememberMeAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
-    public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
+    public function authenticate(ServerRequestInterface $request, array $credentials, string $firewallName): ?TokenInterface
     {
         $loadedUsers = $cookies = [];
-        $identifiers = \explode('|', \urldecode($request->getCookieParams()[$this->rememberMeHandler->getUsersIdCookie()] ?? '')) ?: [];
 
-        foreach ($identifiers as $identifier) {
-            $rawCookie = $request->getCookieParams()[$this->rememberMeHandler->getCookieName() . $identifier] ?? null;
+        foreach ($request->getCookieParams() as $cookieName => $rawCookie) {
+            if (empty($rawCookie) || !\str_starts_with($cookieName, $this->rememberMeHandler->getCookieName())) {
+                continue;
+            }
 
-            if (null !== $rawCookie) {
-                [$loadedUser, $cookie] = $this->rememberMeHandler->consumeRememberMeCookie($rawCookie, $this->userProvider);
-                $loadedUsers[] = $loadedUser;
+            [$loadedUser, $cookie] = $this->rememberMeHandler->consumeRememberMeCookie(\urldecode($rawCookie), $this->userProvider);
+            $loadedUsers[] = $loadedUser;
 
-                if (null !== $cookie) {
-                    $cookies[] = $cookie->withSecure('https' === $request->getUri()->getScheme());
-                }
+            if (null !== $cookie) {
+                $cookies[] = $cookie->withSecure('https' === $request->getUri()->getScheme());
             }
         }
 
         if (!empty($loadedUsers)) {
             $firstUser = \array_shift($loadedUsers);
-            $token = new RememberMeToken($firstUser, 'main', $this->rememberMeHandler->getSecret());
+            $token = new RememberMeToken($firstUser, $firewallName, $this->rememberMeHandler->getSecret());
 
             if (\count($loadedUsers) > 0) {
                 if (!$this->allowMultipleRememberMeTokens) {
@@ -105,15 +106,12 @@ class RememberMeAuthenticator implements AuthenticatorInterface
                 }
 
                 foreach ($loadedUsers as $user) {
-                    $token = new SwitchUserToken($user, 'main', $user->getRoles(), $token);
+                    $token = new SwitchUserToken($user, $firewallName, $user->getRoles(), $token);
                 }
             }
 
             if (\count($cookies) > 0) {
-                $token->setAttributes([
-                    RememberMeHandler::REMEMBER_ME => $cookies,
-                    RememberMeHandler::USERS_ID => $this->rememberMeHandler->getUsersIdCookie()
-                ]);
+                $token->setAttribute(RememberMeHandler::REMEMBER_ME, $cookies);
             }
 
             return $token;

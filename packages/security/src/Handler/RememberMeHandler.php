@@ -41,13 +41,12 @@ class RememberMeHandler
 {
     public const COOKIE_DELIMITER = ':';
     public const REMEMBER_ME = '_security.remember_me';
-    public const USERS_ID = '_remember_user_id';
 
     private ?TokenProviderInterface $tokenProvider;
     private ?TokenVerifierInterface $tokenVerifier;
     private ?SignatureHasher $signatureHasher;
     private Cookie $cookie;
-    private string $secret, $parameterName, $usersIdCookie;
+    private string $secret, $parameterName;
 
     public function __construct(
         string $secret,
@@ -55,11 +54,9 @@ class RememberMeHandler
         TokenVerifierInterface $tokenVerifier = null,
         SignatureHasher $signatureHasher = null,
         string $requestParameter = '_remember_me',
-        string $usersIdCookie = '_remember_user_id',
         array $options = []
     ) {
         $this->secret = $secret;
-        $this->usersIdCookie = $usersIdCookie;
         $this->parameterName = $requestParameter;
         $this->tokenProvider = $tokenProvider ?? new InMemoryTokenProvider();
         $this->tokenVerifier = $tokenVerifier ?? ($this->tokenProvider instanceof TokenVerifierInterface ? $this->tokenProvider : null);
@@ -90,11 +87,6 @@ class RememberMeHandler
     public function getCookieName(): string
     {
         return $this->cookie->getName();
-    }
-
-    public function getUsersIdCookie(): string
-    {
-        return $this->usersIdCookie;
     }
 
     /**
@@ -189,22 +181,21 @@ class RememberMeHandler
     public function clearRememberMeCookies(ServerRequestInterface $request): array
     {
         $cookies = [];
-        $identifiers = \explode('|', \urldecode($request->getCookieParams()[$this->usersIdCookie] ?? '')) ?: [];
 
-        foreach ($identifiers as $identifier) {
-            $clearCookie = $this->cookie;
-
-            if (null === $cookie = $request->getCookieParams()[$clearCookie->getName() . $identifier] ?? null) {
+        foreach ($request->getCookieParams() as $cookieName => $rawCookie) {
+            if (empty($rawCookie) || !\str_starts_with($cookieName, $this->getCookieName())) {
                 continue;
             }
 
+            $clearCookie = clone $this->cookie;
+            $rememberMeDetails = self::fromRawCookie(\urldecode($rawCookie));
+
             if (null !== $this->tokenProvider) {
-                $rememberMeDetails = self::fromRawCookie($cookie);
                 [$series, ] = \explode(':', $rememberMeDetails[3]);
                 $this->tokenProvider->deleteTokenBySeries($series);
             }
 
-            $cookies[] = $this->setCookieName($clearCookie->withExpires(1)->withValue(null), $identifier);
+            $cookies[] = $this->setCookieName($clearCookie->withExpires(1)->withValue(null), $rememberMeDetails[1]);
         }
 
         return $cookies;

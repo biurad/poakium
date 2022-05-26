@@ -19,12 +19,12 @@ declare(strict_types=1);
 namespace Biurad\Security\Authenticator;
 
 use Biurad\Security\Interfaces\AuthenticatorInterface;
+use Biurad\Security\Interfaces\FailureHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -35,7 +35,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class RemoteUserAuthenticator implements AuthenticatorInterface
+class RemoteUserAuthenticator implements AuthenticatorInterface, FailureHandlerInterface
 {
     private string $userKey;
     private string $credentialsKey;
@@ -60,24 +60,8 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
-    public function setToken(?TokenInterface $token): void
-    {
-        if (null !== $token) {
-            $this->tokenStorage->setToken($token);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function supports(ServerRequestInterface $request): bool
     {
-        $token = $this->tokenStorage->getToken();
-
-        if (null !== $token && !$token instanceof PreAuthenticatedToken) {
-            return $request->hasHeader('AUTH-SWITCH-USER');
-        }
-
         if (!$username = ($request->getServerParams()[$this->userKey] ?? null)) {
             $username = $request->getServerParams()[$this->credentialsKey] ?? null;
 
@@ -86,9 +70,7 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
             }
         }
 
-        if (null === $username) {
-            $this->clearToken($token);
-
+        if (empty($username)) {
             if (null !== $this->logger) {
                 $this->logger->debug('Skipping pre-authenticated authenticator no username could be extracted.', ['authenticator' => static::class]);
             }
@@ -97,7 +79,10 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
         }
 
         // do not overwrite already stored tokens from the same user (i.e. from the session)
-        if ($token instanceof PreAuthenticatedToken && $token->getUserIdentifier() === $username) {
+        if (
+            null !== ($token = $this->tokenStorage->getToken()) &&
+            (!$token instanceof PreAuthenticatedToken || $token->getUserIdentifier() === $username)
+        ) {
             if (null !== $this->logger) {
                 $this->logger->debug('Skipping pre-authenticated authenticator as the user already has an existing session.', ['authenticator' => static::class]);
             }
@@ -113,22 +98,11 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
     /**
      * {@inheritdoc}
      */
-    public function authenticate(ServerRequestInterface $request, array $credentials): ?TokenInterface
+    public function authenticate(ServerRequestInterface $request, array $credentials, string $firewallName): ?TokenInterface
     {
-        if (!empty($credentials)) {
-            return null;
-        }
         $user = $this->userProvider->loadUserByIdentifier($this->userKey);
 
-        if ($request->hasHeader('AUTH-SWITCH-USER')) {
-            $token = $this->tokenStorage->getToken();
-
-            if ($token && $this->userKey !== $token->getUserIdentifier()) {
-                $token = new SwitchUserToken($user, 'main', $user->getRoles(), $token, (string) $request->getUri());
-            }
-        }
-
-        return $token ?? new PreAuthenticatedToken($user, 'main', $user->getRoles());
+        return $token ?? new PreAuthenticatedToken($user, $firewallName, $user->getRoles());
     }
 
     /**
@@ -136,13 +110,8 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
      */
     public function failure(ServerRequestInterface $request, AuthenticationException $exception): ?ResponseInterface
     {
-        $this->clearToken($this->tokenStorage->getToken(), $exception);
+        $token =$this->tokenStorage->getToken();
 
-        return null;
-    }
-
-    private function clearToken(?TokenInterface $token, AuthenticationException $exception = null): void
-    {
         if ($token instanceof PreAuthenticatedToken) {
             $this->tokenStorage->setToken();
 
@@ -154,5 +123,7 @@ class RemoteUserAuthenticator implements AuthenticatorInterface
                 }
             }
         }
+
+        return null;
     }
 }

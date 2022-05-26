@@ -52,7 +52,7 @@ class AccessMap implements AccessMapInterface
             throw new \InvalidArgumentException(\sprintf('The request must be an instance of %s.', ServerRequest::class));
         }
 
-        if ([] !== $this->map) {
+        if (!empty($this->map)) {
             $request = $request->getRequest();
 
             foreach ($this->map as [$requestMatcher, $attributes, $channel]) {
