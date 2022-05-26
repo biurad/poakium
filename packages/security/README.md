@@ -62,20 +62,23 @@ $hasherFactory = new PasswordHasherFactory([
     // Can more than one algorithm be used?
 ]);
 $tokenStorage = new CacheableTokenStorage($session = new Session());
-$tokenProvider = new PdoTokenProvider('mysql://root:password@localhost:3306/test');
+$rememberMeHandler = new RememberMeHandler('cookie-secret', new PdoTokenProvider('mysql://root:password@localhost:3306/test'));
 $authenticators = [
     // You can add the csrf authenticator
-    new FormLoginAuthenticator($userProvider, $hasherFactory, null, $session),
-    new RememberMeAuthenticator(new RememberMeHandler('cookie-secret', $tokenProvider), $userProvider, true),
+    new FormLoginAuthenticator($userProvider, $hasherFactory, $rememberMeHandler),
+    new RememberMeAuthenticator($rememberMeHandler, $userProvider, true),
 ];
 
 $request = \Biurad\Http\Factory\Psr17Factory::fromGlobalRequest();
 $authenticator = new Authenticator($authenticators, $tokenStorage, $accessDecisionManager);
 
-// The parameters which should be fetched from request ...
-$credentials = ['_identifier', '_password', '_remember_me'];
+if (null !== $authenticator->getToken()) {
+    // Token is already set, so we're already authenticated, we can skip the authentication process.
+}
 
 try {
+    // The parameters which should be fetched from request ...
+    $credentials = ['_identifier', '_password', '_remember_me'];
     $response = $authenticator->authenticate($request, $credentials);
 
     // This means an error was caught by transformed into response
@@ -86,12 +89,19 @@ try {
     // You choose how you want to handle exception
 }
 
-// The token is ready for use
-$token = $authenticator->getToken();
+if (null !== $token = $authenticator->getToken()) {
+    // ... You can use the token to access the user data.
 
-// This is an array of cookies which can be used to set into the browser's response.
-$rememberMeCookies = Helper::createRememberMeCookie($token, $request);
+    if ($fromToken->hasAttribute($cookieId = RememberMeHandler::REMEMBER_ME)) {
+        $tokenCookies = $fromToken->getAttribute($cookieId);
 
+        if (!\is_array($tokenCookies)) {
+            $tokenCookies = [$tokenCookies];
+        }
+
+        // ... You can set the cookies to the browser.
+    }
+}
 ```
 
 ## 📓 Documentation
