@@ -16,7 +16,7 @@ declare(strict_types=1);
  *
  */
 
-namespace Biurad\Security\Handler;
+namespace Biurad\Security\Authenticator;
 
 use Biurad\Security\Interfaces\AuthenticatorInterface;
 use Psr\Http\Message\ServerRequestInterface;
