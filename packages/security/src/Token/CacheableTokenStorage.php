@@ -44,7 +44,21 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
     {
         $this->storage = function (string $key, TokenInterface $token = null) use ($storage, $expiry): ?TokenInterface {
             if (1 === \func_num_args()) {
-                return $this->safelyUnserialize($storage instanceof CacheItemPoolInterface ? $storage->getItem($key)->get() : $storage->get($key));
+                if ($storage instanceof CacheItemPoolInterface) {
+                    return $storage->getItem($key)->get();
+                }
+
+                if (\is_array($token = $storage->get($key))) {
+                    [$token, $expiry] = $token;
+
+                    if (\time() > $expiry) {
+                        $this->setToken();
+
+                        return null; // token has expired
+                    }
+                }
+
+                return $token;
             }
 
             if (null === $token) {
@@ -57,11 +71,9 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
                 if ($expiry instanceof \DateTimeInterface) {
                     $expiry = $expiry->getTimestamp();
                 }
-                $storage->set($key, \serialize($expiry ? [$token, $expiry] : $token));
+                $storage->set($key, $expiry ? [$token, $expiry] : $token);
             } else {
-                $item = $storage->getItem($key);
-                $item->set(\serialize($token));
-
+                $item = $storage->getItem($key)->set($token);
                 $storage->save(\is_int($expiry) ? $item->expiresAfter(new \DateInterval('PT'.$expiry.'S')) : $item->expiresAt($expiry));
             }
 
@@ -91,43 +103,5 @@ class CacheableTokenStorage implements TokenStorageInterface, ResetInterface
     public function reset(): void
     {
         $this->setToken();
-    }
-
-    private function safelyUnserialize(?string $serializedToken): ?TokenInterface
-    {
-        if (null === $serializedToken) {
-            return $serializedToken;
-        }
-
-        $token = null;
-        $prevUnserializeHandler = \ini_set('unserialize_callback_func', __CLASS__ . '::handleUnserializeCallback');
-        $prevErrorHandler = \set_error_handler(static function ($type, $msg, $file, $line, $context = []) use (&$prevErrorHandler) {
-            if (__FILE__ === $file) {
-                throw new \ErrorException($msg, 0x37313BC, $type, $file, $line);
-            }
-
-            return $prevErrorHandler ? $prevErrorHandler($type, $msg, $file, $line, $context) : false;
-        });
-
-        try {
-            if (\is_array($token = \unserialize($serializedToken))) {
-                [$token, $expiry] = $token;
-
-                if (\time() > $expiry) {
-                    $this->setToken();
-
-                    return null; // token has expired
-                }
-            }
-        } catch (\ErrorException $e) {
-            if (0x37313BC !== $e->getCode()) {
-                throw $e;
-            }
-        } finally {
-            \restore_error_handler();
-            \ini_set('unserialize_callback_func', $prevUnserializeHandler);
-        }
-
-        return $token instanceof TokenInterface ? $token : null;
     }
 }
