@@ -1,0 +1,112 @@
+#!/usr/bin/env php
+<?php
+
+if (!\file_exists($autoload = __DIR__ . '/vendor/autoload.php') && \function_exists('shell_exec')) {
+    $path = \shell_exec('composer -v') ? 'composer' : ''; // check for global composer command
+
+    // fallback to download composer.phar
+    if (!$path || !\preg_match('/(composer|composer\.phar)$/', $path)) {
+        \shell_exec('curl -s https://getcomposer.org/installer | php');
+        $path = 'php composer.phar';
+    }
+
+    echo 'Preparing to install vendor dependencies...' . \PHP_EOL . \PHP_EOL;
+    echo \shell_exec($path . '  install --ansi --no-interaction --prefer-dist --optimize-autoloader');
+    echo \PHP_EOL . \PHP_EOL;
+}
+
+require $autoload;
+
+[$execute, $processName, $command, $args] = (static function () {
+    $arguments = $_SERVER['argv'];
+    $execute = static function (string $command, array $args = [], string $cwd = null, array $env = null, callable $callback = null) {
+        $process = new Symfony\Component\Process\Process([$command, ...$args], $cwd, $env);
+        echo \PHP_EOL;
+
+        return $process->run(fn (string $type, string $data) => $callback ? $callback($type, $data) : print($data));
+    };
+
+    return [$execute, \array_shift($arguments), \array_shift($arguments), $arguments];
+})();
+
+switch ($command) {
+    case 'update':
+        echo \PHP_EOL. 'Preparing to update vendor dependencies...' . \PHP_EOL;
+        $execute('composer', ['update', '--ansi', '--no-interaction', '--prefer-dist', '--optimize-autoloader', ...$args]);
+    break;
+    case 'reinstall':
+        $execute('php', ['./poakium', 'purge']) | $execute('php', ['./poakium']);
+    break;
+    case 'purge':
+        if (0 !== $execute('rm', ['-rf', 'vendor/', 'packages/*/vendor/', 'packages/*/composer.lock'])) {
+            foreach (\glob('./{vendor/,composer.lock,packages/*/{vendor/,composer.lock}}', \GLOB_BRACE) as $pPath) {
+                Nette\Utils\FileSystem::delete(__DIR__ . \substr($pPath, 1));
+            }
+        }
+        echo 'Vendor dependencies purged successfully' . \PHP_EOL;
+    break;
+    case 'package':
+        [$folder, $repo, $branch] = $args;
+
+        if ($execute('git', ['show-branch', $folder])) {
+            echo \PHP_EOL . 'Git Branch "' . $folder . '" exists, delete existing branch or use a different folder name.';
+            exit(1);
+        }
+
+        if ($execute('git', ['status', '--porcelain'])) {
+            echo \PHP_EOL . 'Git working directory is dirty, commit or stash changes before creating a new branch.';
+            exit(1);
+        }
+
+        if ('N' === \readline('It\'s recommended to use a Terminal supporting (mkdir, mv). Continue (Y/N): ')) {
+            exit(1);
+        }
+
+        if ($execute('git', ['remote', 'show', $folder])) {
+            $execute('git', ['remote', 'remove', $folder]);
+        }
+
+        echo \PHP_EOL . 'Fetching ' . $folder . \PHP_EOL;
+        $execute('git', ['remote', 'add', $folder, $repo]);
+        $execute('git', ['config', '--add', 'remote.' . $folder . '.fetch', '+refs/heads/*:refs/tags/' . $folder . '/*']);
+        $execute('git', ['config', 'remote.' . $folder . '.tagOpt', '--no-tags']);
+        $execute('git', ['fetch', '--atomic', $folder]);
+
+        echo \PHP_EOL . 'Creating a new branch "' . $folder . '"' . \PHP_EOL;
+        $execute('git', ['checkout', '--orphan', $folder]);
+
+        echo \PHP_EOL . 'Cleaning up "' . $folder . '" branch' . \PHP_EOL;
+        $execute('git', ['rm', '-rf', '--ignore-unmatch']);
+        Nette\Utils\FileSystem::delete(__DIR__ . '/');
+
+        echo \PHP_EOL . 'Merging commits from "' . $repo . '" to "' . $folder . '" branch' . \PHP_EOL;
+        $execute('git', ['merge', '--no-commit', '-s', 'ours', "$folder/$branch", '--allow-unrelated-histories', '--no-ff']);
+        $execute("mv * packages/$folder | mkdir -p packages/$folder");
+        $execute('git', ['add', '-A']);
+        $execute('git', ['commit', '-m', "Merge $repo/$branch to packages/$folder"]);
+        $execute('git', ['checkout', '.']);
+        
+        echo \PHP_EOL . 'Merging commits from "' . $folder . '" branch into main branch' . \PHP_EOL;
+        $execute('git', ['checkout', 'main']);
+        $execute('git', ['merge', $folder, '--allow-unrelated-histories']);
+
+        echo \PHP_EOL . 'Succeeded! You can now push your branch to your remote repository.' . \PHP_EOL;
+    break;
+    default:
+       echo <<<'EOT'
+
+██████╗  ██████╗  █████╗ ██╗  ██╗██╗██╗   ██╗███╗   ███╗
+██╔══██╗██╔═══██╗██╔══██╗██║ ██╔╝██║██║   ██║████╗ ████║
+██████╔╝██║   ██║███████║█████╔╝ ██║██║   ██║██╔████╔██║
+██╔═══╝ ██║   ██║██╔══██║██╔═██╗ ██║██║   ██║██║╚██╔╝██║
+██║     ╚██████╔╝██║  ██║██║  ██╗██║╚██████╔╝██║ ╚═╝ ██║
+╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝     ╚═╝
+
+EOT;
+       echo \PHP_EOL . 'Poakium CLI ' . (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s') . \PHP_EOL;
+       echo \PHP_EOL . 'Available commands:' . \PHP_EOL;
+       echo '  install              =  Installs the dependencies from composer.json to /packages/*/' . \PHP_EOL;
+       echo '  reinstall            =  Uninstalls and reinstalls composer dependencies to /packages/*/' . \PHP_EOL;
+       echo '  purge                =  Removes all installed composer dependencies from /packages/*/' . \PHP_EOL;
+       echo '  package              =  Adds a subtree of an independent repo into /packages/*/' . \PHP_EOL;
+}
