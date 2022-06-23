@@ -48,13 +48,13 @@ switch ($command) {
     case 'package':
         [$folder, $repo, $branch] = $args;
 
-        if ($execute('git', ['show-branch', $folder])) {
-            echo \PHP_EOL . 'Git Branch "' . $folder . '" exists, delete existing branch or use a different folder name.';
+        if (0 === $execute('git', ['show-branch', $folder])) {
+            echo \PHP_EOL . 'Git Branch "' . $folder . '" exists, delete existing branch or use a different folder name.' . \PHP_EOL;
             exit(1);
         }
 
-        if ($execute('git', ['status', '--porcelain'])) {
-            echo \PHP_EOL . 'Git working directory is dirty, commit or stash changes before creating a new branch.';
+        if (0 === $execute('git', ['status', '--porcelain'])) {
+            echo \PHP_EOL . 'Git working directory is dirty, commit or stash changes before creating a new branch.' . \PHP_EOL;
             exit(1);
         }
 
@@ -62,7 +62,7 @@ switch ($command) {
             exit(1);
         }
 
-        if ($execute('git', ['remote', 'show', $folder])) {
+        if (0 === $execute('git', ['remote', 'show', $folder])) {
             $execute('git', ['remote', 'remove', $folder]);
         }
 
