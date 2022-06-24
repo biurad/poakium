@@ -11,7 +11,7 @@ if (!\file_exists($autoload = __DIR__ . '/vendor/autoload.php') && \function_exi
     }
 
     echo 'Preparing to install vendor dependencies...' . \PHP_EOL . \PHP_EOL;
-    echo \shell_exec($path . '  install --ansi --no-interaction --prefer-dist --optimize-autoloader');
+    echo \shell_exec($path . '  install --no-interaction --prefer-dist --optimize-autoloader');
     echo \PHP_EOL . \PHP_EOL;
 }
 
