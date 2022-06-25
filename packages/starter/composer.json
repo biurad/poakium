@@ -1,0 +1,54 @@
+{
+    "name": "biurad/php-starter",
+    "description": "A template repository for setting up a new PHP library package.",
+    "type": "library",
+    "keywords": ["biurad","php"],
+    "homepage": "https://github.com/biurad/php-starter",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        }
+    ],
+    "support": {
+        "docs": "https://github.com/biurad/php-starter/tree/master/docs",
+        "issues": "https://github.com/biurad/php-starter/issues?state=open",
+        "rss": "https://github.com/biurad/php-starter/releases.atom",
+        "source": "https://github.com/biurad/php-starter"
+    },
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "composer/package-versions-deprecated": "^1.11",
+        "phpstan/phpstan": "^0.12",
+        "phpunit/phpunit": "^8.5 || ^9.5",
+        "squizlabs/php_codesniffer": "^3.6",
+        "vimeo/psalm": "^4.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Biurad\\Package\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Biurad\\Package\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpcs": "phpcs -q",
+        "phpstan": "phpstan analyse",
+        "psalm": "psalm --show-info=true",
+        "phpunit": "phpunit --coverage-text",
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@psalm",
+            "@phpunit"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
