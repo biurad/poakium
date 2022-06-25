@@ -1,0 +1,39 @@
+{
+    "application": "ConsoleLite Configuration",
+    "generated": "2019/06/17 03:41",
+    "version": "1.0.0",
+    "stuble": {
+        "config": {
+            "name": "ConsoleLite Stub Generator"
+        }
+    },
+    "compile": {
+        "config": {
+            "name": "clite.phar",
+            "index": "docs/tests/test",
+            "compression": 0,
+            "signature": null
+        },
+        "pack": {
+            "autoload": "vendor/autoload.php",
+            "bin": "docs/tests/test",
+            "files": [
+                "clite.json",
+                "composer.json"
+            ],
+            "directory": [
+                "src/",
+                "vendor/"
+            ],
+            "excludes": [
+                "Tests/*",
+                "!*.php"
+            ]
+        },
+        "unpack": {
+            "extract-to": "unpack",
+            "files": null,
+            "overwrite": true
+        }
+    }
+}

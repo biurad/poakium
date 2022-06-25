@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "name": "Clite Package",
+    "properties": {
+        "application": {
+            "description": "The application name, could be ConsoleLite or project name",
+            "type": "string"
+        },
+        "generated": {
+            "description": "Released date, in 'YYYY-MM-DD', 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DDTHH:MM:SSZ' format.",
+            "type": "string"
+        },
+        "version": {
+            "description": "The Phar build version number for updates",
+            "type": "string"
+        },
+        "stuble": {
+            "type": "object",
+            "description": "The relative file path to the stub file, or the flag to use the default stub.",
+            "additionalProperties": true
+        },
+        "compile": {
+            "type": "object",
+            "required": [ "config", "pack", "unpack" ],
+            "description": "This is a package configuation for phar compile",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "description": "The phar build and unbuild configurations",
+                    "additionalProperties": true
+                },
+                "pack": {
+                    "type": "object",
+                    "description": "The configurations to build a phar",
+                    "additionalProperties": true
+                },
+                "unpack": {
+                    "type": "object",
+                    "description": "This configurations is to unpack files out of a phar file",
+                    "additionalProperties": true
+                }
+            }
+        }
+    }
+}

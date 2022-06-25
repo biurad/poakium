@@ -1,0 +1,40 @@
+{
+    "name": "biurad/consolelite",
+    "description": "This is the light weight version of Symfony Console",
+    "keywords": [
+        "autoloader",
+        "php5",
+        "php7",
+        "biurad",
+        "biurad-toolbox",
+        "composer-lite"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Divine Niiquaye",
+            "email": "support@biuhub.net"
+        }
+    ],
+    "minimum-stability": "stable",
+    "config": {
+        "vendor-dir": "vendor",
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "BiuradPHP\\Toolbox\\ConsoleLite\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BiuradPHP\\Toolbox\\ConsoleLiteTest\\": "docs/tests/"
+        }
+    },
+    "require": {
+        "biurad/filephp": "^1.0",
+        "psr/log": "^1.1",
+        "seld/jsonlint": "^1.7"
+    }
+}

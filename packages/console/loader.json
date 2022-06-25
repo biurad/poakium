@@ -1,0 +1,24 @@
+{
+    "application": "Autoload Jet",
+    "generated": "2019/06/06 04:03",
+    "local": {
+        "rooturl": "C:/wamp64/www/biurad-development/Vendor/consolelite",
+        "destination": "C:/wamp64/www/biurad-development/Vendor/consolelite",
+        "save-file": 1,
+        "save-filename": "autoload.php",
+        "exclude-namespace": [],
+        "exclude-path": [],
+        "external-path": "C:/wamp64/www/biurad-development/Vendor/filephp"
+    },
+    "remote": {
+        "destination": "C:/wamp64/www/biurad-development/Vendor/consolelite",
+        "rooturl": [
+            "https://downloads.biurad.ml/test.zip",
+            "https://raw.githubusercontent.com/biurad/Console-lite/master/logo.png"
+        ]
+    },
+    "git": {
+        "destination": "C:/wamp64/www/biurad-development/Vendor/consolelite",
+        "name": ["biurad/hello-world 1.* --no-dev"]
+    }
+}
