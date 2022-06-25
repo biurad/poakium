@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<psalm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="https://getpsalm.org/schema/config"
+       name="Psalm for PHP Http Galaxy"
+       useDocblockTypes="true"
+       errorLevel="3"
+       strictBinaryOperands="false"
+       rememberPropertyAssignmentsAfterCall="true"
+       checkForThrowsDocblock="false"
+       throwExceptionOnError="0"
+       ensureArrayStringOffsetsExist="true"
+       ensureArrayIntOffsetsExist="false"
+       resolveFromConfigFile="true"
+       xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <file name="src\Factories\LaminasPsr7Factory.php"/>
+            </errorLevel>
+        </UndefinedClass>
+
+        <PossiblyUndefinedMethod>
+            <errorLevel type="suppress">
+                <file name="src\Session.php"/>
+            </errorLevel>
+        </PossiblyUndefinedMethod>
+
+        <InvalidDocblock>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr17Factory.php"/>
+            </errorLevel>
+        </InvalidDocblock>
+
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr7Bridge.php"/>
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+
+        <PossiblyNullArgument>
+            <errorLevel type="suppress">
+                <referencedFunction name="Biurad\Http\UploadedFile::__construct" />
+            </errorLevel>
+        </PossiblyNullArgument>
+
+        <InvalidScalarArgument>
+            <errorLevel type="suppress">
+                <referencedFunction name="UnexpectedValueException::__construct"/>
+            </errorLevel>
+        </InvalidScalarArgument>
+
+        <ArgumentTypeCoercion>
+            <errorLevel type="suppress">
+                <referencedFunction name="ReflectionClass::implementsInterface"/>
+            </errorLevel>
+        </ArgumentTypeCoercion>
+
+        <PossiblyUndefinedStringArrayOffset>
+            <errorLevel type="suppress">
+                <file name="src\Factories\Psr7Bridge.php"/>
+                <file name="src\Factories\LaminasPsr7Factory.php"/>
+            </errorLevel>
+        </PossiblyUndefinedStringArrayOffset>
+    </issueHandlers>
+</psalm>
