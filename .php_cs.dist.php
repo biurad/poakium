@@ -59,5 +59,23 @@ return (new PhpCsFixer\Config())
                 'inheritDoc' => 'inheritdoc',
             ],
         ],
+        'blank_line_before_statement' => [
+            'statements' => [
+                'do',
+                'for',
+                'foreach',
+                'if',
+                'include',
+                'include_once',
+                'require',
+                'require_once',
+                'return',
+                'switch',
+                'throw',
+                'try',
+                'while',
+                'yield',
+            ],
+        ],
     ])
 ;
