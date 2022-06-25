@@ -1,0 +1,50 @@
+{
+    "name": "biurad/biurad-loader",
+    "type": "library",
+    "description": "This dependency is a robust package for loading files, classes, class aliases, annotations, and store data",
+    "keywords": ["loader", "loader manager", "biuradphp", "php7"],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        },
+        {
+            "name": "Biurad Lap Community",
+            "homepage": "https://biurad.com/contributors"
+        }
+    ],
+    "require": {
+        "php": "^7.0",
+        "ext-json": "*",
+        "ext-tokenizer": "*",
+        "psr/log": "1.1"
+    },
+    "require-dev": {
+        "composer/package-versions-deprecated": "^1.8",
+        "phpstan/phpstan": "^0.12",
+        "phpstan/phpstan-strict-rules": "^0.12",
+        "phpunit/phpunit": "^8.5 || ^9.0",
+        "squizlabs/php_codesniffer": "^3.5",
+        "vimeo/psalm": "^3.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "BiuradPHP\\Loader\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+	"autoload-dev": {
+        "psr-4": {
+            "BiuradPHP\\Loader\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "suggest": {
+        "symfony/yaml": "Support loading files in yml or yaml format, if native yaml extension is not avaliable",
+        "nette/neon": "Support loading files in neon format, since nette/neon is an advanced version of yaml"
+    }
+}

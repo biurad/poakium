@@ -1,0 +1,14 @@
+test:
+    dir:
+        root: true
+        lib: ~
+    forbidden_file_extensions:
+        - php
+        - php3
+        - pl
+        - com
+        - exe
+        - bat
+        - cgi
+        - htaccess
+    debugger_token: debug
