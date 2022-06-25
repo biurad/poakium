@@ -1,0 +1,17 @@
+# Path-based git attributes
+# https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html
+
+# Auto-detect text files, ensure they use LF.
+# See core.whitespace @ http://git-scm.com/docs/git-config for whitespace flags.
+text=auto eol=lf whitespace=blank-at-eol,blank-at-eof
+
+# Ignore all test and documentation with "export-ignore".
+#/.editorconfig        export-ignore
+#/.gitattributes       export-ignore
+/.github              export-ignore
+#/.gitignore           export-ignore
+# /phpcs.xml.dist       export-ignore
+# /phpstan.neon.dist    export-ignore
+# /phpunit.xml.dist     export-ignore
+# /psalm.xml            export-ignore
+# /tests                export-ignore

@@ -1,0 +1,122 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * This file is part of Biurad opensource projects.
+ *
+ * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @license   https://opensource.org/licenses/BSD-3-Clause License
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+if (!\in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+    echo 'Warning: The console should be invoked via the CLI version of PHP, not the ' . \PHP_SAPI . ' SAPI' . \PHP_EOL;
+}
+
+if (\version_compare($ver = \PHP_VERSION, $req = '8.0', '<')) {
+    throw new RuntimeException(\sprintf("You are running PHP %s, but Application needs at least PHP %s to run.\n", $ver, $req));
+}
+
+if (!\file_exists(__DIR__ . '/vendor/autoload.php') && \function_exists('system')) {
+    // Before we can even start, we need to run composer first
+    if (!\function_exists('shell_exec')) {
+        throw new RuntimeException('Please do run \'composer install\' to use this application');
+    }
+
+    // check for global composer install
+    $path = 0 === \stripos(\PHP_OS, 'win') ? (null !== \shell_exec('composer info') ? 'composer' : '') : \trim(\shell_exec('command -v composer'));
+
+    // fallback to download composer.phar
+    if (!$path || !\preg_match('/(composer|composer\.phar)$/', $path)) {
+        \shell_exec('curl -s https://getcomposer.org/installer | php');
+        $path = 'php composer.phar';
+    }
+
+    echo "Preparing to install vendor dependencies...\n\n";
+    echo \system($path . ' --no-interaction -o update');
+    echo "\n\n";
+}
+
+if ('self-update' === ($argv[1] ?? false)) {
+    if (!\function_exists('curl_init') && !\class_exists(ZipArchive::class)) {
+        throw new RuntimeException('Please install curl and zip extension to self update this application');
+    }
+
+    \curl_setopt_array($curl = \curl_init('https://api.github.com/repos/biurad/php-framework/tags'), $context = [
+        \CURLOPT_SSL_VERIFYPEER => false,
+        \CURLOPT_RETURNTRANSFER => true,
+        \CURLOPT_HTTPHEADER => ['Accept: application/vnd.github.v3+json', 'User-Agent: biurad/php-framework'],
+    ]);
+    $response = \json_decode(\curl_exec($curl), true);
+
+    if ($error = \curl_error($curl)) {
+        throw new RuntimeException($error);
+    }
+    \curl_close($curl);
+    $selectVersion = \readline('Available Versions are: ' . \implode(', ', \array_column($response, 'name')) . ': Input version: ');
+    echo \PHP_EOL;
+
+    foreach ($response as $tag) {
+        if (empty($selectVersion) || $tag['name'] === $selectVersion) {
+            $selectVersion = $tag['name'];
+            $zipBallUrl = $tag['zipball_url'];
+            break;
+        }
+    }
+
+    if (!isset($zipBallUrl)) {
+        throw new RuntimeException('Version not found. ' . \implode(', ', \array_column($response, 'name')));
+    }
+
+    \curl_setopt_array($curl = \curl_init($zipBallUrl), $context + [
+        \CURLOPT_FOLLOWLOCATION => true,
+        \CURLOPT_HEADER => false,
+        \CURLOPT_NOPROGRESS => false, // needed to make progress function work
+        \CURLOPT_FILE => $zipFile = \fopen($zipFileName = 'rade_zip_' . \random_int(0, 10000) . '.zip', 'wb+'),
+        \CURLOPT_PROGRESSFUNCTION => static function ($ch, $dlSize, $dlNow, $ulSize, $ulNow): void {
+            if ($dlSize > 0) {
+                $percent = \round($dlNow / $dlSize * 100, 2) . '%';
+                echo \sprintf("\033[32mDownloading %s (%s)...\033[0m\r", \intval($dlSize / 1024) . 'KB', $percent);
+            }
+        },
+    ]);
+    $response = \curl_exec($curl);
+    echo \PHP_EOL; // new line after progress bar
+
+    if ($error = \curl_error($curl)) {
+        throw new RuntimeException($error);
+    }
+    \curl_close($curl);
+    \fclose($zipFile);
+    $zip = new ZipArchive();
+    $replace = 'n';
+
+    if (true !== $zip->open($zipFileName)) {
+        throw new RuntimeException('Unable to open the Zip File');
+    }
+
+    for ($i = 1; $i < $zip->numFiles; ++$i) {
+        $filename = \substr($f = $zip->getNameIndex($i), \strpos($f, '/') + 1);
+
+        if (\file_exists($path = __DIR__ . '/' . $filename) && 'all' !== $replace) {
+            $replace = \readline("\nFile `" . $filename . '` already exists. Replace all files? (y/n/all): ');
+
+            if ('y' !== $replace) {
+                continue;
+            }
+        } elseif ($dir = \substr($filename, 0, \strrpos($filename, '/'))) {
+            @\mkdir(__DIR__ . '/' . $dir, 0777, true);
+        }
+        @\file_put_contents($path, $zip->getFromIndex($i));
+    }
+
+    $zip->close();
+    \unlink($zipFileName);
+    echo \PHP_EOL . \sprintf('Successfully updated to %s', $selectVersion) . \PHP_EOL;
+    exit(0);
+}
+
+// Let's initialise console application
+require __DIR__ . '/public/index.php';
