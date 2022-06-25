@@ -46,50 +46,60 @@ switch ($command) {
         echo 'Vendor dependencies purged successfully' . \PHP_EOL;
     break;
     case 'package':
-        [$folder, $repo, $branch] = $args;
+        foreach ($args as $package) {
+            [$repo, $folder] = \explode('@', $package, 2);
+            [$folder, $remote] = \str_contains($folder, ':') ? \explode(':', $folder, 2) : [$folder, null];
 
-        if (0 === $execute('git', ['show-branch', $folder])) {
-            echo \PHP_EOL . 'Git Branch "' . $folder . '" exists, delete existing branch or use a different folder name.' . \PHP_EOL;
-            exit(1);
+            $execute('git', ['status', '--porcelain'], callback: static function (string $type, string $data) {
+                if (!empty($data)) {
+                    echo \PHP_EOL . 'Git working directory is dirty, commit or stash changes before creating a new branch.' . \PHP_EOL;
+                    exit(1);
+                }
+            });
+
+            echo 'Fetching ' . $folder . \PHP_EOL;
+            $execute(
+                'git',
+                ['config', '--get', 'remote.' . ($r = $remote ?? $folder) . 'fetch'],
+                callback: static function (string $type, string $data) use ($r, $repo, $execute) {
+                    if (empty($data)) {
+                        echo 'Remote ' . $r . ' not found, creating...' . \PHP_EOL;
+                        $execute('git', ['remote', 'add', $r, $repo]); // add remote repo
+                        $execute('git', ['config', '--add', "remote.$r.fetch", "refs/tags/*:refs/tags/$r/*"]);
+                        $execute('git', ['config', "remote.$r.tagOpt", '--no-tags']);
+                    }
+                }
+            );
+            $execute('git', ['fetch', '--atomic', $r]); // fetch remote repo
+            $execute(
+                'git',
+                ['branch', '-r', '-l', "$r/*", '--no-color', '--format', '%(refname:lstrip=3)'],
+                callback: function (string $type, string $data) use ($r, $repo, $folder, $execute) {
+                    foreach (\explode("\n", $data, -1) as $branch) {
+                        echo 'Switching and cleaning branch ' . ($b = $r . '-' . $branch) . \PHP_EOL;
+                        $execute('git', ['symbolic-ref', 'HEAD', 'refs/heads/' . \trim($b)]); // switch to branch
+                        $execute('git', ['clean', '-f', '-d', '-x']); // clean up
+                        $execute('git', ['rm', '-rfq', '--ignore-unmatch', '.']); // Extra to ensure everything is removed
+                        $execute('git', ['reset']);
+
+                        echo "Merging commits from $folder/$branch" . ' to "' . $b . '" branch' . \PHP_EOL;
+                        $execute('git', ['merge', '--no-commit', '-s', 'ours', "$r/$branch", '--allow-unrelated-histories']);
+                        \mkdir($gitFolder = 'packages/' . $folder, recursive: true); // create folder if not exists
+
+                        foreach (\glob('{*,.*}', GLOB_BRACE) as $gitFile) {
+                            if (\in_array($gitFile, ['.', '..', '.git', 'packages'], true)) {
+                                continue;
+                            }
+                            $execute('git', ['mv', '-f', $gitFile, $gitFolder . '/']); // move files to packages folder
+                        }
+                        $execute('git', ['add', '-A']); // add all files to index
+                        $execute('git', ['commit', '-m', 'Merge ' . \substr($repo, 0, -4) .  "/$branch", '--allow-empty']); // commit changes
+                        $execute('git', ['merge', 'main', '--allow-unrelated-histories']); // rebase from main branch
+                    }
+                }
+            );
         }
-
-        if (0 === $execute('git', ['status', '--porcelain'])) {
-            echo \PHP_EOL . 'Git working directory is dirty, commit or stash changes before creating a new branch.' . \PHP_EOL;
-            exit(1);
-        }
-
-        if ('N' === \readline('It\'s recommended to use a Terminal supporting (mkdir, mv). Continue (Y/N): ')) {
-            exit(1);
-        }
-
-        if (0 === $execute('git', ['remote', 'show', $folder])) {
-            $execute('git', ['remote', 'remove', $folder]);
-        }
-
-        echo \PHP_EOL . 'Fetching ' . $folder . \PHP_EOL;
-        $execute('git', ['remote', 'add', $folder, $repo]);
-        $execute('git', ['config', '--add', 'remote.' . $folder . '.fetch', '+refs/heads/*:refs/tags/' . $folder . '/*']);
-        $execute('git', ['config', 'remote.' . $folder . '.tagOpt', '--no-tags']);
-        $execute('git', ['fetch', '--atomic', $folder]);
-
-        echo \PHP_EOL . 'Creating a new branch "' . $folder . '"' . \PHP_EOL;
-        $execute('git', ['checkout', '--orphan', $folder]);
-
-        echo \PHP_EOL . 'Cleaning up "' . $folder . '" branch' . \PHP_EOL;
-        $execute('git', ['rm', '-rf', '--ignore-unmatch']);
-        Nette\Utils\FileSystem::delete(__DIR__ . '/');
-
-        echo \PHP_EOL . 'Merging commits from "' . $repo . '" to "' . $folder . '" branch' . \PHP_EOL;
-        $execute('git', ['merge', '--no-commit', '-s', 'ours', "$folder/$branch", '--allow-unrelated-histories', '--no-ff']);
-        $execute("mv * packages/$folder | mkdir -p packages/$folder");
-        $execute('git', ['add', '-A']);
-        $execute('git', ['commit', '-m', "Merge $repo/$branch to packages/$folder"]);
         $execute('git', ['checkout', '.']);
-        
-        echo \PHP_EOL . 'Merging commits from "' . $folder . '" branch into main branch' . \PHP_EOL;
-        $execute('git', ['checkout', 'main']);
-        $execute('git', ['merge', $folder, '--allow-unrelated-histories']);
-
         echo \PHP_EOL . 'Succeeded! You can now push your branch to your remote repository.' . \PHP_EOL;
     break;
     default:
@@ -105,8 +115,8 @@ switch ($command) {
 EOT;
        echo \PHP_EOL . 'Poakium CLI ' . (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s') . \PHP_EOL;
        echo \PHP_EOL . 'Available commands:' . \PHP_EOL;
-       echo '  install              =  Installs the dependencies from composer.json to /packages/*/' . \PHP_EOL;
-       echo '  reinstall            =  Uninstalls and reinstalls composer dependencies to /packages/*/' . \PHP_EOL;
-       echo '  purge                =  Removes all installed composer dependencies from /packages/*/' . \PHP_EOL;
-       echo '  package              =  Adds a subtree of an independent repo into /packages/*/' . \PHP_EOL;
+       echo '  update                       =  Updates the dependencies from composer.json for /packages/*/' . \PHP_EOL;
+       echo '  reinstall                    =  Uninstalls and reinstalls composer dependencies for /packages/*/' . \PHP_EOL;
+       echo '  purge                        =  Removes all installed composer dependencies from /packages/*/' . \PHP_EOL;
+       echo '  package <repo@folder:remote> =  Adds a subtree of an independent repo into /packages/*/' . \PHP_EOL;
 }
