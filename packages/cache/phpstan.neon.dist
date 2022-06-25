@@ -1,0 +1,17 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: 4
+    paths: [src]
+    treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: false
+
+    ignoreErrors:
+        - "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
+        -
+            message: "#^Variable \\$deleteItem might not be defined|Variable method call on Psr\\\\Cache\\\\CacheItemPoolInterface\\|Psr\\\\SimpleCache\\\\CacheInterface.$#"
+            path: src/FastCache.php
+        -
+            message: "#^Short ternary operator is not allowed. Use null coalesce operator if applicable or consider using long ternary|Class Symfony\\\\Component\\\\Cache\\\\DoctrineProvider not found.$#"
+            path: src/AdapterFactory.php
