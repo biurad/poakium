@@ -42,6 +42,17 @@ switch ($command) {
         echo 'Vendor dependencies purged successfully' . \PHP_EOL;
     break;
     case 'package':
+        if (empty($args)) {
+            foreach (\json_decode(\file_get_contents(__DIR__ . '/.gitrepo'), true) as $k => $v) {
+                if (!\is_string($v)) {
+                    $g = ($v['host'] ?? 'https://github.com')."/$k.git@".$v['folder'];
+                    $args[] = $g . (isset($v['remote']) ? ':'.$v['remote'] : '');
+                    continue;
+                }
+                $args[] = "https://github.com/$k.git@$v";
+            }
+        }
+
         foreach ($args as $package) {
             [$repo, $folder] = \explode('@', $package, 2);
             [$folder, $remote] = \str_contains($folder, ':') ? \explode(':', $folder, 2) : [$folder, null];
