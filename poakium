@@ -30,10 +30,6 @@ require $autoload;
 })();
 
 switch ($command) {
-    case 'update':
-        echo \PHP_EOL. 'Preparing to update vendor dependencies...' . \PHP_EOL;
-        $execute('composer', ['update', '--ansi', '--no-interaction', '--prefer-dist', '--optimize-autoloader', ...$args]);
-    break;
     case 'reinstall':
         $execute('php', ['./poakium', 'purge']) | $execute('php', ['./poakium']);
     break;
@@ -115,7 +111,6 @@ switch ($command) {
 EOT;
        echo \PHP_EOL . 'Poakium CLI ' . (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s') . \PHP_EOL;
        echo \PHP_EOL . 'Available commands:' . \PHP_EOL;
-       echo '  update                       =  Updates the dependencies from composer.json for /packages/*/' . \PHP_EOL;
        echo '  reinstall                    =  Uninstalls and reinstalls composer dependencies for /packages/*/' . \PHP_EOL;
        echo '  purge                        =  Removes all installed composer dependencies from /packages/*/' . \PHP_EOL;
        echo '  package <repo@folder:remote> =  Adds a subtree of an independent repo into /packages/*/' . \PHP_EOL;
