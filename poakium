@@ -31,7 +31,6 @@ require $autoload;
     $arguments = $_SERVER['argv'];
     $execute = static function (string $command, array $args = [], string $cwd = null, array $env = null, callable $callback = null) {
         $process = new Symfony\Component\Process\Process([$command, ...$args], $cwd, $env);
-        echo \PHP_EOL;
 
         return $process->run(fn (string $type, string $data) => $callback ? $callback($type, $data) : print($data));
     };
@@ -75,19 +74,13 @@ switch ($command) {
                 }
             });
 
-            echo 'Fetching '.$folder.\PHP_EOL;
-            $execute(
-                'git',
-                ['config', '--get', 'remote.'.($r = $remote ?? $folder).'.fetch'],
-                callback: static function (string $type, string $data) use ($r, $repo, $execute): void {
-                    if (empty($data)) {
-                        echo 'Remote '.$r.' not found, creating...'.\PHP_EOL;
-                        $execute('git', ['remote', 'add', $r, $repo]); // add remote repo
-                        $execute('git', ['config', '--add', "remote.{$r}.fetch", "refs/tags/*:refs/tags/{$r}/*"]);
-                        $execute('git', ['config', "remote.{$r}.tagOpt", '--no-tags']);
-                    }
-                }
-            );
+            if (1 === $execute('git', ['config', '--get', 'remote.'.($r = $remote ?? $folder).'.fetch'])) {
+                echo 'Remote '.$r.' not found, creating...'.\PHP_EOL;
+                $execute('git', ['remote', 'add', $r, $repo]); // add remote repo
+                $execute('git', ['config', '--add', "remote.{$r}.fetch", "refs/tags/*:refs/tags/{$r}/*"]);
+                $execute('git', ['config', "remote.{$r}.tagOpt", '--no-tags']);
+            }
+            echo 'Fetching from remote: '.$r.\PHP_EOL;
             $execute('git', ['fetch', '--atomic', $r]); // fetch remote repo
             $execute(
                 'git',
