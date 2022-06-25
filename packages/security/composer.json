@@ -1,0 +1,62 @@
+{
+    "name": "biurad/security",
+    "type": "library",
+    "description": "A Security system that provides authentication, authorization and a role-based access control management plus more",
+    "keywords": ["authentication", "authorization", "ACL", "biurad", "php", "security", "role", "access", "control", "user"],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "biurad/http-galaxy": "1.*",
+        "psr/log": "^1|^2|^3",
+        "symfony/polyfill-php80": "^1.23",
+        "symfony/property-access": "^5.4 || ^6.0",
+        "symfony/security-core": "^5.4 || ^6.0"
+    },
+    "require-dev": {
+        "psr/cache": "^1.0|^2.0|^3.0",
+        "psr/http-factory": "^1.0",
+        "phpunit/phpunit": "^8.4 || ^9.5",
+        "squizlabs/php_codesniffer": "^3.6",
+        "symfony/console": "^5.4 || ^6.0",
+        "symfony/security-csrf": "^5.4 || ^6.0",
+        "laminas/laminas-stratigility": "^3.5"
+    },
+    "suggest": {
+        "ext-json": "To use json_encode and json_decode",
+        "ext-pdo": "To use PDO",
+        "laminas/laminas-stratigility": "To use PSR-15 middleware support",
+        "psr/http-factory": "To use the PSR-17 factory",
+        "symfony/console": "To use Security console commands",
+        "symfony/security-csrf": "To use CSRF protection"
+    },
+    "conflict": {
+        "symfony/security-csrf": "<4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Biurad\\Security\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Biurad\\Security\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    }
+}
