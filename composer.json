@@ -1,0 +1,34 @@
+{
+    "name": "biurad/poakium",
+    "description": "A Monorepo for Full-stack PHP independent libraries. (metapackage)",
+    "license": "MIT",
+    "type": "project",
+    "keywords": ["php", "libraries", "metapackage", "monorepo", "full-stack", "framework"],
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "platform-check": false,
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true
+        }
+    },
+    "bin": ["poakium"],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.0",
+        "nette/utils": "4.0.x-dev",
+        "symfony/process": "^6.1",
+        "wikimedia/composer-merge-plugin": "dev-master"
+    },
+    "extra": {
+        "branch-alias": {
+			"dev-main": "2.x-dev"
+		},
+        "merge-plugin": {
+            "include": ["packages/*/composer.json"],
+            "replace": true
+        }
+    }
+}
