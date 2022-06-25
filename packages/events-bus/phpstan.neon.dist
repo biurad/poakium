@@ -1,0 +1,26 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: max
+    paths: [src]
+
+    ignoreErrors:
+        -
+            message: "#^Variable property access on \\$this\\(Biurad\\\\Events\\\\Annotation\\\\Listener\\).$#"
+            path: src/Annotation/Listener.php
+        -
+            message: "#^Casting to float something that's already float.$#"
+            path: src/TraceableEventDispatcher.php
+        -
+            message: "#^Construct empty\\(\\) is not allowed. Use more strict comparison.$#"
+            path: src/TraceableEventDispatcher.php
+        -
+            message: "#^Variable method call on Symfony\\\\Component\\\\EventDispatcher\\\\EventDispatcherInterface.$#"
+            path: src/TraceableEventDispatcher.php
+        -
+            message: "#^Call to an undefined method Biurad\\\\Events\\\\TraceableEventDispatcher\\:\\:getResolver\\(\\).$#"
+            path: src/WrappedListener.php
+        -
+            message: "#^Instanceof between Symfony\\\\Contracts\\\\EventDispatcher\\\\Event and Psr\\\\EventDispatcher\\\\StoppableEventInterface will always evaluate to true.$#"
+            path: src/WrappedListener.php
