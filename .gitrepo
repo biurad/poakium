@@ -1,0 +1,24 @@
+{
+  "biurad/php-annotations": "annotations",
+  "biurad/php-framework": "framework",
+  "biurad/php-security": "security",
+  "biurad/php-templating": "templating",
+  "biurad/php-events-bus": "events-bus",
+  "biurad/php-loader": "loader",
+  "biurad/php-make": "maker",
+  "biurad/php-cache": "cache",
+  "biurad/php-starter": "starter",
+  "biurad/php-coding-standard": "coding-standard",
+  "biurad/php-di": {
+    "folder": "dependency-injection",
+    "remote": "di"
+  },
+  "biurad/php-http-galaxy": {
+    "folder": "http-galaxy",
+    "remote": "http"
+  },
+  "biurad/php-clite": {
+    "folder": "console",
+    "remote": "clite"
+  }
+}
