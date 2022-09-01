@@ -1,0 +1,16 @@
+includes:
+  - vendor/phpstan/phpstan-phpunit/extension.neon
+  - vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+  level: 5
+  paths: [packages, tools, tests]
+  checkGenericClassInNonGenericObjectType: false
+
+  excludePaths:
+    - packages/*/resources/*
+    - packages/*/tests/Fixtures/*
+    - tools/*/tests/Fixtures/*
+
+  ignoreErrors:
+
