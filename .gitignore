@@ -1,0 +1,7 @@
+# composer
+/vendor/
+/build/
+composer.lock
+
+# vscode
+/.vscode/
