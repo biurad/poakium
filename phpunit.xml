@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         colors="true"
+         backupGlobals="false"
+         bootstrap="vendor/autoload.php"
+         failOnRisky="true"
+         failOnWarning="true"
+         cacheResultFile="build/.phpunit.cache"
+>
+  <php>
+    <ini name="error_reporting" value="-1" />
+  </php>
+
+  <testsuites>
+    <testsuite name="Poakium Test Suite">
+      <directory>./packages/*/tests/</directory>
+      <directory>./packages/*/*/tests/</directory>
+      <directory>./packages/*/*/*/tests/</directory>
+      <directory>./tools/*/tests/</directory>
+    </testsuite>
+  </testsuites>
+
+  <coverage>
+    <include>
+      <directory>./packages/*/src/</directory>
+      <directory>./packages/*/*/src/</directory>
+      <directory>./packages/*/*/*/src/</directory>
+      <directory>./tools/*/src/</directory>
+    </include>
+</coverage>
+</phpunit>

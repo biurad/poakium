@@ -1,0 +1,6 @@
+{
+  "require-dev": {
+    "pestphp/pest": "^1.21",
+    "pestphp/pest-plugin-parallel": "^1.2"
+  }
+}
