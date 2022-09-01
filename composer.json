@@ -1,0 +1,56 @@
+{
+  "name": "biurad/poakium",
+  "description": "A Monorepo for Full-stack PHP independent libraries. (metapackage)",
+  "license": "MIT",
+  "type": "project",
+  "keywords": ["php", "libraries", "metapackage", "monorepo", "full-stack", "framework"],
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist",
+    "optimize-autoloader": true,
+    "platform-check": false,
+    "process-timeout": 1800,
+    "allow-plugins": {
+      "wikimedia/composer-merge-plugin": true,
+      "pestphp/pest-plugin": true
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.0",
+    "wikimedia/composer-merge-plugin": "dev-master"
+  },
+  "require-dev": {
+    "php-parallel-lint/php-parallel-lint": "^1.3",
+    "symfony/var-dumper": "^6.0"
+  },
+  "scripts": {
+    "coverage": [
+      "@phpcs --report-full",
+      "@pest --log-junit=build/unitreport.xml --coverage-text --coverage-html=build --coverage-clover=build/coverage.xml"
+    ],
+    "test": [
+      "composer validate --no-interaction",
+      "@lint",
+      "@phpcs",
+      "@phan",
+      "@pest"
+    ],
+    "phan": "@php vendor/bin/phpstan",
+    "phpcs": "@php vendor/bin/phpcs --encoding=utf-8 --extensions=php",
+    "lint": "@php vendor/bin/parallel-lint packages tools tests",
+    "pest": "@php vendor/bin/pest"
+  },
+  "extra": {
+    "merge-plugin": {
+      "include": [
+        "packages/*/composer.json",
+        "tools/*/composer.json"
+      ],
+      "replace": true,
+      "merge-extra": true,
+      "merge-extra-deep": true
+    }
+  }
+}
