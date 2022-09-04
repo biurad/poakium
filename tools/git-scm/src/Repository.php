@@ -219,7 +219,7 @@ class Repository
      */
     public function getBranches(): array
     {
-        $o = $this->run('branch', ['-a', '--format', '"%(refname:short) %(objectname)"']);
+        $o = $this->run('branch', ['-a', '--format=%(refname:short) %(objectname)']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return [];
@@ -253,7 +253,7 @@ class Repository
      */
     public function getBranch(string $revision = 'HEAD'): Branch|array|null
     {
-        $o = $this->run('branch', ['--points-at', $revision, '--format', '"%(refname:short) %(objectname)"']);
+        $o = $this->run('branch', ['--points-at', $revision, '--format=%(refname:short) %(objectname)']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return null;
@@ -295,7 +295,7 @@ class Repository
      */
     public function getTags(): array
     {
-        $o = $this->run('tag', ['--sort=-creatordate', '--format', '"%(refname:short) %(objectname)"']);
+        $o = $this->run('tag', ['--sort=-creatordate', '--format=%(refname:short) %(objectname)']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return [];
@@ -322,7 +322,7 @@ class Repository
      */
     public function getTag(string $revision = 'HEAD'): Tag|array|null
     {
-        $o = $this->run('tag', ['--points-at', $revision, '--format', '"%(refname:short) %(objectname)"']);
+        $o = $this->run('tag', ['--points-at', $revision, '--format=%(refname:short) %(objectname)']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return null;
