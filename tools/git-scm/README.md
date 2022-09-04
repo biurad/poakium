@@ -31,13 +31,19 @@ The performance is not as good as Git, but it is still fast enough to be used in
 Here is an example of how to use the library:
 
 ```php
-$repo = new Biurad\GIT\Repository('/path/to/repository');
-$repo->addCommit('My commit message'); // Stage all changes and commit them
+use Biurad\Git;
+
+$repo = new Git\Repository('/path/to/repository');
+$repo->commit(new Git\CommitNew(
+    message: new Git\Commit\Message('My commit message'),
+    author: $repo->getAuthor()->setDate('Tue, 06 Sep 2022 07:21:10')
+)); // Stage all changes and commit them
 
 $repo->getLog()->getCommits(); // Get all commits
 $repo->getLastCommit(); // Get the newest commit
 
-$repo->getReference(); // References of tags, branches, and stash.
+$branches = $repo->getBranches(); // Get all branches
+$tags = $repo->getTags(); // Gt all tags
 ```
 
 ## 📓 Documentation
