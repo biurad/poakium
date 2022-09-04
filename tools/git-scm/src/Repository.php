@@ -32,7 +32,7 @@ class Repository
 
     public function __construct(
         private string $path,
-        private array $envVars,
+        private array $envVars = [],
         private bool $debug = true,
         private ?LoggerInterface $logger = null,
     ) {
