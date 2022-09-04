@@ -447,8 +447,16 @@ class Repository
      *
      * @param array<int,string> $args arguments to pass to git commit
      */
-    public function commit(CommitNew $commit, array $args = [], string $cwd = null): self
+    public function commit(CommitNew|Commit\Message $commit, array $args = [], string $cwd = null): self
     {
+        if ($commit instanceof Commit\Message) {
+            $msg = $commit->__toString();
+            $msg = !empty($msg) ? ['-m', $msg] : ['--allow-empty-message'];
+            $this->run('commit', ['-a', '--allow-empty', ...$msg, ...$args], null, $cwd);
+
+            return $this;
+        }
+
         $commands = [];
         $msg = ($data = $commit->getData())[0]->__toString();
         $commands[] = !empty($paths = $data[1] ?? []) ? ['add', ...$paths] : ['add', '--all'];
