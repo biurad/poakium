@@ -25,7 +25,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Biurad\\GIT\\": "src/"
+      "Biurad\\Git\\": "src/"
     }
   },
   "suggest": {
