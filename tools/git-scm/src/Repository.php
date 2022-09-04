@@ -245,18 +245,18 @@ class Repository
 
     /**
      * Returns branch(es) belonging to a revision, if count is 1, the first branch is returned.
-     * Head is detached if the revision value is HEAD and empty.
+     * Head is detached if the revision value is HEAD and null is returned.
      *
      * @param string $revision The branch ref name or short name, tag, or a commit hash
      *
-     * @return array<int,Branch>|Branch
+     * @return null|array<int,Branch>|Branch
      */
-    public function getBranch(string $revision = 'HEAD'): Branch|array
+    public function getBranch(string $revision = 'HEAD'): Branch|array|null
     {
         $o = $this->run('branch', ['--points-at', $revision, '--format', '"%(refname:short) %(objectname)"']);
 
         if (empty($o) || 0 !== $this->exitCode) {
-            return [];
+            return null;
         }
 
         if (!isset($this->cache[$i = \md5($o)])) {
@@ -318,14 +318,14 @@ class Repository
      *
      * @param string $revision The tag ref name or short name, tag, or a commit hash
      *
-     * @return array<int,Tag>|Tag
+     * @return null|array<int,Tag>|Tag
      */
-    public function getTag(string $revision = 'HEAD'): Tag|array
+    public function getTag(string $revision = 'HEAD'): Tag|array|null
     {
         $o = $this->run('tag', ['--points-at', $revision, '--format', '"%(refname:short) %(objectname)"']);
 
         if (empty($o) || 0 !== $this->exitCode) {
-            return [];
+            return null;
         }
 
         if (!isset($this->cache[$i = \md5($o)])) {
