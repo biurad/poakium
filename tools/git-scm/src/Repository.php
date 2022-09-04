@@ -478,10 +478,10 @@ class Repository
 
         if (!empty($coAuthors = $data[4] ?? [])) {
             $coAuthors = \array_map(fn (Commit\Identity $i) => $i->getName().' <'.$i->getEmail().'>', $coAuthors);
-            $data[1] .= "\n".($c = "\n".'Co-Authored-By: ').\implode($c, $coAuthors);
+            $msg .= "\n".($c = "\n".'Co-Authored-By: ').\implode($c, $coAuthors);
         }
 
-        $msg = !empty($msg) ? ['-m', $msg.(!empty($data[1]) ? "\n".$data[1] : '')] : ['--allow-empty-message'];
+        $msg = !empty($msg) ? ['-m', $msg] : ['--allow-empty-message'];
         $commands[] = ['commit', '--allow-empty', ...$msg, ...$args];
         $this->runConcurrent($commands, cwd: $cwd);
         $this->envVars = $oldEnv;
