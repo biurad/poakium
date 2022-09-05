@@ -36,7 +36,7 @@ class Message implements \Stringable
 
     public static function fromString(string $message): self
     {
-        $data = \explode("\n", $message, 3);
+        $data = \explode("\n\n", $message, 2);
 
         return new self($data[0] ?? '', $data[2] ?? null);
     }

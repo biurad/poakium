@@ -118,9 +118,8 @@ class Commit extends GitObject
     public function getMessage(): Commit\Message
     {
         if (!isset($this->data['msg-object'])) {
-            $data = \explode("\n", $this->getData('message'), 4);
-
-            $this->data['msg-object'] = new Commit\Message($data[1], $data[3] ?? null);
+            $data = \explode("\n\n", $this->getData('message'), 2);
+            $this->data['msg-object'] = new Commit\Message($data[0], $data[1] ?? null);
         }
 
         return $this->data['msg-object'];
@@ -175,8 +174,9 @@ class Commit extends GitObject
 
             foreach (\explode("\n", $this->data['content'] = $o) as $line) {
                 if (isset($this->data['gpgSign'])) {
-                    if (\str_ends_with($line, $i = '-----END PGP SIGNATURE-----')) {
-                        $this->data['message'] = \substr($o, \strpos($o, $i));
+                    if (\str_ends_with($line, '-----END PGP SIGNATURE-----')) {
+                        $pos = \strpos($o, "-----\n \n\n");
+                        $this->data['message'] = \substr($o, $pos ? $pos + 9 : \strpos($o, "-----\n\n") + 7);
                         break;
                     }
 
@@ -196,6 +196,9 @@ class Commit extends GitObject
                     $this->data[$key] = new Commit\Identity($author[2], $author[3], \DateTime::createFromFormat('U e O', $author[4].' UTC'));
                 } elseif ('gpgsig' === $key) {
                     $this->data['gpgSign'] = '';
+                } else {
+                    $this->data['message'] = \substr($o, \strpos($o, "\n\n") + 2);
+                    break;
                 }
             }
         }
