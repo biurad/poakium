@@ -184,6 +184,8 @@ class Commit extends GitObject
                         $this->data['gpgSign'] .= $line."\n";
                     }
                     continue;
+                } elseif (empty($line)) {
+                    continue;
                 }
                 [$key, $value] = \explode(' ', $line, 2);
 
