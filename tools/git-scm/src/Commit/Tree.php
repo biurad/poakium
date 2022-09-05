@@ -80,14 +80,17 @@ class Tree extends GitObject
             return;
         }
 
-        $o = $this->repository->run('cat-file', ['commit', $this->__toString()]);
+        $o = $this->repository->run('ls-tree', [$this->__toString(),'--format=%(objectmode) %(objecttype) %(objectname) %(path)']);
 
         if (empty($o) || 0 !== $this->repository->getExitCode()) {
             throw new \RuntimeException(\sprintf('Failed to get tree data for "%s"', $this->__toString()));
         }
 
         foreach (\explode("\n", $o) as $line) {
-            [$a, $b, $c] = \explode(' ', $line, 3);
+            if (empty($line)) {
+                continue;
+            }
+            [$a, $b, $c, $d] = \explode(' ', $line, 4);
             $object = null;
 
             if ('tree' === $b) {
@@ -95,7 +98,7 @@ class Tree extends GitObject
             } elseif ('blob' === $b) {
                 $object = new Blob($this->repository, $c, (int) $a);
             }
-            $this->entries[\substr($line, \strpos($line, '    ') + 1)] = $object ?? new CommitRef($c, (int) $a);
+            $this->entries[$d] = $object ?? new CommitRef($c, (int) $a);
         }
 
         $this->initialized = true;
