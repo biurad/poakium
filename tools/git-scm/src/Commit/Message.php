@@ -28,7 +28,7 @@ class Message implements \Stringable
         $full = $this->subject;
 
         if (!empty($this->body)) {
-            $full .= "\n".$this->body;
+            $full .= "\n\n".$this->body;
         }
 
         return $full;
@@ -48,6 +48,6 @@ class Message implements \Stringable
 
     public function getBody(): ?string
     {
-        return $this->body;
+        return \rtrim($this->body, "\n");
     }
 }
