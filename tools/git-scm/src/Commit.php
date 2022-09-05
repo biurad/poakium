@@ -139,7 +139,7 @@ class Commit extends GitObject
      */
     public function getReferences(): array
     {
-        $o = $this->repository->run('for-each-ref', ['--contains', $this->__toString()]);
+        $o = $this->repository->run('for-each-ref', ['--contains', $this->__toString(), '--format=%(refname) %(objectname)']);
 
         if (empty($o) || 0 !== $this->repository->getExitCode()) {
             throw new \RuntimeException(\sprintf('Failed to get commit references for "%s"', $this->__toString()));
@@ -147,7 +147,10 @@ class Commit extends GitObject
 
         if (!isset($this->data[$i = \md5($o)])) {
             foreach (\explode("\n", $o) as $line) {
-                [$hash, $type, $ref] = \explode(' ', $line, 3);
+                if (empty($line)) {
+                    continue;
+                }
+                [$ref, $hash] = \explode(' ', $line, 2);
 
                 if (\str_starts_with($ref, 'refs/tags/')) {
                     $this->data[$i][] = new Tag($this->repository, $ref, $hash);
