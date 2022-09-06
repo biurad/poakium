@@ -452,7 +452,7 @@ class Repository
         if ($commit instanceof Commit\Message) {
             $msg = $commit->__toString();
             $msg = !empty($msg) ? ['-m', $msg] : ['--allow-empty-message'];
-            $this->run('commit', ['-a', '--allow-empty', ...$msg, ...$args], null, $cwd);
+            $this->runConcurrent([['add', '--all'], ['commit', '--allow-empty', ...$msg, ...$args]], cwd: $cwd);
 
             return $this;
         }
