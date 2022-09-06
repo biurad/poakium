@@ -435,9 +435,11 @@ class Repository
      */
     public function initialize(int|string ...$args): self
     {
-        if (!\file_exists($this->getGitPath())) {
-            $this->run('init', $args);
+        if (!\file_exists($p = $this->path)) {
+            \mkdir($p, 0777, true);
         }
+
+        $this->run('init', $args);
 
         return $this;
     }
