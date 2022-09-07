@@ -386,7 +386,7 @@ class Repository
             $data = $this->runConcurrent([
                 ['config', '--get', '--global', 'user.name'],
                 ['config', '--get', '--global', 'user.email'],
-            ]);
+            ], null, false);
 
             if (empty($data) || 0 !== $this->exitCode) {
                 return null;
