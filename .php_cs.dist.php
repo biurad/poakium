@@ -33,7 +33,7 @@ return (new PhpCsFixer\Config())
             ])
     )
     ->setRules([
-        '@PhpCsFixer' => true,
+        '@Symfony' => true,
         '@Symfony:risky' => true,
         '@PHP80Migration:risky' => true,
         '@PHPUnit84Migration:risky' => true,
@@ -42,11 +42,14 @@ return (new PhpCsFixer\Config())
         'blank_line_after_opening_tag' => false,
         'linebreak_after_opening_tag' => false,
         'single_class_element_per_statement' => false,
+        'single_trait_insert_per_statement' => false,
+        //'group_import' => true,
         'native_constant_invocation' => true,
         'comment_to_phpdoc' => true,
         'strict_param' => true,
         'no_unset_on_property' => true,
         'nullable_type_declaration_for_default_null_value' => ['use_nullable_type_declaration' => false],
+        'ordered_imports' => ['imports_order' => ['class', 'const', 'function'], 'sort_algorithm' => 'alpha'],
         'header_comment' => ['header' => $header],
         'native_function_invocation' => [
             'include' => ['@compiler_optimized', '@internal'],
