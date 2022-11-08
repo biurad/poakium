@@ -380,12 +380,12 @@ class Repository
     /**
      * Returns the global default git user.
      */
-    public function getAuthor(): ?Commit\Identity
+    public function getAuthor(bool $local = false): ?Commit\Identity
     {
         if (!isset($this->cache['author'])) {
             $data = $this->runConcurrent([
-                ['config', '--get', '--global', 'user.name'],
-                ['config', '--get', '--global', 'user.email'],
+                ['config', '--get', $local ? '--local' : '--global', 'user.name'],
+                ['config', '--get', $local ? '--local' : '--global', 'user.email'],
             ], null, false);
 
             if (empty($data) || 0 !== $this->exitCode) {
