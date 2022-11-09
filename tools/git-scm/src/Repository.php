@@ -575,7 +575,7 @@ class Repository
         } catch (ProcessFailedException) {
         }
 
-        if (empty($o) || 0 !== $this->exitCode) {
+        if (0 !== $this->exitCode) {
             return false;
         }
 
