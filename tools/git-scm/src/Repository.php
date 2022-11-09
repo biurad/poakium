@@ -277,7 +277,7 @@ class Repository
      *
      * @param string $revision The branch ref name or short name, tag, or a commit hash
      *
-     * @return null|array<int,Branch>|Branch
+     * @return array<int,Branch>|Branch|null
      */
     public function getBranch(string $revision = 'HEAD'): Branch|array|null
     {
@@ -342,7 +342,7 @@ class Repository
      *
      * @param string $revision The tag ref name or short name, tag, or a commit hash
      *
-     * @return null|array<int,Tag>|Tag
+     * @return array<int,Tag>|Tag|null
      */
     public function getTag(string $revision = 'HEAD'): Tag|array|null
     {
@@ -391,10 +391,10 @@ class Repository
     }
 
     /**
-     * @param null|array<int,string>|string $revisions a list of revisions or null if you want all history
-     * @param null|array<int,string>|string $paths     paths to filter on
-     * @param null|int                      $offset    start list from a given position
-     * @param null|int                      $limit     limit number of fetched elements
+     * @param array<int,string>|string|null $revisions a list of revisions or null if you want all history
+     * @param array<int,string>|string|null $paths     paths to filter on
+     * @param int|null                      $offset    start list from a given position
+     * @param int|null                      $limit     limit number of fetched elements
      */
     public function getLog(array|string $revisions = null, array|string $paths = null, int $offset = null, int $limit = null): Log
     {
@@ -538,7 +538,7 @@ class Repository
      * Pushes changes to a remote or git repository.
      *
      * @param array<int,string> $args arguments to pass to git push
-     * @param null|string       $cwd  The working directory command should run from
+     * @param string|null       $cwd  The working directory command should run from
      */
     public function push(string $remote = null, array $args = [], string $cwd = null): self
     {
@@ -565,8 +565,8 @@ class Repository
      *
      * @param string                $command  Run git command eg. (checkout, branch, tag)
      * @param array<int,int|string> $args     Arguments of the git command
-     * @param null|callable|string  $expected The string or callable to check command output
-     * @param null|string           $cwd      The working directory command should run from
+     * @param callable|string|null  $expected The string or callable to check command output
+     * @param string|null           $cwd      The working directory command should run from
      */
     public function check(string $command, array $args = [], string|callable $expected = null, string $cwd = null): bool
     {
@@ -589,12 +589,12 @@ class Repository
     /**
      * @param string                $command  Run git command eg. (checkout, branch, tag)
      * @param array<int,int|string> $args     Arguments of the git command
-     * @param null|callable         $callback Reads buffer, param of (string $type, string $buffer)
-     * @param null|string           $cwd      The working directory command should run from
-     *
-     * @throws \RuntimeException while executing git command (debug-mode only)
+     * @param callable|null         $callback Reads buffer, param of (string $type, string $buffer)
+     * @param string|null           $cwd      The working directory command should run from
      *
      * @return string output of a successful process or null if execution failed and debug-mode is disabled
+     *
+     * @throws \RuntimeException while executing git command (debug-mode only)
      */
     public function run(string $command, array $args = [], callable $callback = null, string $cwd = null): ?string
     {
@@ -620,8 +620,8 @@ class Repository
      * Concurrently run multiple git commands.
      *
      * @param array<int,array<int,string>|string> $commands An array list of commands eg. [['log', 'master'], ['git', '-v']]
-     * @param null|callable                       $callback Reads buffer, param of (array $command, string $type, string $buffer)
-     * @param null|string                         $cwd      The working directory command should run from
+     * @param callable|null                       $callback Reads buffer, param of (array $command, string $type, string $buffer)
+     * @param string|null                         $cwd      The working directory command should run from
      *
      * @return array<int,string>
      */
