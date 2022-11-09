@@ -279,13 +279,9 @@ class Repository
                     $this->cache[$i][] = new Branch($this, $branch, $hash);
                 }
             }
-
-            if (1 <= \count($branches = &$this->cache[$i] ?? [])) {
-                $branches = $branches[0] ?? [];
-            }
         }
 
-        return $this->cache[$i];
+        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
     }
 
     /**
