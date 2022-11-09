@@ -85,6 +85,34 @@ class Repository
     }
 
     /**
+     * Set the git environment variables.
+     */
+    public function setEnvVars(array $envVars): void
+    {
+        $this->envVars = $envVars;
+    }
+
+    /**
+     * Remove the git environment variable(s).
+     */
+    public function removeEnvVars(string ...$envVars): void
+    {
+        foreach ($envVars as $envVar) {
+            unset($this->envVars[$envVar]);
+        }
+    }
+
+    /**
+     * Get the git environment variables.
+     *
+     * @return array<string,string>
+     */
+    public function getEnvVars(): array
+    {
+        return $this->envVars;
+    }
+
+    /**
      * Returns the url or path to the repository.
      */
     public function getPath(): string
