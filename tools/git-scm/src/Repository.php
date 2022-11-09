@@ -610,12 +610,8 @@ class Repository
             return $this->debug ? throw $e : null;
         } finally {
             if (null !== $this->logger) {
-                $message = 'Command "%s" finished successfully';
-
-                if ($this->debug) {
-                    $message .= \sprintf(' at "%.2fms".', (\microtime(true) - $process->getStartTime()) * 1000);
-                }
-                $this->logger->debug(\sprintf($message, $process->getCommandLine()));
+                $message = \sprintf(' at "%.2fms".', (\microtime(true) - $process->getStartTime()) * 1000);
+                $this->logger->debug(\sprintf('Command "%s" finished successfully'.$message, $process->getCommandLine()));
             }
         }
     }
@@ -636,10 +632,7 @@ class Repository
         if (null !== $this->logger) {
             $message = 'Concurrent command(s) [%s] finished successfully';
             $lines = [];
-
-            if ($this->debug) {
-                $start = 0;
-            }
+            $start = 0;
         }
 
         if ($hasCallback = null !== $callback) {
@@ -683,10 +676,7 @@ class Repository
         }
 
         if (isset($message)) {
-            if (isset($start) && $start > 0) {
-                $message .= \sprintf(' at "%.2fms".', $start * 1000);
-            }
-            $this->logger->debug(\sprintf($message, \implode(', ', $lines ?? [])));
+            $this->logger->debug(\sprintf($message.' at "%.2fms".', \implode(', ', $lines ?? []), $start * 1000));
         }
 
         return $outputs;
