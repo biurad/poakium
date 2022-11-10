@@ -466,7 +466,7 @@ class Repository
      */
     public function reset(string $commitHash = null, bool $keep = false): void
     {
-        $this->cache['author'] = null;
+        $this->cache = [];
         $this->run('reset', [$keep ? '--keep' : '--hard', $commitHash ?? 'HEAD']);
     }
 
