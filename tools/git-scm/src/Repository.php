@@ -85,6 +85,34 @@ class Repository
     }
 
     /**
+     * Set the git environment variables.
+     */
+    public function setEnvVars(array $envVars): void
+    {
+        $this->envVars = $envVars;
+    }
+
+    /**
+     * Remove the git environment variable(s).
+     */
+    public function removeEnvVars(string ...$envVars): void
+    {
+        foreach ($envVars as $envVar) {
+            unset($this->envVars[$envVar]);
+        }
+    }
+
+    /**
+     * Get the git environment variables.
+     *
+     * @return array<string,string>
+     */
+    public function getEnvVars(): array
+    {
+        return $this->envVars;
+    }
+
+    /**
      * Returns the url or path to the repository.
      */
     public function getPath(): string
@@ -213,6 +241,38 @@ class Repository
     }
 
     /**
+     * Get the git repository's references.
+     *
+     * @return array<int,Revision>
+     */
+    public function getReferences(): array
+    {
+        $o = $this->run('show-ref');
+
+        if (empty($o) || 0 !== $this->exitCode) {
+            return [];
+        }
+
+        if (!isset($this->cache[$i = \md5($o)])) {
+            foreach (\explode("\n", $o) as $line) {
+                if (!empty($line)) {
+                    [$hash, $ref] = \explode(' ', $line, 2);
+
+                    if (\str_starts_with($ref, 'refs/heads/')) {
+                        $this->cache[$i][] = new Branch($this, $ref, $hash);
+                    } elseif (\str_starts_with($ref, 'refs/tags/')) {
+                        $this->cache[$i][] = new Tag($this, $ref, $hash);
+                    } else {
+                        $this->cache[$i][] = new Revision($this, $ref, $hash);
+                    }
+                }
+            }
+        }
+
+        return $this->cache[$i];
+    }
+
+    /**
      * Returns an array of all branches.
      *
      * @return array<int,Branch>
@@ -249,7 +309,7 @@ class Repository
      *
      * @param string $revision The branch ref name or short name, tag, or a commit hash
      *
-     * @return null|array<int,Branch>|Branch
+     * @return array<int,Branch>|Branch|null
      */
     public function getBranch(string $revision = 'HEAD'): Branch|array|null
     {
@@ -279,13 +339,9 @@ class Repository
                     $this->cache[$i][] = new Branch($this, $branch, $hash);
                 }
             }
-
-            if (1 <= \count($branches = &$this->cache[$i] ?? [])) {
-                $branches = $branches[0] ?? [];
-            }
         }
 
-        return $this->cache[$i];
+        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
     }
 
     /**
@@ -318,7 +374,7 @@ class Repository
      *
      * @param string $revision The tag ref name or short name, tag, or a commit hash
      *
-     * @return null|array<int,Tag>|Tag
+     * @return array<int,Tag>|Tag|null
      */
     public function getTag(string $revision = 'HEAD'): Tag|array|null
     {
@@ -335,13 +391,9 @@ class Repository
                     $this->cache[$i][] = new Tag($this, 'refs/tags/'.$tag, $hash);
                 }
             }
-
-            if (1 <= \count($tags = &$this->cache[$i] ?? [])) {
-                $tags = $tags[0] ?? [];
-            }
         }
 
-        return $this->cache[$i];
+        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
     }
 
     /**
@@ -367,10 +419,10 @@ class Repository
     }
 
     /**
-     * @param null|array<int,string>|string $revisions a list of revisions or null if you want all history
-     * @param null|array<int,string>|string $paths     paths to filter on
-     * @param null|int                      $offset    start list from a given position
-     * @param null|int                      $limit     limit number of fetched elements
+     * @param array<int,string>|string|null $revisions a list of revisions or null if you want all history
+     * @param array<int,string>|string|null $paths     paths to filter on
+     * @param int|null                      $offset    start list from a given position
+     * @param int|null                      $limit     limit number of fetched elements
      */
     public function getLog(array|string $revisions = null, array|string $paths = null, int $offset = null, int $limit = null): Log
     {
@@ -414,7 +466,7 @@ class Repository
      */
     public function reset(string $commitHash = null, bool $keep = false): void
     {
-        $this->cache['author'] = null;
+        $this->cache = [];
         $this->run('reset', [$keep ? '--keep' : '--hard', $commitHash ?? 'HEAD']);
     }
 
@@ -514,7 +566,7 @@ class Repository
      * Pushes changes to a remote or git repository.
      *
      * @param array<int,string> $args arguments to pass to git push
-     * @param null|string       $cwd  The working directory command should run from
+     * @param string|null       $cwd  The working directory command should run from
      */
     public function push(string $remote = null, array $args = [], string $cwd = null): self
     {
@@ -541,8 +593,8 @@ class Repository
      *
      * @param string                $command  Run git command eg. (checkout, branch, tag)
      * @param array<int,int|string> $args     Arguments of the git command
-     * @param null|callable|string  $expected The string or callable to check command output
-     * @param null|string           $cwd      The working directory command should run from
+     * @param callable|string|null  $expected The string or callable to check command output
+     * @param string|null           $cwd      The working directory command should run from
      */
     public function check(string $command, array $args = [], string|callable $expected = null, string $cwd = null): bool
     {
@@ -551,7 +603,7 @@ class Repository
         } catch (ProcessFailedException) {
         }
 
-        if (empty($o) || 0 !== $this->exitCode) {
+        if (0 !== $this->exitCode) {
             return false;
         }
 
@@ -565,12 +617,12 @@ class Repository
     /**
      * @param string                $command  Run git command eg. (checkout, branch, tag)
      * @param array<int,int|string> $args     Arguments of the git command
-     * @param null|callable         $callback Reads buffer, param of (string $type, string $buffer)
-     * @param null|string           $cwd      The working directory command should run from
-     *
-     * @throws \RuntimeException while executing git command (debug-mode only)
+     * @param callable|null         $callback Reads buffer, param of (string $type, string $buffer)
+     * @param string|null           $cwd      The working directory command should run from
      *
      * @return string output of a successful process or null if execution failed and debug-mode is disabled
+     *
+     * @throws \RuntimeException while executing git command (debug-mode only)
      */
     public function run(string $command, array $args = [], callable $callback = null, string $cwd = null): ?string
     {
@@ -586,12 +638,8 @@ class Repository
             return $this->debug ? throw $e : null;
         } finally {
             if (null !== $this->logger) {
-                $message = 'Command "%s" finished successfully';
-
-                if ($this->debug) {
-                    $message .= \sprintf(' at "%.2fms".', (\microtime(true) - $process->getStartTime()) * 1000);
-                }
-                $this->logger->debug(\sprintf($message, $process->getCommandLine()));
+                $message = \sprintf(' at "%.2fms".', (\microtime(true) - $process->getStartTime()) * 1000);
+                $this->logger->debug(\sprintf('Command "%s" finished successfully'.$message, $process->getCommandLine()));
             }
         }
     }
@@ -600,8 +648,8 @@ class Repository
      * Concurrently run multiple git commands.
      *
      * @param array<int,array<int,string>|string> $commands An array list of commands eg. [['log', 'master'], ['git', '-v']]
-     * @param null|callable                       $callback Reads buffer, param of (array $command, string $type, string $buffer)
-     * @param null|string                         $cwd      The working directory command should run from
+     * @param callable|null                       $callback Reads buffer, param of (array $command, string $type, string $buffer)
+     * @param string|null                         $cwd      The working directory command should run from
      *
      * @return array<int,string>
      */
@@ -612,10 +660,7 @@ class Repository
         if (null !== $this->logger) {
             $message = 'Concurrent command(s) [%s] finished successfully';
             $lines = [];
-
-            if ($this->debug) {
-                $start = 0;
-            }
+            $start = 0;
         }
 
         if ($hasCallback = null !== $callback) {
@@ -659,10 +704,7 @@ class Repository
         }
 
         if (isset($message)) {
-            if (isset($start) && $start > 0) {
-                $message .= \sprintf(' at "%.2fms".', $start * 1000);
-            }
-            $this->logger->debug(\sprintf($message, \implode(', ', $lines ?? [])));
+            $this->logger->debug(\sprintf($message.' at "%.2fms".', \implode(', ', $lines ?? []), $start * 1000));
         }
 
         return $outputs;
