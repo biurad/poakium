@@ -391,13 +391,9 @@ class Repository
                     $this->cache[$i][] = new Tag($this, 'refs/tags/'.$tag, $hash);
                 }
             }
-
-            if (1 <= \count($tags = &$this->cache[$i] ?? [])) {
-                $tags = $tags[0] ?? [];
-            }
         }
 
-        return $this->cache[$i];
+        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
     }
 
     /**
