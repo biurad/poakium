@@ -241,6 +241,38 @@ class Repository
     }
 
     /**
+     * Get the git repository's references.
+     *
+     * @return array<int,Revision>
+     */
+    public function getReferences(): array
+    {
+        $o = $this->run('show-ref');
+
+        if (empty($o) || 0 !== $this->exitCode) {
+            return [];
+        }
+
+        if (!isset($this->cache[$i = \md5($o)])) {
+            foreach (\explode("\n", $o) as $line) {
+                if (!empty($line)) {
+                    [$hash, $ref] = \explode(' ', $line, 2);
+
+                    if (\str_starts_with($ref, 'refs/heads/')) {
+                        $this->cache[$i][] = new Branch($this, $ref, $hash);
+                    } elseif (\str_starts_with($ref, 'refs/tags/')) {
+                        $this->cache[$i][] = new Tag($this, $ref, $hash);
+                    } else {
+                        $this->cache[$i][] = new Revision($this, $ref, $hash);
+                    }
+                }
+            }
+        }
+
+        return $this->cache[$i];
+    }
+
+    /**
      * Returns an array of all branches.
      *
      * @return array<int,Branch>
