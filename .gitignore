@@ -5,3 +5,7 @@ composer.lock
 
 # vscode
 /.vscode/
+
+# not allowed
+/tools/*/tests/build/
+/packages/*/tests/build/
