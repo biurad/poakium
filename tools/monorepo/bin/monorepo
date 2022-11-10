@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+namespace Biurad\Monorepo;
+
+require_once __DIR__ . '/console.php';
