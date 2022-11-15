@@ -213,7 +213,7 @@ class Repository
 
         if (!isset($this->cache[$i = \md5($o)])) {
             foreach (\explode('\n', $o) as $line) {
-                [$remote, $url] = \explode('  ', $line, 2);
+                [$remote, $url] = \explode("\t", $line, 2);
 
                 if (\str_ends_with($url, '(push)')) {
                     continue;
