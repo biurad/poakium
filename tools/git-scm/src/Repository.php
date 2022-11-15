@@ -141,14 +141,24 @@ class Repository
     }
 
     /**
-     * @return int the size of repository in kilobytes, 0 if command failed
+     * @return int the size of repository in kilobytes, -1 if command failed
      */
-    public function getSize(): int
+    public function getSize(bool $real = false): int
     {
-        $o = $this->run('count-objects');
+        if ($real) {
+            if (0 === ($totalBytes = &$this->cache['size'] ?? 0)) {
+                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->getGitPath(), \FilesystemIterator::SKIP_DOTS));
 
-        if (empty($o) || 0 !== $this->exitCode) {
-            return 0;
+                foreach ($iterator as $object) {
+                    $totalBytes += $object->getSize();
+                }
+            }
+
+            return (int) ($totalBytes / 1000 + 0.5);
+        }
+
+        if (empty($o = $this->run('count-objects')) || 0 !== $this->exitCode) {
+            return -1;
         }
 
         return (int) \substr($o, \strpos($o, ',') + 2, -10);
