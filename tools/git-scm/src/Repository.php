@@ -608,10 +608,10 @@ class Repository
         }
 
         if (\is_string($expected)) {
-            return $expected === $o;
+            return $expected === ($o ?? null);
         }
 
-        return null === $expected ? true : $expected($o);
+        return null === $expected ? true : $expected($o ?? null);
     }
 
     /**
@@ -703,7 +703,7 @@ class Repository
             }
         }
 
-        if (isset($message)) {
+        if (isset($message, $start)) {
             $this->logger->debug(\sprintf($message.' at "%.2fms".', \implode(', ', $lines ?? []), $start * 1000));
         }
 
