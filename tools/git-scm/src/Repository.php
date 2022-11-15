@@ -258,7 +258,7 @@ class Repository
                 if (!empty($line)) {
                     [$hash, $ref] = \explode(' ', $line, 2);
 
-                    if (\str_starts_with($ref, 'refs/heads/')) {
+                    if (\str_starts_with($ref, 'refs/heads/') || \str_starts_with($ref, 'refs/remotes/')) {
                         $this->cache[$i][] = new Branch($this, $ref, $hash);
                     } elseif (\str_starts_with($ref, 'refs/tags/')) {
                         $this->cache[$i][] = new Tag($this, $ref, $hash);
