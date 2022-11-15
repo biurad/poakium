@@ -232,7 +232,7 @@ class Repository
      */
     public function getUntrackedFiles(bool $staged = false): array
     {
-        $o = $this->run('status', ['--porcelain', '-uall', $staged ? '-s' : '--empty-directory']);
+        $o = $this->run('status', ['--porcelain', '-uall', $staged ? '-s' : '--untracked-files=all']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return [];
@@ -241,8 +241,8 @@ class Repository
         if (!isset($this->cache[$i = \md5($o)])) {
             foreach (\explode("\n", $o) as $line) {
                 if (!empty($line)) {
-                    $status = \strrpos($line, "\0") + 1;
-                    $this->cache[$i][] = ['status' => \substr($line, 0, $status), 'file' => \substr($line, $status)];
+                    [$status, $file] = \explode(' ', $line, 2);
+                    $this->cache[$i][] = \compact('status', 'file');
                 }
             }
         }
