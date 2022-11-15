@@ -31,6 +31,11 @@ class Branch extends Revision
         return !$this->remote;
     }
 
+    public function getRemoteName(): ?string
+    {
+        return $this->remote ? \explode('/', $this->name, 2)[1] : null;
+    }
+
     /**
      * @param null|int $offset Start listing from a given position
      * @param null|int $limit  Limit the fetched number of commits
