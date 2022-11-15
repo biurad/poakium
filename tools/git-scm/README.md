@@ -17,7 +17,7 @@ A lightweight PHP library for working with Git Source Control Management (SCM). 
 
 ## 📦 Installation
 
-PHP 8.0 or newer and [GIT][2] 2.25 or newer are required. The recommended way to install, is by using [Composer][1]. Simply run:
+PHP 8.0 or newer and [GIT][2] 2.30 or newer are required. The recommended way to install, is by using [Composer][1]. Simply run:
 
 ```bash
 $ composer require biurad/git-scm
