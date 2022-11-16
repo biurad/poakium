@@ -28,7 +28,7 @@ class Tag extends Revision
         } catch (ExceptionInterface) {
         }
 
-        return !empty($tag);
+        return null !== ($tag ?? null);
     }
 
     /**
