@@ -351,7 +351,7 @@ class Repository
             }
         }
 
-        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
+        return 1 === \count($this->cache[$i]) ? $this->cache[$i][0] : $this->cache[$i] ?? null;
     }
 
     /**
@@ -403,7 +403,7 @@ class Repository
             }
         }
 
-        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
+        return 1 === \count($this->cache[$i]) ? $this->cache[$i][0] : $this->cache[$i] ?? null;
     }
 
     /**
