@@ -28,7 +28,7 @@ class Revision extends GitObject
      */
     public function __construct(Repository $repository, string $revision, string $commitHash = null)
     {
-        parent::__construct($repository, $commitHash);
+        parent::__construct($repository, $commitHash ?? '');
         $this->revision = $revision;
         $this->name = $this->doName();
     }
@@ -50,6 +50,10 @@ class Revision extends GitObject
      */
     public function getRevision(): string
     {
+        if (!\str_starts_with($this->revision, 'refs/')) {
+            throw new \RuntimeException(\sprintf('Invalid revision provided "%s", expected revision to start with a "refs/"', $this->revision));
+        }
+
         return $this->revision;
     }
 

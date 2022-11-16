@@ -48,6 +48,6 @@ class Message implements \Stringable
 
     public function getBody(): ?string
     {
-        return \rtrim($this->body, "\n");
+        return empty($this->body) ? null : \rtrim($this->body, "\n");
     }
 }

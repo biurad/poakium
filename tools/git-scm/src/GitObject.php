@@ -36,7 +36,7 @@ abstract class GitObject implements \Stringable
         $hash = $this->hash;
 
         if (empty($hash) || !\preg_match('/^[0-9a-f]{40}$/', $hash)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid commit hash "%s"', $hash));
+            throw new \InvalidArgumentException(\sprintf('Invalid commit hash%s', empty($hash) ? '. Empty hash provided' : " \"$hash\""));
         }
 
         return $hash;

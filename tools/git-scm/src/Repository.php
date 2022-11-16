@@ -141,14 +141,24 @@ class Repository
     }
 
     /**
-     * @return int the size of repository in kilobytes, 0 if command failed
+     * @return int the size of repository in kilobytes, -1 if command failed
      */
-    public function getSize(): int
+    public function getSize(bool $real = false): int
     {
-        $o = $this->run('count-objects');
+        if ($real) {
+            if (0 === ($totalBytes = &$this->cache['size'] ?? 0)) {
+                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->getGitPath(), \FilesystemIterator::SKIP_DOTS));
 
-        if (empty($o) || 0 !== $this->exitCode) {
-            return 0;
+                foreach ($iterator as $object) {
+                    $totalBytes += $object->getSize();
+                }
+            }
+
+            return (int) ($totalBytes / 1000 + 0.5);
+        }
+
+        if (empty($o = $this->run('count-objects')) || 0 !== $this->exitCode) {
+            return -1;
         }
 
         return (int) \substr($o, \strpos($o, ',') + 2, -10);
@@ -191,7 +201,7 @@ class Repository
     /**
      * Returns all remotes.
      *
-     * @return array<string,string> [remote => url]
+     * @return array<string,Remote>
      */
     public function getRemotes(): array
     {
@@ -202,13 +212,10 @@ class Repository
         }
 
         if (!isset($this->cache[$i = \md5($o)])) {
-            foreach (\explode('\n', $o) as $line) {
-                [$remote, $url] = \explode('  ', $line, 2);
-
-                if (\str_ends_with($url, '(push)')) {
-                    continue;
-                }
-                $this->cache[$i][$remote] = \substr($url, 0, -7);
+            foreach (\array_filter(\explode(" (push)\n", $o)) as $line) {
+                [$a, $b] = \explode("\n", $line, 2);
+                [$remote, $url] = \explode("\t", $b, 2);
+                $this->cache[$i][$remote] = new Remote($remote, \substr($a, \strlen($remote) + 1, -8), $url);
             }
         }
 
@@ -222,7 +229,7 @@ class Repository
      */
     public function getUntrackedFiles(bool $staged = false): array
     {
-        $o = $this->run('status', ['--porcelain', '-uall', $staged ? '-s' : '--empty-directory']);
+        $o = $this->run('status', ['--porcelain', '-uall', $staged ? '-s' : '--untracked-files=all']);
 
         if (empty($o) || 0 !== $this->exitCode) {
             return [];
@@ -231,8 +238,8 @@ class Repository
         if (!isset($this->cache[$i = \md5($o)])) {
             foreach (\explode("\n", $o) as $line) {
                 if (!empty($line)) {
-                    $status = \strrpos($line, "\0") + 1;
-                    $this->cache[$i][] = ['status' => \substr($line, 0, $status), 'file' => \substr($line, $status)];
+                    [$status, $file] = \explode(' ', $line, 2);
+                    $this->cache[$i][] = \compact('status', 'file');
                 }
             }
         }
@@ -258,7 +265,7 @@ class Repository
                 if (!empty($line)) {
                     [$hash, $ref] = \explode(' ', $line, 2);
 
-                    if (\str_starts_with($ref, 'refs/heads/')) {
+                    if (\str_starts_with($ref, 'refs/heads/') || \str_starts_with($ref, 'refs/remotes/')) {
                         $this->cache[$i][] = new Branch($this, $ref, $hash);
                     } elseif (\str_starts_with($ref, 'refs/tags/')) {
                         $this->cache[$i][] = new Tag($this, $ref, $hash);
@@ -341,7 +348,7 @@ class Repository
             }
         }
 
-        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
+        return 1 === \count($this->cache[$i]) ? $this->cache[$i][0] : $this->cache[$i] ?? null;
     }
 
     /**
@@ -393,7 +400,7 @@ class Repository
             }
         }
 
-        return 1 <= \count($this->cache[$i]) ? $this->cache[$i][0] ?? [] : $this->cache[$i];
+        return 1 === \count($this->cache[$i]) ? $this->cache[$i][0] : $this->cache[$i] ?? null;
     }
 
     /**
@@ -608,10 +615,10 @@ class Repository
         }
 
         if (\is_string($expected)) {
-            return $expected === $o;
+            return $expected === ($o ?? null);
         }
 
-        return null === $expected ? true : $expected($o);
+        return null === $expected ? true : $expected($o ?? null);
     }
 
     /**
@@ -703,7 +710,7 @@ class Repository
             }
         }
 
-        if (isset($message)) {
+        if (isset($message, $start)) {
             $this->logger->debug(\sprintf($message.' at "%.2fms".', \implode(', ', $lines ?? []), $start * 1000));
         }
 
