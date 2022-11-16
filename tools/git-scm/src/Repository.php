@@ -201,7 +201,7 @@ class Repository
     /**
      * Returns all remotes.
      *
-     * @return array<string,string> [remote => url]
+     * @return array<string,Remote>
      */
     public function getRemotes(): array
     {
@@ -212,13 +212,10 @@ class Repository
         }
 
         if (!isset($this->cache[$i = \md5($o)])) {
-            foreach (\explode('\n', $o) as $line) {
-                [$remote, $url] = \explode("\t", $line, 2);
-
-                if (\str_ends_with($url, '(push)')) {
-                    continue;
-                }
-                $this->cache[$i][$remote] = \substr($url, 0, -7);
+            foreach (\array_filter(\explode(" (push)\n", $o)) as $line) {
+                [$a, $b] = \explode("\n", $line, 2);
+                [$remote, $url] = \explode("\t", $b, 2);
+                $this->cache[$i][$remote] = new Remote($remote, \substr($a, \strlen($remote) + 1, -8), $url);
             }
         }
 
