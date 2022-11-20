@@ -1,9 +1,9 @@
-<h1 style="text-align:center;font-size:5rem;font-weight:bold;letter-spacing:1.5rem;margin:10px auto">Poakium</h1>
+<h1 align="center">Poakium</h1>
 
 <p align="center">
-<a href="https://github.com/biurad/poakium/actions"><img src="https://github.com/biurad/paokium/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
-<a href="https://codecov.io/gh/biurad/paokium"><img src="https://codecov.io/gh/biurad/paokium/branch/5.x/graph/badge.svg" alt="CodeCoverage"></a>
-<a href="https://packagist.org/packages/biurad/paokium"><img src="https://img.shields.io/packagist/v/biurad/paokium.svg" alt="Released"></a>
+<a href="https://github.com/biurad/poakium/actions"><img src="https://github.com/biurad/poakium/actions/workflows/ci.yml/badge.svg?branch=master" alt="GitHub Actions"></a>
+<a href="https://codecov.io/gh/biurad/poakium"><img src="https://codecov.io/gh/biurad/paokium/branch/5.x/graph/badge.svg" alt="CodeCoverage"></a>
+<a href="https://packagist.org/packages/biurad/poakium"><img src="https://img.shields.io/packagist/v/biurad/poakium.svg" alt="Released"></a>
 </p>
 
 ## 🧱 About
