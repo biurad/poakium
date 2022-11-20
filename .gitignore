@@ -5,3 +5,10 @@ composer.lock
 
 # vscode
 /.vscode/
+
+# Monorepo
+/.monorepo-cache
+
+# not allowed
+/tools/*/tests/build/
+/packages/*/tests/build/

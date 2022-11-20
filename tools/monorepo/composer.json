@@ -1,0 +1,38 @@
+{
+  "name": "biurad/monorepo",
+  "type": "library",
+  "description": "Library for working with Git repositories and PHP as a monorepo",
+  "keywords": ["git", "monorepo", "repository", "repositories", "library", "php"],
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Niiquaye Divine Ibok",
+      "email": "divineibok@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "bin": ["bin/monorepo"],
+  "config": {
+    "preferred-install": "dist",
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "biurad/git-scm": "*",
+    "symfony/console": "^6.0",
+    "symfony/options-resolver": "^6.0",
+    "symfony/process": "^6.0",
+    "symfony/yaml": "^6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Biurad\\Monorepo\\": "src/"
+    }
+  },
+  "suggest": {
+    "psr/log": "Required to use loggers for reporting of execution"
+  }
+}

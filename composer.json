@@ -26,6 +26,10 @@
     "php-parallel-lint/php-parallel-lint": "^1.3",
     "symfony/var-dumper": "^6.0"
   },
+  "replace": {
+    "symfony/polyfill-php80": "*",
+    "biurad/git-scm": "*"
+  },
   "scripts": {
     "coverage": [
       "@phpcs --report-full",
