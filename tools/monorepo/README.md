@@ -17,7 +17,7 @@ A PHP library for working with Monorepo Project's. This library handles splittin
 
 ## 📦 Installation
 
-PHP 8.0 or newer and [GIT][1] 2.25 or newer are required. The recommended way to install, is by using [Composer][2]. Simply run:
+PHP 8.0 or newer and [GIT][1] 2.30 or newer are required. The recommended way to install, is by using [Composer][2]. Simply run:
 
 ```bash
 $ composer require biurad/monorepo
