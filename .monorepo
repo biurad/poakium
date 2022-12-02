@@ -21,5 +21,55 @@ repositories:
     url: https://github.com/biurad/php-monorepo.git
     path: tools/monorepo
 
+  annotations:
+    url: https://github.com/biurad/php-annotations.git
+    path: packages/annotations
+    merge: true
+
+  cache:
+    url: https://github.com/biurad/php-cache.git
+    path: packages/cache
+    merge: true
+
+  cs:
+    url: https://github.com/biurad/php-coding-standard.git
+    path: packages/coding-standard
+    merge: true
+
+  docs:
+    url: https://github.com/biurad/php-docs.git
+    path: packages/docs
+    merge: true
+
+  http-galaxy:
+    url: https://github.com/biurad/php-http-galaxy.git
+    path: packages/http-galaxy
+    merge: true
+
+  loader:
+    url: https://github.com/biurad/php-loader.git
+    path: packages/loader
+    merge: true
+
+  maker:
+    url: https://github.com/biurad/php-make.git
+    path: packages/maker
+    merge: true
+
+  security:
+    url: https://github.com/biurad/php-security.git
+    path: packages/security
+    merge: true
+
+  starter:
+    url: https://github.com/biurad/php-starter.git
+    path: packages/starter
+    merge: true
+
+  templating:
+    url: https://github.com/biurad/php-templating.git
+    path: packages/templating
+    merge: true
+
 # An array of configuration's which custom workers may rely on
 #extra: ~
