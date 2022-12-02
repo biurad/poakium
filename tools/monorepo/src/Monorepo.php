@@ -56,7 +56,7 @@ class Monorepo
         $result = 0;
 
         foreach ($this->repositories as [$url, $remote, $path, $merge]) {
-            if (null !== $checker && $checker([$url, $remote, $path, $merge])) {
+            if (null !== $checker && !$checker([$url, $remote, $path, $merge])) {
                 continue;
             }
 

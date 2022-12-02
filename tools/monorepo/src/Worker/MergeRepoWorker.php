@@ -73,13 +73,13 @@ class MergeRepoWorker implements PriorityInterface, WorkerInterface
             return WorkflowCommand::FAILURE;
         }
 
-        if ($mainRepo->check('status', ['--porcelain'])) {
+        if (!empty($mainRepo->run('status', ['--porcelain']))) {
             $output->writeln('<error>Git status shows pending changes in repo</error>');
 
             return WorkflowCommand::FAILURE;
         }
 
-        return $repo->resolveRepository($output, static function (array $required) use ($output, $mainRepo, $readTree): int {
+        return $repo->resolveRepository($output, static function (array $required) use ($output, $repo, $mainRepo, $readTree): int {
             [$url, $remote, $path, $clonePath] = $required;
             $output->writeln(\sprintf('<info>Rewriting %s commit history to point to %s</info>', $url, $path));
 
@@ -131,6 +131,6 @@ class MergeRepoWorker implements PriorityInterface, WorkerInterface
             }
 
             return $merged;
-        }, static fn (array $v): bool => !$v[3]);
+        }, static fn (array $v): bool => 'true' === $v[3]);
     }
 }
