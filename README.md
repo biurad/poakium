@@ -39,6 +39,7 @@ Follow the instructions in [SETUP.md][6] to get a development environment set up
 The repository has the following packages (sub projects):
 
 [Git-SCM](https://github.com/biurad/php-git-scm)
+[Monorepo](https://github.com/biurad/php-monorepo)
 
 **Please do not use biurad/poakium in production!** Use the split packages instead, unless your project heavily relies on it.
 
