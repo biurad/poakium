@@ -1,0 +1,79 @@
+{
+    "name": "biurad/templating",
+    "description": "A library that provides all the tools needed in working with any kind of template system",
+    "type": "library",
+    "keywords": ["biurad","templating","template", "php"],
+    "homepage": "https://www.biurad.com",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Divine Niiquaye Ibok",
+            "email": "divineibok@gmail.com"
+        },
+        {
+            "name": "Biurad Lap Community",
+            "homepage": "https://biurad.com/projects/contributors"
+        }
+    ],
+    "support": {
+        "docs": "https://docs.biurad.com/php-templating/",
+        "issues": "https://github.com/biurad/php-templating/issues",
+        "rss": "https://github.com/biurad/php-templating/releases.atom",
+        "source": "https://github.com/biurad/php-templating"
+    },
+    "require": {
+        "php": "^7.2 || ^8.0",
+        "symfony/polyfill-php80": "^1.23",
+        "symfony/polyfill-php81": "^1.23"
+    },
+    "require-dev": {
+        "latte/latte": "^2.8",
+        "phpstan/phpstan": "^1.0",
+        "phpunit/phpunit": "^8.5 || ^9.5",
+        "squizlabs/php_codesniffer": "^3.6",
+        "twig/twig": "^3.1",
+        "vimeo/psalm": "^4.7"
+    },
+    "suggest": {
+        "ext-json": "For loading JSON parsed templates to ArrayStorage",
+        "latte/latte": "For a intuitive and fast template engine",
+        "twig/twig": "A flexible, fast, and secure template language for PHP"
+    },
+    "autoload": {
+        "psr-4": {
+            "Biurad\\UI\\": "src/"
+        },
+        "files": [
+            "src/Html/elements.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Biurad\\UI\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "scripts": {
+        "phpcs": "phpcs -q",
+        "phpstan": "phpstan analyse",
+        "psalm": "psalm --show-info=true",
+        "phpunit": "phpunit --no-coverage",
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@psalm",
+            "@phpunit"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": false
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

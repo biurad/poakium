@@ -1,0 +1,50 @@
+
+<!Doctype html>
+<html lang="en-us">
+    <head>
+        <title>
+            Biurad World
+        </title>
+        <meta charset="UTF-8">
+        <style>
+            .home { background: #fefefe; } article div p { font-size: 1.2rem; } @media only screen and (max-width: 500px) { p > button#btn { border: 1px solid grey; } ul li a { font-size: 22px; padding-top: 20px; } }
+        </style>
+    </head>
+    <body style="margin: 0px;">
+        <h1>
+            Hello World
+        </h1>
+        <hr>
+        <!-- This is the main content -->
+        <div>
+            <a target="__self" href="biurad.com"></a>
+            <p>
+                Welcome to Biurad Templating
+            </p>
+        </div>
+        <ul>
+            <li>
+                Hello World
+            </li>
+            <li>
+                Hi World
+            </li>
+        </ul>
+        <span>
+            Traveled By Train
+        </span>
+        <br/>
+        <span>
+            Traveled By Plane
+        </span>
+        <br/>
+        <span>
+            Traveled By Car
+        </span>
+        <br/>
+        <span>
+            Traveled Differently
+        </span>
+        <br/>
+    </body>
+</html>

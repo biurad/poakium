@@ -1,0 +1,10 @@
+parameters:
+    level: 3
+    paths: [src]
+    checkGenericClassInNonGenericObjectType: false
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        -
+           message: "#^Access to an undefined property Biurad\\\\UI\\\\Html\\\\Node\\\\AbstractNode\\:\\:\\$parent.$#"
+           path: "src/Html/HtmlElement.php"
