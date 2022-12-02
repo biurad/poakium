@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader-config>
+    <test>
+        <dir>
+            <root>1</root>
+            <lib></lib>
+        </dir>
+        <forbidden_file_extensions>php</forbidden_file_extensions>
+        <forbidden_file_extensions>php3</forbidden_file_extensions>
+        <forbidden_file_extensions>pl</forbidden_file_extensions>
+        <forbidden_file_extensions>com</forbidden_file_extensions>
+        <forbidden_file_extensions>exe</forbidden_file_extensions>
+        <forbidden_file_extensions>bat</forbidden_file_extensions>
+        <forbidden_file_extensions>cgi</forbidden_file_extensions>
+        <forbidden_file_extensions>htaccess</forbidden_file_extensions>
+        <debugger_token>debug</debugger_token>
+    </test>
+</loader-config>
