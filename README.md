@@ -40,6 +40,15 @@ The repository has the following packages (sub projects):
 
 * [Git-SCM](https://github.com/biurad/php-git-scm) - tools/git-scm
 * [Monorepo](https://github.com/biurad/php-monorepo) - tools/monorepo
+* [Annotations](https://github.com/biurad/php-annotations) - packages/annotations
+* [Cache](https://github.com/biurad/php-cache) - packages/cache
+* [Coding Standard](https://github.com/biurad/php-coding-standard) - packages/coding-standard
+* [Docs](https://github.com/biurad/php-docs) - packages/docs
+* [Http Galaxy](https://github.com/biurad/php-http-galaxy) - packages/http-galaxy
+* [Loader](https://github.com/biurad/php-loader) - packages/loader
+* [Maker](https://github.com/biurad/php-make) - packages/maker
+* [Starter](https://github.com/biurad/php-starter) - packages/starter
+* [Templating](https://github.com/biurad/php-templating) - packages/templating
 
 **Please do not use biurad/poakium in production!** Use the split packages instead, unless your project heavily relies on it.
 
