@@ -21,7 +21,7 @@ Poakium is backed by [DivineNii][3] and [Biurad Lap][4].
 
 **DivineNii** is a software engineer who is passionate about open source and the PHP community. He provides a wide range of professional services, kindly contact him at [divinenii.com][3].
 
-**Biurad Lap** is tech company/agency in Ghana, providing software development, cloud solutions, consulting, and training services. Visit their [website][4] for more information.
+**Biurad Lap** is a tech company/agency in Ghana, providing software development, cloud solutions, consulting, and training services. Visit their [website][4] for more information.
 
 Help Poakium by [sponsoring][5] its development!
 
@@ -38,8 +38,8 @@ Follow the instructions in [SETUP.md][6] to get a development environment set up
 
 The repository has the following packages (sub projects):
 
-[Git-SCM](https://github.com/biurad/php-git-scm)
-[Monorepo](https://github.com/biurad/php-monorepo)
+* [Git-SCM](https://github.com/biurad/php-git-scm) - tools/git-scm
+* [Monorepo](https://github.com/biurad/php-monorepo) - tools/monorepo
 
 **Please do not use biurad/poakium in production!** Use the split packages instead, unless your project heavily relies on it.
 
