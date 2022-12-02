@@ -77,13 +77,12 @@ class SplitCommitsWorker implements WorkerInterface
         }
 
         if ($branches && '*' === $branches[0]) {
-            $allBranches = true;
-
             if (\count($branches) > 1) {
                 $output->writeln(\sprintf('<error>Expected "*" as the only value for option "--branch", got "%s"</error>', \implode(', ', $branches)));
 
                 return WorkflowCommand::FAILURE;
             }
+            [$branches, $allBranches] = [[], true];
         }
 
         foreach ($mainRepo->getBranches() as $branch) {
