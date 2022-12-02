@@ -17,7 +17,7 @@ A PHP library for working with Monorepo Project's. This library handles splittin
 
 ## 📦 Installation
 
-PHP 8.0 or newer and [GIT][1] 2.25 or newer are required. The recommended way to install, is by using [Composer][2]. Simply run:
+PHP 8.0 or newer and [GIT][1] 2.30 or newer are required. The recommended way to install, is by using [Composer][2]. Simply run:
 
 ```bash
 $ composer require biurad/monorepo
@@ -35,9 +35,6 @@ Here is an example of the *.monorepo* config:
 ```yaml
 # URL or absolute path to the remote GIT repository of the monorepo
 base_url: https://github.com/YOUR-VENDORNAME/YOUR-PROJECT.git
-
-# Base directories where sub repo paths can be found
-base_path: ['packages', 'plugins']
 
 # All branches that match this regular expression will be split by default
 branch_filter: /^(main|develop|\d+\.\d+)$/
@@ -63,7 +60,7 @@ repositories:
   second-subfolder:
     # URL or absolute path to the remote GIT repository
     url: https://github.com/YOUR-VENDORNAME/YOUR-SECOND-SPLIT-PROJECT.git
-    # A path which exist in `base_path` or an absolute path to sub repo
+    # A path which exist in the root path where monorepo command is called
     # If not defined, this config key (second-subfolder) is used as path
     path: php-example
     # If true, Repo supports merging & splitting. If false, only splitting is supported

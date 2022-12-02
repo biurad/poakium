@@ -28,15 +28,14 @@ final class Config implements \ArrayAccess, \Countable
 
     public function __construct(string $rootPath, string $cachePath = null)
     {
-        if (!\file_exists($configFile = $rootPath.'/.monorepo')) {
+        if (!\file_exists($configFile = ($this->config['path'] = $rootPath).'/.monorepo')) {
             throw new \RuntimeException(\sprintf('Config file "%s" does not exist.', $configFile));
         }
 
-        $basePaths = $workers = [];
+        $workers = [];
         $options = new OptionsResolver();
         $options
             ->define('base_url')->default(null)->allowedTypes('string', 'null')
-            ->define('base_path')->default(null)->allowedTypes('string', 'string[]', 'null')
             ->define('branch_filter')->default(null)->allowedTypes('string', 'null')
             ->define('extra')->default([])->allowedTypes('array')
             ->define('workers')->default([])->allowedTypes('array')
@@ -60,40 +59,15 @@ final class Config implements \ArrayAccess, \Countable
                 return $value;
             })
             ->define('repositories')
-            ->default(function (OptionsResolver $options, Options $parent) use (&$basePaths, &$workers, $rootPath): void {
+            ->default(function (OptionsResolver $options, Options $parent) use (&$workers): void {
                 $workers = \array_keys($parent['workers']);
-
-                if (!\is_array($basePaths = $parent['base_path'] ?? [])) {
-                    $basePaths = [$basePaths];
-                }
-
                 $options->setPrototype(true)
                     ->define('url')->default(null)->allowedTypes('string', 'null')->required()
                     ->define('merge')->default(false)->allowedTypes('bool')
                     ->define('path')
                     ->allowedTypes('string')
                     ->default(\Closure::bind(fn (Options $options): string => $options->prototypeIndex, null, $options))
-                    ->normalize(function (Options $options, string $value) use ($basePaths, $rootPath): string {
-                        $value = \rtrim($value, '\/');
-
-                        if (\file_exists("{$rootPath}/{$value}") || \file_exists($value)) {
-                            return $value;
-                        }
-
-                        foreach ($basePaths as $path) {
-                            $path = \rtrim($path, '\/').'/'.\ltrim($value, '\/');
-
-                            if (\file_exists($path) || \file_exists($rootPath.'/'.\ltrim($path, '/'))) {
-                                return $path;
-                            }
-                        }
-
-                        if ($options['merge']) {
-                            return $value;
-                        }
-
-                        throw new InvalidOptionsException(\sprintf('The path "%s" does not exist.', $value));
-                    })
+                    ->normalize(fn (Options $options, string $value): string => \trim($value, '/'))
                     ->define('workers')->default($workers)->allowedTypes('array')
                     ->normalize(function (Options $options, array $value) use ($workers): array {
                         foreach ($value as $worker) {
@@ -108,9 +82,8 @@ final class Config implements \ArrayAccess, \Countable
             })->allowedTypes('array')
         ;
 
-        $options->setRequired(['base_url', 'base_path', 'branch_filter', 'workers', 'repositories']);
+        $options->setRequired(['base_url', 'branch_filter', 'workers', 'repositories']);
         $this->config = $options->resolve(\function_exists('yaml_parse_file') ? yaml_parse_file($configFile) : Yaml::parseFile($configFile));
-        $this->config['path'] = \substr($configFile, 0, -10);
         $this->config['cache'] = $cachePath ?? $this->config['path'].'/.monorepo-cache';
     }
 

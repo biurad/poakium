@@ -16,6 +16,7 @@ use Biurad\Git\Repository;
 use Biurad\Monorepo\{Monorepo, WorkerInterface, WorkflowCommand};
 use Symfony\Component\Console\Input\{InputInterface, InputOption};
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\Process\{ExecutableFinder, Process};
 
 /**
@@ -95,6 +96,10 @@ class SplitCommitsWorker implements WorkerInterface
             $output,
             static function (array $required) use ($input, $output, $currentBranch, $branches, $split, $repo, $mainRepo): int {
                 [$url, $remote, $path, $clonePath] = $required;
+
+                if (!\file_exists($mainRepo->getPath()."/$path")) {
+                    throw new InvalidOptionsException(\sprintf('The repo for "%s" path "%s" does not exist.', $remote, $path));
+                }
 
                 foreach (\array_unique($branches) as $branch) {
                     $output->writeln(\sprintf('<info>Splitting commits from branch %s into %s</info>', $branch, $url));

@@ -1,5 +1,4 @@
 base_url: https://github.com/biurad/poakium.git
-base_path: ['packages', 'tools']
 
 # All branches that match this regular expression will be split by default
 branch_filter: /^(master|issue-[\d+]|\d+\.\d+)$/
@@ -12,14 +11,15 @@ workers:
   merge:
     - Biurad\Monorepo\Worker\MergeRepoWorker
 
-
 # List of all split projects
 repositories:
   git-scm:
     url: https://github.com/biurad/php-git-scm.git
+    path: tools/git-scm
 
   monorepo:
     url: https://github.com/biurad/php-monorepo.git
+    path: tools/monorepo
 
 # An array of configuration's which custom workers may rely on
 #extra: ~
