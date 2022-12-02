@@ -138,7 +138,7 @@ class SplitCommitsWorker implements WorkerInterface
                         ]);
 
                         if (!$input->getOption('no-push')) {
-                            $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f', '-u'] : ['-u']), 'origin', "+$branch"];
+                            $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f', '-u'] : ['-u']), 'origin', "$branch:$branch"];
                         }
                     } else {
                         $output->writeln(\sprintf('<info>Nothing to commit; On branch %s, "%s/%1$s" is up to date</info>', $branch, $remote));
