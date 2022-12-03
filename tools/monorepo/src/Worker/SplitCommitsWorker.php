@@ -130,7 +130,7 @@ class SplitCommitsWorker implements WorkerInterface
                             ['checkout', '--orphan', "split-$remote"],
                             ['reset', '--hard'],
                             ['pull', $remote, $branch],
-                            ['cherry-pick', "$target~".\implode(" $target~", \array_reverse(\range(0, $updates - $count - 1)))],
+                            ['cherry-pick', ...\explode(' ', "$target~".\implode(" $target~", \array_reverse(\range(0, $updates - $count - 1))))],
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+refs/heads/split-$remote:$branch"],
                             ['checkout', $currentBranch],
                             ['branch', '-D', "split-$remote"],
