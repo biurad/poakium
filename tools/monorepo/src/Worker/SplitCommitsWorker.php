@@ -56,13 +56,11 @@ class SplitCommitsWorker implements WorkerInterface
      */
     public function work(Monorepo $repo, InputInterface $input, SymfonyStyle $output): int
     {
-        [$finder, $mainRepo, $branches] = [new ExecutableFinder(), $repo->getRepository(), $input->getOption('branch')];
+        [$mainRepo, $branches] = [$repo->getRepository(), $input->getOption('branch')];
         $currentBranch = $mainRepo->getBranch()->getName();
 
-        if (null === $split = $finder->find('splitsh-lite', null, [__DIR__.'/../../bin'])) {
-            $output->writeln('<error>splitsh-lite not found</error>');
-
-            return WorkflowCommand::FAILURE;
+        if (!\is_executable($split = __DIR__.'/../../bin/splitsh-lite')) {
+            Process::fromShellCommandline('chmod +x '.$split)->mustRun();
         }
 
         if ('\\' === \DIRECTORY_SEPARATOR) {
