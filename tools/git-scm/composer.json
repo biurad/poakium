@@ -3,13 +3,21 @@
   "type": "library",
   "description": "Library for working with Git repository & Git services in PHP.",
   "keywords": ["git", "scm", "repository", "library", "php"],
+  "homepage": "https://biurad.com",
   "license": "BSD-3-Clause",
   "authors": [
     {
-      "name": "Niiquaye Divine Ibok",
+      "name": "Divine Niiquaye Ibok",
       "email": "divineibok@gmail.com"
+    },
+    {
+      "name": "GitHub Contributors",
+      "homepage": "https://github.com/biurad/php-git-scm/contributors"
     }
   ],
+  "support": {
+    "docs": "https://docs.biurad.com/php/git-scm"
+  },
   "minimum-stability": "dev",
   "prefer-stable": true,
   "config": {
@@ -29,7 +37,7 @@
     }
   },
   "suggest": {
-    "ext-fileinfo": "Required to determine the mimetype of a blob",
+    "ext-fileinfo": "Required to determine the mimetype of a git commit blob",
     "psr/log": "Required to use loggers for reporting of execution"
   }
 }
