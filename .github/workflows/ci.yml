@@ -87,7 +87,7 @@ jobs:
     name: Publishing Commits
     #needs: tests
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Setup PHP
@@ -105,4 +105,4 @@ jobs:
           cd tools/monorepo
           composer install
           cd ../../
-          php tools/monorepo/bin/console.php -v
+          php tools/monorepo/bin/monorepo -v
