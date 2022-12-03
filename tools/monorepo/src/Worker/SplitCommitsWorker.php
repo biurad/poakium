@@ -105,7 +105,7 @@ class SplitCommitsWorker implements WorkerInterface
                     $pushChanges = [];
 
                     ($s = Process::fromShellCommandline(
-                        "{$split} --prefix={$path} --origin=heads/{$branch} --target=".$target = "refs/splits/$remote",
+                        "{$split} --prefix={$path} --origin=origin/{$branch} --target=".$target = "refs/splits/$remote",
                         $mainRepo->getPath(),
                         timeout: 1200
                     ))->run();
