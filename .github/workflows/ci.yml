@@ -87,7 +87,6 @@ jobs:
     name: Publishing Commits
     #needs: tests
     if: github.event_name != 'pull_request'
-
     runs-on: ubuntu-latest
 
     steps:
@@ -101,8 +100,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install the dependencies
-        run: composer global require biurad/monorepo:dev-master
-
       - name: Split Commits
-        run: $HOME/.composer/vendor/bin/monorepo -v
+        run: |
+          cd tools/monorepo
+          composer install
+          cd ../../
+          php tools/monorepo/bin/console.php -v
