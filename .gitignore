@@ -10,5 +10,6 @@ composer.lock
 /.monorepo-cache
 
 # not allowed
+.phpcs-cache
 /tools/*/tests/build/
 /packages/*/tests/build/
