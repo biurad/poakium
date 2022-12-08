@@ -4,7 +4,6 @@
 
 [![Latest Version](https://img.shields.io/packagist/v/biurad/git-scm.svg?style=flat-square)](https://packagist.org/packages/biurad/git-scm)
 [![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?style=flat-square)](LICENSE)
-[![Workflow Status](https://img.shields.io/github/workflow/status/biurad/php-git-scm/build?style=flat-square)](https://github.com/biurad/php-git-scm/actions)
 [![Code Maintainability](https://img.shields.io/codeclimate/maintainability/biurad/php-git-scm?style=flat-square)](https://codeclimate.com/github/biurad/php-git-scm)
 [![Coverage Status](https://img.shields.io/codecov/c/github/biurad/php-git-scm?style=flat-square)](https://codecov.io/gh/biurad/php-git-scm)
 [![Quality Score](https://img.shields.io/scrutinizer/g/biurad/php-git-scm.svg?style=flat-square)](https://scrutinizer-ci.com/g/biurad/php-git-scm)
