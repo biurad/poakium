@@ -76,7 +76,7 @@ final class LatteRender extends AbstractRender implements CacheInterface
             $templateLoader = new Latte\Loaders\StringLoader([$template => $source]);
         }
 
-        $latte = $this->latte->setLoader($templateLoader ?? new class($this->loader) extends Latte\Loaders\FileLoader {
+        $latte = $this->latte->setLoader($templateLoader ?? new class ($this->loader) extends Latte\Loaders\FileLoader {
             /** @var Template */
             private $loader;
 

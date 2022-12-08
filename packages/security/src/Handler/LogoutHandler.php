@@ -41,8 +41,7 @@ class LogoutHandler
         ClearableTokenStorageInterface $csrfTokenStorage = null,
         RememberMeHandler $rememberMeHandler = null,
         SessionInterface $session = null
-    )
-    {
+    ) {
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
         $this->csrfTokenStorage = $csrfTokenStorage;

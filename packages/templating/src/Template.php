@@ -72,7 +72,7 @@ final class Template
 
     /**
      * Adds a new storage system to templating.
-     * 
+     *
      * This can be useful as e.g. cached templates may be fetched
      * from database and used in runtime.
      */
