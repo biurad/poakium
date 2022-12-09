@@ -60,7 +60,7 @@ class SplitCommitsWorker implements WorkerInterface
         $currentBranch = $mainRepo->getBranch()->getName();
 
         if (!\is_executable($split = __DIR__.'/../../bin/splitsh-lite')) {
-            Process::fromShellCommandline('chmod +x '.$split)->mustRun();
+            $mainRepo->run('update-index', ['--chmod=+x']);
         }
 
         if ('\\' === \DIRECTORY_SEPARATOR) {
