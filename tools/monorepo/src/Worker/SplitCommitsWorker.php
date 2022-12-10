@@ -17,7 +17,7 @@ use Biurad\Monorepo\{Monorepo, WorkerInterface, WorkflowCommand};
 use Symfony\Component\Console\Input\{InputInterface, InputOption};
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\Process\{ExecutableFinder, Process};
+use Symfony\Component\Process\Process;
 
 /**
  * A workflow worker for splitting commits to repositories.
@@ -100,6 +100,7 @@ class SplitCommitsWorker implements WorkerInterface
 
                 foreach (\array_unique($branches) as $branch) {
                     $output->writeln(\sprintf('<info>Splitting commits from branch %s into %s</info>', $branch, $url));
+                    $verify = ['-1', '--format=%ad | %s [%an]', '--date=short'];
                     $pushChanges = [];
 
                     ($s = Process::fromShellCommandline(
@@ -116,19 +117,23 @@ class SplitCommitsWorker implements WorkerInterface
                         }
                     }
 
-                    if ($mainRepo->run('log', ['master', '-1', '--format=%s'], null, $clonePath) !== $mainRepo->run('log', [$target, '-1', '--format=%s'])) {
-                        $updates = $mainRepo->run('rev-list', ['--count', $target]);
-                        $count = $mainRepo->run('rev-list', ['--count', $branch], null, $clonePath) ?? 0;
+                    if ($mainRepo->run('log', [$branch, ...$verify], cwd: $clonePath) !== $mainRepo->run('log', [$target, ...$verify])) {
+                        $count = (int) \rtrim($mainRepo->run('rev-list', ['--count', $target]) ?? '0');
+                        $updates = (int) \rtrim($mainRepo->run('rev-list', ['--count', $branch], cwd: $clonePath) ?? '0');
 
-                        $output->writeln(\sprintf('<info>Pushing (%d) commits from branch %s to %s</info>', $updates - $count, $branch, $url));
-                        $mainRepo->runConcurrent(0 === $count ? [
+                        if (($count = $updates > $count ? $updates - $count : $count - $updates) < 0) {
+                            continue;
+                        }
+
+                        $output->writeln(\sprintf('<info>Pushing (%d) commits from branch %s to %s</info>', $count, $branch, $url));
+                        $mainRepo->runConcurrent(0 === $updates ? [
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+$target:refs/heads/$branch"],
                             ['update-ref', '-d', $target],
                         ] : [
                             ['checkout', '--orphan', "split-$remote"],
                             ['reset', '--hard'],
                             ['pull', $remote, $branch],
-                            ['cherry-pick', ...\explode(' ', "$target~".\implode(" $target~", \array_reverse(\range(0, $updates - $count - 1))))],
+                            ['cherry-pick', ...\explode(' ', "$target~".\implode(" $target~", \array_reverse(\range(0, $count - 1))))],
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+refs/heads/split-$remote:$branch"],
                             ['checkout', $currentBranch],
                             ['branch', '-D', "split-$remote"],
