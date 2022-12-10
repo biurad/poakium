@@ -18,7 +18,7 @@ A [PHP] template library for bootstrapping a library project, edit contents to y
 
 <!--- > This library is out of maintenance ir discontinued as it has reach its feature limit or end of life,  Updates will no longer be committed unless a **severe security venerability** is reported. -->
 
-## 📦 Installation & Basic Usage
+## 📦 Installation
 
 This project requires [PHP][1] 7.4 or higher. The recommended way to install, is via [Composer][2]. Simply run:
 
@@ -53,7 +53,7 @@ Starter Template is completely free and released under the [BSD 3 License](LICEN
 
 [1]: https://php.net
 [2]: https://getcomposer.org
-[3]: https://docs.biurad.com/poakium/git-scm
+[3]: https://docs.biurad.com/php/starter
 [PHP]: https://php.net
 [Composer]: https://getcomposer.org
 [@divineniiquaye]: https://github.com/divineniiquaye

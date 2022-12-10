@@ -65,7 +65,7 @@ Git SCM is completely free and released under the [BSD 3 License](LICENSE).
 
 [1]: https://getcomposer.org
 [2]: https://git-scm.com
-[3]: https://docs.biurad.com/poakium/git-scm
+[3]: https://docs.biurad.com/php/git-scm
 [4]: https://biurad.com/sponsor
 [5]: https://github.com/alexandresalome
 [6]: https://github.com/gitonomy/gitlib

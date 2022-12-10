@@ -29,6 +29,7 @@ Here is a simple example of how to use this library in your project:
 use Biurad\Security\Authenticator;
 use Biurad\Security\Authenticator\FormLoginAuthenticator;
 use Biurad\Security\Token\CacheableTokenStorage;
+use Biurad\Security\Token\PdoTokenProvider;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;

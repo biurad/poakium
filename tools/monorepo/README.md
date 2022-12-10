@@ -99,7 +99,7 @@ Poakium Monorepo is completely free and released under the [BSD 3 License](LICEN
 [2]: https://getcomposer.org
 [3]: https://githib.com/splitsh/lite
 [4]: https://github.com/crazy-max/ghaction-import-gpg
-[5]: https://docs.biurad.com/poakium/monorepo
+[5]: https://docs.biurad.com/php/monorepo
 [6]: https://biurad.com/sponsor
 [7]: https://au.si/
 [8]: https://github.com/contao/monorepo-tools
