@@ -86,6 +86,7 @@ class WorkflowCommand extends Command
         $this->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Do not perform operations, just their preview');
         $this->addOption('path', 'p', InputOption::VALUE_OPTIONAL, 'Absolute path to project\'s directory, defaults to directory were script is called.');
         $this->addOption('cache', 'c', InputOption::VALUE_OPTIONAL, 'Absolute path to cache directory, defaults to .monorepo-cache in the project directory.');
+        $this->addOption('clean', 'x', InputOption::VALUE_NONE, 'Re-clone cached repositories of monorepo\'s sub-repo');
         $this->addOption('only', 'o', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL, 'List of sub-repos specified by repo name', []);
     }
 
@@ -96,7 +97,7 @@ class WorkflowCommand extends Command
     {
         $repositories = [];
         $this->output = new SymfonyStyle($input, $output);
-        $config = new Config(\rtrim($input->getOption('path') ?? $this->rootPath, '\/'), $input->getOption('cache'));
+        $config = new Config(\rtrim($input->getOption('path') ?? $this->rootPath, '\/'), $input->getOption('cache'), $input->getOption('clean'));
         $exclusive = $input->getOption('only');
 
         if (empty($jobWorkers = $config['workers'][$stage = $input->getArgument('job')] ?? [])) {

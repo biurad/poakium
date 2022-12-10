@@ -26,13 +26,14 @@ final class Config implements \ArrayAccess, \Countable
     /** @var array<string,mixed> */
     private array $config;
 
-    public function __construct(string $rootPath, string $cachePath = null)
+    public function __construct(string $rootPath, string $cachePath = null, bool $reclone)
     {
         if (!\file_exists($configFile = ($this->config['path'] = $rootPath).'/.monorepo')) {
             throw new \RuntimeException(\sprintf('Config file "%s" does not exist.', $configFile));
         }
 
         $workers = [];
+        $this->config['reclone'] = $reclone;
         $options = new OptionsResolver();
         $options
             ->define('base_url')->default(null)->allowedTypes('string', 'null')
