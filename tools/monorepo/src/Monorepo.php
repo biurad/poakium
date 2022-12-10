@@ -61,12 +61,16 @@ class Monorepo
             }
 
             if (\file_exists($clonePath = \rtrim($this->config['cache'], '\/').'/'.$remote)) {
-                $output->writeln(\sprintf('Deleting previous clone of <info>%s</info>', $remote));
-                Process::fromShellCommandline(('\\' === \DIRECTORY_SEPARATOR ? 'rd /s /q "' : 'rm -rf "').$clonePath.'"')->run();
+                if ($this->config['reclone']) {
+                    $output->writeln(\sprintf('Deleting previous clone of <info>%s</info>', $remote));
+                    Process::fromShellCommandline(('\\' === \DIRECTORY_SEPARATOR ? 'rd /s /q "' : 'rm -rf "').$clonePath.'"')->run();
+                } else {
+                    $this->repository->run('pull', ['--all'], cwd: $clonePath);
+                }
             }
 
             $output->writeln(\sprintf('<info>Cloning %s into %s</info>', $url, $clonePath));
-            \mkdir($clonePath, recursive: true);
+            @\mkdir($clonePath, recursive: true);
             $this->repository->run('clone', ['-q', '--bare', $url, $clonePath]);
 
             if (0 !== $this->repository->getExitCode()) {
