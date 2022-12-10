@@ -614,11 +614,7 @@ class Repository
             return false;
         }
 
-        if (\is_string($expected)) {
-            return $expected === ($o ?? null);
-        }
-
-        return null === $expected ? true : $expected($o ?? null);
+        return isset($o) ? ($expected === $o || (\is_callable($expected) ? $expected($o) : true)) : false;
     }
 
     /**
