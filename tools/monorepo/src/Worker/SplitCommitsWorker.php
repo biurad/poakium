@@ -12,7 +12,6 @@
 
 namespace Biurad\Monorepo\Worker;
 
-use Biurad\Git\Repository;
 use Biurad\Monorepo\{Monorepo, WorkerInterface, WorkflowCommand};
 use Symfony\Component\Console\Input\{InputInterface, InputOption};
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -46,7 +45,6 @@ class SplitCommitsWorker implements WorkerInterface
         $multi = InputOption::VALUE_IS_ARRAY | InputOption::VALUE_OPTIONAL;
         $command->addOption('branch', 'b', $multi, 'Defaults to all branches that match the configured branch filter. (also accepts -b "*")', []);
         $command->addOption('no-branch', null, InputOption::VALUE_NONE, 'If set, no branches will be pushed.');
-        $command->addOption('release', 't', InputOption::VALUE_OPTIONAL, 'Release of new tag (accepted pattern: <tag>[=<branch>])');
 
         return new self();
     }
@@ -128,7 +126,6 @@ class SplitCommitsWorker implements WorkerInterface
                         $output->writeln(\sprintf('<info>Pushing (%d) commits from branch %s to %s</info>', $count, $branch, $url));
                         $mainRepo->runConcurrent(0 === $updates ? [
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+$target:refs/heads/$branch"],
-                            ['update-ref', '-d', $target],
                         ] : [
                             ['checkout', '--orphan', "split-$remote"],
                             ['reset', '--hard'],
@@ -136,52 +133,50 @@ class SplitCommitsWorker implements WorkerInterface
                             ['cherry-pick', ...\explode(' ', "$target~".\implode(" $target~", \array_reverse(\range(0, $count - 1))))],
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+refs/heads/split-$remote:$branch"],
                             ['checkout', $currentBranch],
-                            ['branch', '-D', "split-$remote"],
-                            ['update-ref', '-d', $target],
                         ]);
 
-                        if (!$input->getOption('no-push')) {
-                            $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f', '-u'] : ['-u']), 'origin', "$branch:$branch"];
-                        }
-                    } else {
-                        $output->writeln(\sprintf('<info>Nothing to commit; On branch %s, "%s/%1$s" is up to date</info>', $branch, $remote));
-                    }
-                }
+                        foreach ($mainRepo->getLog(0 === $updates ? "refs/splits/$target" : "split-$remote", limit: $count)->getCommits() as $commit) {
+                            if (!$tag = \rtrim($mainRepo->run('tag', ['--points-at', (string) $commit]) ?? '')) {
+                                continue;
+                            }
 
-                if ($tagged = $input->getOption('release')) {
-                    [$tagged, $repo] = [\explode('=', $tagged, 2), new Repository($clonePath, [], $repo->isDebug(), $repo->getLogger())];
-
-                    if (!$repo->getBranch($rBranch = $tagged[1] ?? $currentBranch)) {
-                        $output->writeln(\sprintf('<error>Release Branch %s does not exist</error>', $rBranch));
-                    } else {
-                        if ($repo->getBranch()->getName() !== $rBranch) {
-                            $repo->run('checkout', [$rBranch]);
-                        }
-
-                        $tags = '*' === $tagged[0] ? \explode("\n", $mainRepo->run('tag', ['--list', '--points-at', $rBranch]) ?? '') : [$tagged[0]];
-                        $tagPushes = [];
-
-                        if ($repo->getBranch()->getName() !== $rBranch) {
-                            $tagPushes[] = ['checkout', $rBranch];
-                        }
-
-                        foreach (\array_filter($tags) as $tag) {
                             if (\str_starts_with($tag, $remote.'/')) {
                                 $tag = \substr($tag, \strlen($remote.'/'));
                             }
 
-                            if (!$repo->getTag($tag)) {
-                                $output->writeln(\sprintf('<info>Creating tag %s for repo %s</info>', $tagged[0], $remote));
-                                $tagPushes[] = ['tag', $tagged[0], '-m', 'Release '.$tagged[0]];
-                                $tagPushes[] = ['push', ...($input->getOption('force') ? ['origin', '--tags', '-f'] : ['origin', '--tags']), $rBranch];
+                            if ($mainRepo->check('tag', ['--points-at', $tag], cwd: $clonePath)) {
+                                $output->writeln(\sprintf('<info>Tag %s/%s in branch "%s" exists, skipping</info>', $remote, $tag, $branch));
+                                continue;
+                            }
 
-                                if (!$input->getOption('no-push')) {
-                                    $pushChanges[] = \end($tagPushes);
-                                }
+                            if ($branch !== $rBranch = \rtrim($mainRepo->run('branch', ['--show-current'], cwd: $clonePath))) {
+                                $mainRepo->run('checkout', [$rBranch], cwd: $clonePath);
+                            }
+
+                            if (true !== $verify) {
+                                $verify = true;
+                            }
+
+                            $output->writeln(\sprintf('<info>Creating tag %s/%s in branch "%s"</info>', $remote, $tag, $branch));
+                            $mainRepo->setEnvVars($mainRepo->getEnvVars() + [
+                                'GIT_COMMITTER_DATE' => $commit->getCommitter()->getDate()->format('D, d M Y H:i:s'),
+                                'GIT_AUTHOR_DATE' => $commit->getAuthor()->getDate()->format('D, d M Y H:i:s'),
+                            ]);
+                            $mainRepo->run('tag', [$tag, (string) $commit, '-m', "Release of $tag"], cwd: $clonePath);
+                            $mainRepo->removeEnvVars('GIT_AUTHOR_DATE', 'GIT_COMMITTER_DATE');
+                        }
+
+                        if (!$input->getOption('no-push')) {
+                            $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f', '-u'] : ['-u']), 'origin', "$branch:$branch"];
+
+                            if (true === $verify) {
+                                $pushChanges[] = [...\end($pushChanges), '--tags']; // Re-push to update tags only
                             }
                         }
 
-                        $repo->runConcurrent($tagPushes);
+                        $mainRepo->runConcurrent([['update-ref', '-d', $target], ...($updates > 0 ? [['branch', '-D', "split-$remote"]] : [])]);
+                    } else {
+                        $output->writeln(\sprintf('<info>Nothing to commit; On branch %s, "%s/%1$s" is up to date</info>', $branch, $remote));
                     }
                 }
 
