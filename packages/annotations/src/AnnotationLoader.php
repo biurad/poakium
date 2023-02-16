@@ -38,9 +38,6 @@ class AnnotationLoader
     /** @var int */
     private $loaderType;
 
-    /**
-     * @param callable $classLoader
-     */
     public function __construct(ReaderInterface $reader = null, int $loaderType = self::TOKENIZED)
     {
         if (\PHP_VERSION_ID < 80000 && null === $reader) {
