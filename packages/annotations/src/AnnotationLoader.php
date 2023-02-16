@@ -21,13 +21,13 @@ use Spiral\Attributes\ReaderInterface;
  */
 class AnnotationLoader
 {
-    public const REQUIRE_FILE = 0x01, TOKENIZED = 0x02;
+    public const REQUIRE_FILE = 0, TOKENIZED = 1;
 
     /** @var ReaderInterface|null */
     private $reader;
 
     /** @var array<string,mixed> */
-    private $loadedAttributes = [], $loadedListeners = [], $aliases = [];
+    private $loadedListeners = [], $aliases = [];
 
     /** @var array<string,ListenerInterface> */
     private $listeners = [];
@@ -88,20 +88,18 @@ class AnnotationLoader
     {
         $loaded = [];
 
-        foreach (($listener ?: $this->listeners) as $name => $value) {
-            if (\is_int($name)) {
-                $name = $this->aliases[$value] ?? $value;
-
-                if (!isset($this->listeners[$name])) {
-                    $loaded[$name] = $this->loadedAttributes[$name] ?? ($this->loadedAttributes[$name] = $this->build($name));
+        if (!empty($listener)) {
+            foreach ($listener as $value) {
+                if ($l = ($this->listeners[$name = $this->aliases[$value] ?? $value] ?? null)) {
+                    $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $l->load($this->build(...$l->getAnnotations()));
                     continue;
                 }
-
-                if (!isset($this->loadedListeners[$name])) {
-                    $value = $this->listeners[$name];
-                }
+                $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $this->build($name);
             }
-            $loaded[$name] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $value->load($this->build(...$value->getAnnotations()));
+        } else {
+            foreach ($this->listeners as $name => $value) {
+                $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $value->load($this->build(...$value->getAnnotations()));
+            }
         }
 
         return 1 === \count($loaded) ? \current($loaded) : $loaded;
@@ -258,7 +256,7 @@ class AnnotationLoader
      *
      * @param \Traversable<int,string> $files
      *
-     * @return array>int,string>
+     * @return array<int,string>
      */
     private function findClasses(\Traversable $files): array
     {
@@ -267,25 +265,23 @@ class AnnotationLoader
         if (self::TOKENIZED === $this->loaderType) {
             foreach ($files as $file) {
                 $tokens = \token_get_all(\file_get_contents($file));
-
-                if (1 === \count($tokens) && \T_INLINE_HTML === $tokens[0][0]) {
-                    continue;
-                }
-
                 $namespace = '';
                 $namespaced = 0;
+
                 foreach ($tokens as $token) {
                     if (\T_NAMESPACE === $token[0]) {
                         $namespaced = 1;
-                    } elseif (1 === $namespaced && \T_NAME_QUALIFIED === $token[0]) {
-                        $namespace = $token[3];
+                    } elseif (\T_NAME_QUALIFIED === $token[0] && 1 === $namespaced) {
+                        $namespace = $token[1] . '\\';
+                        $namespaced = 0;
                     } elseif (\T_DOUBLE_COLON === $token[0] || \T_NEW === $token[0]) {
                         $namespaced = 3; // Skip usage of ::class constant and anonymous classes
-                    } elseif (\T_CLASS === $token[0] && 1 <= $namespaced) {
+                    } elseif (\T_CLASS === $token[0] && 0 === $namespaced) {
                         $namespaced = 2;
-                    } elseif (2 === $namespaced && \T_STRING === $token[0]) {
-                        $classes[] = $namespace.'\\'.$token[3];
-                        require_once $file;
+                    } elseif (\T_STRING === $token[0] && 2 === $namespaced) {
+                        if (!\class_exists($classes[] = $namespace.$token[1], false)) {
+                            require_once $file;
+                        }
                         continue 2;
                     }
                 }
