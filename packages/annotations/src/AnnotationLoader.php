@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -26,11 +21,13 @@ use Spiral\Attributes\ReaderInterface;
  */
 class AnnotationLoader
 {
+    public const REQUIRE_FILE = 0, TOKENIZED = 1;
+
     /** @var ReaderInterface|null */
     private $reader;
 
     /** @var array<string,mixed> */
-    private $loadedAttributes = [], $loadedListeners = [], $aliases = [];
+    private $loadedListeners = [], $aliases = [];
 
     /** @var array<string,ListenerInterface> */
     private $listeners = [];
@@ -38,20 +35,25 @@ class AnnotationLoader
     /** @var string[] */
     private $resources = [];
 
-    /** @var callable(string[]) */
-    private $classLoader;
+    /** @var int */
+    private $loaderType;
 
-    /**
-     * @param callable $classLoader
-     */
-    public function __construct(ReaderInterface $reader = null, callable $classLoader = null)
+    public function __construct(ReaderInterface $reader = null, int $loaderType = self::TOKENIZED)
     {
         if (\PHP_VERSION_ID < 80000 && null === $reader) {
             throw new \RuntimeException(\sprintf('A "%s" instance to read annotations/attributes not available.', ReaderInterface::class));
         }
 
         $this->reader = $reader;
-        $this->classLoader = $classLoader ?? [self::class, 'findClasses'];
+        $this->loaderType = $loaderType;
+    }
+
+    /**
+     * Returns the spiral attributes/annotations reader instance.
+     */
+    public function getReader(): ?ReaderInterface
+    {
+        return $this->reader;
     }
 
     /**
@@ -59,7 +61,7 @@ class AnnotationLoader
      */
     public function listener(ListenerInterface $listener, string $alias = null): void
     {
-        $this->listeners[$name = \get_class($listener)] = $listener;
+        $this->listeners[$name = $listener::class] = $listener;
         unset($this->loadedListeners[$name]);
 
         if (null !== $alias) {
@@ -91,20 +93,18 @@ class AnnotationLoader
     {
         $loaded = [];
 
-        foreach (($listener ?: $this->listeners) as $name => $value) {
-            if (\is_int($name)) {
-                $name = $this->aliases[$value] ?? $value;
-
-                if (!isset($this->listeners[$name])) {
-                    $loaded[$name] = $this->loadedAttributes[$name] ?? ($this->loadedAttributes[$name] = $this->build($name));
+        if (!empty($listener)) {
+            foreach ($listener as $value) {
+                if ($l = ($this->listeners[$name = $this->aliases[$value] ?? $value] ?? null)) {
+                    $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $l->load($this->build(...$l->getAnnotations()));
                     continue;
                 }
-
-                if (!isset($this->loadedListeners[$name])) {
-                    $value = $this->listeners[$name];
-                }
+                $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $this->build($name);
             }
-            $loaded[$name] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $value->load($this->build(...$value->getAnnotations()));
+        } else {
+            foreach ($this->listeners as $name => $value) {
+                $loaded[] = $this->loadedListeners[$name] ?? $this->loadedListeners[$name] = $value->load($this->build(...$value->getAnnotations()));
+            }
         }
 
         return 1 === \count($loaded) ? \current($loaded) : $loaded;
@@ -126,7 +126,7 @@ class AnnotationLoader
                 $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($resource, \FilesystemIterator::CURRENT_AS_PATHNAME));
                 $files = new \RegexIterator($iterator, '/\.php$/');
 
-                foreach (($this->classLoader)($files) as $class) {
+                foreach ($this->findClasses($files) as $class) {
                     $classes = $this->fetchClassAnnotation($class, $annotationClass);
 
                     if (!empty($classes)) {
@@ -165,9 +165,7 @@ class AnnotationLoader
         }
 
         if (null === $this->reader) {
-            return \array_map(static function (\ReflectionAttribute $attribute): object {
-                return $attribute->newInstance();
-            }, $reflection->getAttributes($annotation));
+            return \array_map(static fn (\ReflectionAttribute $attribute): object => $attribute->newInstance(), $reflection->getAttributes($annotation));
         }
 
         if ($reflection instanceof \ReflectionClass) {
@@ -263,17 +261,46 @@ class AnnotationLoader
      *
      * @param \Traversable<int,string> $files
      *
-     * @return array>int,string>
+     * @return array<int,string>
      */
-    private static function findClasses(\Traversable $files): array
+    private function findClasses(\Traversable $files): array
     {
-        $declared = \get_declared_classes();
         $classes = [];
 
-        foreach ($files as $file) {
-            require_once $file;
+        if (self::TOKENIZED === $this->loaderType) {
+            foreach ($files as $file) {
+                $tokens = \token_get_all(\file_get_contents($file));
+                $namespace = '';
+                $namespaced = 0;
+
+                foreach ($tokens as $token) {
+                    if (\T_NAMESPACE === $token[0]) {
+                        $namespaced = 1;
+                    } elseif (\T_NAME_QUALIFIED === $token[0] && 1 === $namespaced) {
+                        $namespace = $token[1] . '\\';
+                        $namespaced = 0;
+                    } elseif (\T_DOUBLE_COLON === $token[0] || \T_NEW === $token[0]) {
+                        $namespaced = 3; // Skip usage of ::class constant and anonymous classes
+                    } elseif (\T_CLASS === $token[0] && 0 === $namespaced) {
+                        $namespaced = 2;
+                    } elseif (\T_STRING === $token[0] && 2 === $namespaced) {
+                        if (!\class_exists($classes[] = $namespace.$token[1], false)) {
+                            require_once $file;
+                        }
+                        continue 2;
+                    }
+                }
+            }
+        } elseif (self::REQUIRE_FILE === $this->loaderType) {
+            $declared = \get_declared_classes();
+
+            foreach ($files as $file) {
+                require_once $file;
+            }
+
+            return \array_diff(\get_declared_classes(), $declared);
         }
 
-        return \array_merge($classes, \array_diff(\get_declared_classes(), $declared));
+        return $classes;
     }
 }

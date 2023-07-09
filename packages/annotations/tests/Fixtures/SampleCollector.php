@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -22,12 +17,12 @@ class SampleCollector
     private $collected = [];
 
     /**
-     * @param Reflector|string $handler
+     * @param \Reflector|string $handler
      */
     public function add(string $name, int $priority, $handler): void
     {
         $this->collected[$name] = [
-            'handler' => $handler instanceof \Reflector ? \get_class($handler) : $handler,
+            'handler' => $handler instanceof \Reflector ? $handler::class : $handler,
             'priority' => $priority,
         ];
     }
