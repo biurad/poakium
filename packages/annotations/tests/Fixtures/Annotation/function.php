@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Biurad\Annotations\Tests\Fixtures\Valid;
+namespace Biurad\Annotations\Tests\Fixtures\Annotation;
 
 use Biurad\Annotations\Tests\Fixtures\Sample;
 
