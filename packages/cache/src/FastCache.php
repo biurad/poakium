@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.1 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -20,10 +15,10 @@ namespace Biurad\Cache;
 use Biurad\Cache\Exceptions\CacheException;
 use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Cache\Adapter\Common\HasExpirationTimestampInterface;
+use Phpfastcache\Core\Item\ExtendedCacheItemInterface;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
-use Phpfastcache\Core\Item\ExtendedCacheItemInterface;
 
 /**
  * An advanced caching system using PSR-6 or PSR-16.
@@ -36,29 +31,15 @@ class FastCache
 {
     private const NAMESPACE = '';
 
-    /** @var CacheInterface|CacheItemPoolInterface */
-    private $storage;
-
-    /** @var string */
-    private $namespace;
-
     /** @var array<string,mixed> */
-    private $computing = [];
+    private array $computing = [];
 
-    /** @var string */
-    private $cacheItemClass = CacheItem::class;
+    private string $cacheItemClass = CacheItem::class;
 
-    /**
-     * @param CacheInterface|CacheItemPoolInterface $storage
-     */
-    final public function __construct($storage, string $namespace = self::NAMESPACE)
-    {
-        if (!($storage instanceof CacheInterface || $storage instanceof CacheItemPoolInterface)) {
-            throw new CacheException('$storage can only implements PSR-6 or PSR-16 cache interface.');
-        }
-
-        $this->storage = $storage;
-        $this->namespace = $namespace;
+    final public function __construct(
+        private CacheInterface|CacheItemPoolInterface $storage,
+        private string $namespace = self::NAMESPACE
+    ) {
     }
 
     /**
@@ -71,10 +52,7 @@ class FastCache
         }
     }
 
-    /**
-     * @return CacheInterface|CacheItemPoolInterface
-     */
-    public function getStorage()
+    public function getStorage(): CacheInterface|CacheItemPoolInterface
     {
         return $this->storage;
     }
@@ -92,17 +70,15 @@ class FastCache
      */
     public function derive(string $namespace): self
     {
-        return new static($this->storage, $this->namespace . $namespace);
+        return new static($this->storage, $this->namespace.$namespace);
     }
 
     /**
      * Reads the specified item from the cache or generate it.
-     *
-     * @return mixed
      */
-    public function load(string $key, callable $fallback = null, ?float $beta = null)
+    public function load(string $key, callable $fallback = null, float $beta = null): mixed
     {
-        $data = $this->doFetch($this->namespace . $key);
+        $data = $this->doFetch($this->namespace.$key);
 
         if ($data instanceof CacheItemInterface) {
             $data = $data->isHit() ? $data->get() : null;
@@ -118,28 +94,18 @@ class FastCache
     /**
      * Reads multiple items from the cache.
      *
-     * @param array<string,mixed> $keys
+     * @param array<int,string> $keys
      *
-     * @return array<int|string,mixed>
+     * @return array<string,mixed>
      */
-    public function bulkLoad(array $keys, callable $fallback = null, ?float $beta = null): array
+    public function bulkLoad(array $keys, callable $fallback = null, float $beta = null): array
     {
-        if (empty($keys)) {
-            return [];
-        }
-
         $result = [];
 
         foreach ($keys as $key) {
-            if (!\is_string($key)) {
-                throw new \InvalidArgumentException('Only string keys are allowed in bulkLoad().');
-            }
-
             $result[$key] = $this->load(
-                \md5($key), // encode key
-                static function (CacheItemInterface $item) use ($key, $fallback) {
-                    return $fallback($key, $item);
-                },
+                $key,
+                $fallback ? static fn (CacheItemInterface $item): CacheItemInterface => $fallback($key, $item) : null,
                 $beta
             );
         }
@@ -152,14 +118,12 @@ class FastCache
      *
      * @return mixed value itself
      */
-    public function save(string $key, callable $callback, ?float $beta = null)
+    public function save(string $key, callable $callback, float $beta = null): mixed
     {
-        $key = $this->namespace . $key;
+        $key = $this->namespace.$key;
 
         if (0 > $beta = $beta ?? 1.0) {
-            throw new InvalidArgumentException(
-                \sprintf('Argument "$beta" provided to "%s::save()" must be a positive number, %f given.', __CLASS__, $beta)
-            );
+            throw new InvalidArgumentException(\sprintf('Argument "$beta" provided to "%s::save()" must be a positive number, %f given.', __CLASS__, $beta));
         }
 
         return $this->doSave($key, $callback, $beta);
@@ -170,28 +134,33 @@ class FastCache
      */
     public function delete(string $key): bool
     {
-        return $this->doDelete($key);
+        return $this->doDelete($this->namespace.$key);
     }
 
     /**
      * Caches results of function/method calls.
      *
-     * @return mixed
+     * @param mixed ...$arguments Cannot contain closures
      */
-    public function call(callable $callback, ...$arguments)
+    public function call(callable $callback, ...$arguments): mixed
     {
-        $key = $arguments;
-
-        if (\is_array($callback) && \is_object($callback[0])) {
-            $key[0][0] = \get_class($callback[0]);
+        if ($callback instanceof \Closure) {
+            return $callback(...$arguments); // Closure's can't be cached
         }
 
-        return $this->load(
-            $this->generateKey($key),
-            static function (CacheItemInterface $item) use ($callback, $key) {
-                return $callback(...$key + [$item]);
-            }
-        );
+        if (\is_object($callback)) {
+            $key = $callback::class.'::__invoke';
+        } elseif (\is_array($callback)) {
+            $key = \is_object($callback[0]) ? \get_class($callback[0]).$callback[1] : \implode('', $callback);
+        } else {
+            $key = $callback;
+        }
+
+        return $this->load(\md5($key.\serialize($arguments)), function (CacheItemInterface $item) use ($callback, $arguments) {
+            $item->set($callback(...$arguments));
+
+            return $item;
+        });
     }
 
     /**
@@ -203,9 +172,7 @@ class FastCache
      */
     public function wrap(callable $callback /* ... arguments passed to $callback */): callable
     {
-        return function () use ($callback) {
-            return $this->call($callback, ...\func_get_args());
-        };
+        return fn () => $this->call($callback, ...\func_get_args());
     }
 
     /**
@@ -224,27 +191,11 @@ class FastCache
     }
 
     /**
-     * Generates internal cache key.
-     *
-     * @param mixed $key
-     */
-    private function generateKey($key): string
-    {
-        if (\is_object($key)) {
-            $key = \spl_object_id($key);
-        } elseif (\is_array($key)) {
-            $key = \md5(\implode('', $key));
-        }
-
-        return $this->namespace . (string) $key;
-    }
-
-    /**
      * Save cache item.
      *
      * @return mixed The corresponding values found in the cache
      */
-    private function doSave(string $key, callable $callback, ?float $beta)
+    private function doSave(string $key, callable $callback, ?float $beta): mixed
     {
         $storage = $this->storage;
 
@@ -264,7 +215,17 @@ class FastCache
             return $item->get();
         }
 
-        $result = $this->doCreate(new $this->cacheItemClass(), $callback, $expiry);
+        $item = \Closure::bind(
+            static function (string $item) use ($key): CacheItemInterface {
+                $item = new $item();
+                $item->key = $key;
+
+                return $item;
+            },
+            null,
+            $this->cacheItemClass
+        );
+        $result = $this->doCreate($item($this->cacheItemClass), $callback, $expiry);
 
         if ($result instanceof CacheItemInterface) {
             $result = $result->get();
@@ -275,12 +236,7 @@ class FastCache
         return $result;
     }
 
-    /**
-     * @param int $expiry
-     *
-     * @return mixed|CacheItemInterface
-     */
-    private function doCreate(CacheItemInterface $item, callable $callback, int &$expiry = null)
+    private function doCreate(CacheItemInterface $item, callable $callback, int &$expiry = null): mixed
     {
         $key = $item->getKey();
 
@@ -302,6 +258,8 @@ class FastCache
                     $maxAge = $item->getExpirationTimestamp();
                 } elseif (\method_exists($item, 'getExpiry')) {
                     $maxAge = $item->getExpiry();
+                } else {
+                    $maxAge = ((array) $item)["\0*\0expiry"] ?? null;
                 }
 
                 if (isset($maxAge)) {
@@ -326,11 +284,11 @@ class FastCache
      *
      * @return mixed The corresponding values found in the cache
      */
-    private function doFetch($ids)
+    private function doFetch(string|array $ids): mixed
     {
         $fetchMethod = $this->storage instanceof CacheItemPoolInterface
-            ? 'getItem' . (\is_array($ids) ? 's' : null)
-            : 'get' . (!\is_array($ids) ? 'Multiple' : null);
+            ? 'getItem'.(\is_array($ids) ? 's' : null)
+            : 'get'.(\is_array($ids) ? 'Multiple' : null);
 
         return $this->storage->{$fetchMethod}($ids);
     }
@@ -342,12 +300,12 @@ class FastCache
      *
      * @return bool True if the items were successfully removed, false otherwise
      */
-    private function doDelete(string $id)
+    private function doDelete(string $id): bool
     {
         if ($this->storage instanceof CacheItemPoolInterface) {
             $deleteItem = 'Item';
         }
 
-        return $this->storage->{'delete' . $deleteItem ?? null}($id);
+        return $this->storage->{'delete'.($deleteItem ?? null)}($id);
     }
 }

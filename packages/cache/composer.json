@@ -1,82 +1,55 @@
 {
-    "name": "biurad/cache",
-    "type": "library",
-    "description": "A library that provides an advanced caching system for PSR-6 and PSR-16",
-    "keywords": ["caching","cache","psr6","psr16","doctrine","biurad", "php"],
-    "homepage": "https://www.biurad.com",
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Divine Niiquaye Ibok",
-            "email": "divineibok@gmail.com"
-        },
-        {
-            "name": "Biurad Lap Community",
-            "homepage": "https://biurad.com/projects/contributors"
-        }
-    ],
-    "support": {
-        "docs": "https://docs.biurad.com/php-cache/",
-        "issues": "https://github.com/biurad/php-cache/issues",
-        "rss": "https://github.com/biurad/php-cache/releases.atom",
-        "source": "https://github.com/biurad/php-cache"
+  "name": "biurad/cache",
+  "description": "A library that provides an advanced caching system for PSR-6 and PSR-16",
+  "keywords": ["biurad","biurad","php","cache","caching","PSR-16","PSR-16"],
+  "homepage": "https://biurad.com",
+  "license": "BSD-3-Clause",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Divine Niiquaye Ibok",
+      "email": "divineibok@gmail.com"
     },
-    "require": {
-        "php": "^7.1 || ^8.0",
-        "psr/cache": "^1.0",
-        "psr/simple-cache": "^1.0"
-    },
-    "require-dev": {
-        "cache/integration-tests": "dev-master",
-        "cache/adapter-common": "^1.2",
-        "composer/package-versions-deprecated": "^1.11",
-        "doctrine/cache": "^1.11",
-        "phpfastcache/phpfastcache": "^8.0",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
-        "phpunit/phpunit": "^8.5 || ^9.5",
-        "squizlabs/php_codesniffer": "^3.5",
-        "symfony/phpunit-bridge": "^5.1",
-        "vimeo/psalm": "^4.7",
-        "symfony/var-dumper": "^5.2"
-    },
-    "suggest": {
-        "doctrine/cache": "For using AdapterFactory class to create a PSR-6 doctrine cache adapter",
-        "ext-memcached": "For caching into memcached storage",
-        "ext-apcu": "For caching into apcu storage",
-        "ext-redis": "For caching into redis storage",
-        "ext-sqlite": "For caching into pdo sqlite storage"
-    },
-    "autoload": {
-        "psr-4": {
-            "Biurad\\Cache\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Biurad\\Cache\\Tests\\": "tests/"
-        },
-        "exclude-from-classmap": [
-            "/Tests/"
-        ]
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.x-dev"
-        }
-    },
-    "scripts": {
-        "phpcs": "phpcs -q",
-        "phpstan": "phpstan analyse",
-        "psalm": "psalm --show-info=true",
-        "phpunit": "phpunit --no-coverage",
-        "test": [
-            "@phpcs",
-            "@phpstan",
-            "@psalm",
-            "@phpunit"
-        ]
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    {
+      "name": "GitHub Contributors",
+      "homepage": "https://github.com/biurad/php-cache/contributors"
+    }
+  ],
+  "support": {
+    "docs": "https://docs.biurad.com/poakium/cache"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "preferred-install": "dist",
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "psr/cache": "^2.0|^3.0",
+    "psr/simple-cache": "^1.0"
+  },
+  "require-dev": {
+    "doctrine/cache": "^2.0",
+    "symfony/cache": "^6.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Biurad\\Cache\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.x-dev"
+    }
+  },
+  "suggest": {
+    "symfony/cache": "For using AdapterFactory class to create a PSR-6 doctrine cache adapter",
+    "ext-memcached": "For caching into memcached storage",
+    "ext-apcu": "For caching into apcu storage",
+    "ext-redis": "For caching into redis storage",
+    "ext-sqlite": "For caching into pdo sqlite storage"
+  }
 }
