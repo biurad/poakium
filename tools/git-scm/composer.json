@@ -1,10 +1,10 @@
 {
   "name": "biurad/git-scm",
-  "type": "library",
   "description": "Library for working with Git repository & Git services in PHP.",
-  "keywords": ["git", "scm", "repository", "library", "php"],
+  "keywords": ["git", "scm", "repository", "library", "php", "biurad"],
   "homepage": "https://biurad.com",
   "license": "BSD-3-Clause",
+  "type": "library",
   "authors": [
     {
       "name": "Divine Niiquaye Ibok",
@@ -31,9 +31,17 @@
     "psr/log": "^1.0 | ^3.0",
     "symfony/process": "^6.0"
   },
+  "replace": {
+    "symfony/polyfill-php80": "*"
+  },
   "autoload": {
     "psr-4": {
       "Biurad\\Git\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.x-dev"
     }
   },
   "suggest": {
