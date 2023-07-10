@@ -1,0 +1,10 @@
+{
+  "require-dev": {
+    "phpbench/phpbench": "^1.2"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Biurad\\Benchmark\\": "/"
+    }
+  }
+}
