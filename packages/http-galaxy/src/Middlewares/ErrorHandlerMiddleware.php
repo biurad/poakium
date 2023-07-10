@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -30,8 +25,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
  */
 class ErrorHandlerMiddleware implements MiddlewareInterface
 {
-    /** @var bool */
-    private $throwDisabled;
+    private bool $throwDisabled;
 
     public function __construct(bool $disable = true)
     {
@@ -76,6 +70,6 @@ class ErrorHandlerMiddleware implements MiddlewareInterface
     {
         $contents = (string) $response->getBody();
 
-        return empty($contents) || ($response->getStatusCode() >= 100 && $response->getStatusCode() < 200) || (\in_array($response->getStatusCode(), [204, 304]));
+        return empty($contents) || ($response->getStatusCode() >= 100 && $response->getStatusCode() < 200) || \in_array($response->getStatusCode(), [204, 304], true);
     }
 }

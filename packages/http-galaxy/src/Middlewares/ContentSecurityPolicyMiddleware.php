@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -44,8 +39,7 @@ class ContentSecurityPolicyMiddleware implements MiddlewareInterface
         'style-src-elem' => 'X-Style-Nonce',
     ];
 
-    /** @var bool */
-    protected $cspDisabled = false;
+    protected bool $cspDisabled = false;
 
     /**
      * {@inheritdoc}
@@ -118,9 +112,7 @@ class ContentSecurityPolicyMiddleware implements MiddlewareInterface
     {
         return \array_reduce(
             \array_keys($directives),
-            static function ($res, $name) use ($directives) {
-                return ('' !== $res ? $res . '; ' : '') . \sprintf('%s %s', $name, \implode(' ', $directives[$name]));
-            },
+            static fn ($res, $name) => ('' !== $res ? $res.'; ' : '').\sprintf('%s %s', $name, \implode(' ', $directives[$name])),
             ''
         );
     }

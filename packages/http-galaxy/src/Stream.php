@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -27,28 +22,21 @@ use Psr\Http\Message\StreamInterface;
  */
 class Stream implements StreamInterface
 {
-    /** @var bool|null */
+    /** @var resource|null */
     private $resource;
 
-    /** @var bool|null */
-    private $size;
-
-    /** @var bool|null */
-    private $seekable;
-
-    /** @var bool|null */
-    private $writable;
-
-    /** @var bool|null */
-    private $readable;
+    private ?bool $size;
+    private ?bool $seekable;
+    private ?bool $writable;
+    private ?bool $readable;
 
     /**
-    * Creates a new PSR-7 stream.
-    *
-    * @param string|resource|StreamInterface $body
-    *
-    * @throws \InvalidArgumentException
-    */
+     * Creates a new PSR-7 stream.
+     *
+     * @param string|resource|StreamInterface $body
+     *
+     * @throws \InvalidArgumentException
+     */
     public function __construct($stream = 'php://temp', string $mode = 'wb+')
     {
         if (\is_string($stream)) {
@@ -61,7 +49,7 @@ class Stream implements StreamInterface
             }
         }
 
-        if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
+        if (!\is_resource($stream) || 'stream' !== \get_resource_type($stream)) {
             throw new InvalidArgumentException('Invalid stream provided. It must be a string stream identifier or stream resource.');
         }
 
@@ -115,11 +103,11 @@ class Stream implements StreamInterface
      */
     public function getSize(): ?int
     {
-        if ($this->resource === null) {
+        if (null === $this->resource) {
             return null;
         }
 
-        if ($this->size !== null) {
+        if (null !== $this->size) {
             return $this->size;
         }
 
@@ -148,7 +136,7 @@ class Stream implements StreamInterface
      */
     public function eof(): bool
     {
-        return (!$this->resource || \feof($this->resource));
+        return !$this->resource || \feof($this->resource);
     }
 
     /**
@@ -156,7 +144,7 @@ class Stream implements StreamInterface
      */
     public function isSeekable(): bool
     {
-        if ($this->seekable !== null) {
+        if (null !== $this->seekable) {
             return $this->seekable;
         }
 
@@ -166,7 +154,7 @@ class Stream implements StreamInterface
     /**
      * {@inheritdoc}
      */
-    public function seek($offset, $whence = SEEK_SET): void
+    public function seek($offset, $whence = \SEEK_SET): void
     {
         if (!$this->resource) {
             throw new \RuntimeException('No resource available. Cannot seek position.');
@@ -176,7 +164,7 @@ class Stream implements StreamInterface
             throw new \RuntimeException('Stream is not seekable.');
         }
 
-        if (\fseek($this->resource, $offset, $whence) !== 0) {
+        if (0 !== \fseek($this->resource, $offset, $whence)) {
             throw new \RuntimeException('Error seeking within stream.');
         }
     }
@@ -194,7 +182,7 @@ class Stream implements StreamInterface
      */
     public function isWritable(): bool
     {
-        if ($this->writable !== null) {
+        if (null !== $this->writable) {
             return $this->writable;
         }
 
@@ -202,13 +190,12 @@ class Stream implements StreamInterface
             return $this->writable = false;
         }
 
-        return $this->writable = (
-            \strpos($mode, 'w') !== false
-            || \strpos($mode, '+') !== false
-            || \strpos($mode, 'x') !== false
-            || \strpos($mode, 'c') !== false
-            || \strpos($mode, 'a') !== false
-        );
+        return $this->writable = \str_contains($mode, 'w')
+            || \str_contains($mode, '+')
+            || \str_contains($mode, 'x')
+            || \str_contains($mode, 'c')
+            || \str_contains($mode, 'a')
+        ;
     }
 
     /**
@@ -238,7 +225,7 @@ class Stream implements StreamInterface
      */
     public function isReadable(): bool
     {
-        if ($this->readable !== null) {
+        if (null !== $this->readable) {
             return $this->readable;
         }
 
@@ -246,7 +233,7 @@ class Stream implements StreamInterface
             return $this->readable = false;
         }
 
-        return $this->readable = (\strpos($mode, 'r') !== false || \strpos($mode, '+') !== false);
+        return $this->readable = (\str_contains($mode, 'r') || \str_contains($mode, '+'));
     }
 
     /**
@@ -296,7 +283,7 @@ class Stream implements StreamInterface
 
         $metadata = \stream_get_meta_data($this->resource);
 
-        if ($key === null) {
+        if (null === $key) {
             return $metadata;
         }
 

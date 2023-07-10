@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -39,15 +34,13 @@ class CookiesMiddleware implements MiddlewareInterface
     /**
      * The names of the cookies that should be deciphered.
      *
-     * @var string[]
+     * @var array<int,string>
      */
-    protected $excludeCookies = [];
+    protected array $excludeCookies = [];
 
-    /** @var string */
-    private $prefix;
+    private string $prefix;
 
-    /** @var CookieFactoryInterface */
-    private $cookieJar;
+    private CookieFactoryInterface $cookieJar;
 
     /** @var callable(string|null,string,bool) */
     private $encipher;
@@ -81,7 +74,7 @@ class CookiesMiddleware implements MiddlewareInterface
 
         // Handle an incoming request cookie.
         foreach ($request->getCookieParams() as $key => $cookie) {
-            if (!\is_string($cookie) || false === \strpos($cookie, $this->prefix)) {
+            if (!\is_string($cookie) || !\str_contains($cookie, $this->prefix)) {
                 $cookieParams[$key] = $cookie;
 
                 continue;
@@ -122,7 +115,7 @@ class CookiesMiddleware implements MiddlewareInterface
                 return true;
             }
 
-            if ('.' === $cookieDomain[0] && 1 === \preg_match('/' . \strtr($cookieDomain, ['.' => '\\.']) . '$/', $requestUri->getHost())) {
+            if ('.' === $cookieDomain[0] && 1 === \preg_match('/'.\strtr($cookieDomain, ['.' => '\\.']).'$/', $requestUri->getHost())) {
                 return true;
             }
 
@@ -137,7 +130,7 @@ class CookiesMiddleware implements MiddlewareInterface
                 continue;
             }
 
-            $cookie = null !== $this->encipher ? $cookie->withRaw()->withValue($this->prefix . ($this->encipher)($cookie->getValue(), $cookie->getName(), true)) : $cookie;
+            $cookie = null !== $this->encipher ? $cookie->withRaw()->withValue($this->prefix.($this->encipher)($cookie->getValue(), $cookie->getName(), true)) : $cookie;
 
             if ($response instanceof Response) {
                 $response->getResponse()->headers->removeCookie($cookie->getName(), $cookie->getPath(), $cookie->getDomain());

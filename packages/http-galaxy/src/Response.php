@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -107,10 +102,10 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
     /**
      * {@inheritdoc}
      */
-    public function withStatus($code, $reasonPhrase = ''): self
+    public function withStatus(int $code, $reasonPhrase = ''): self
     {
         if ($code < 100 || $code > 599) {
-            throw new InvalidArgumentException(\sprintf('Response status code "%d" is not valid. It must be in 100..599 range.', $statusCode));
+            throw new InvalidArgumentException(\sprintf('Response status code "%d" is not valid. It must be in 100..599 range.', $code));
         }
 
         $new = clone $this;
@@ -124,9 +119,7 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
      */
     public function getReasonPhrase(): string
     {
-        return \Closure::bind(function (HttpFoundationResponse $response) {
-            return $response->statusText;
-        }, null, $this->message)($this->message);
+        return \Closure::bind(fn (HttpFoundationResponse $response) => $response->statusText, null, $this->message)($this->message);
     }
 
     /**
@@ -148,8 +141,6 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
      * Attempts to cache the sent entity by its last modification date.
      *
      * Note: This method is not part of the PSR-7 standard.
-     *
-     * @return Response
      */
     public function withModified(\DateTimeInterface $lastModified = null, string $etag = null): self
     {
@@ -164,7 +155,7 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
         }
 
         if (null !== $etag) {
-            $response = $response->withHeader('ETag', '"' . \addslashes($etag) . '"');
+            $response = $response->withHeader('ETag', '"'.\addslashes($etag).'"');
         }
 
         $new = clone $this;
@@ -265,7 +256,7 @@ class Response implements ResponseInterface, StatusCodeInterface, \Stringable
     {
         $this->message->headers->set('Location', (string) $url);
 
-        if (null === $status && $this->getStatusCode() === HttpFoundationResponse::HTTP_OK) {
+        if (null === $status && HttpFoundationResponse::HTTP_OK === $this->getStatusCode()) {
             $status = HttpFoundationResponse::HTTP_NOT_FOUND;
         }
 

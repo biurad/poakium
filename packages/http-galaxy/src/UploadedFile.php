@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,25 +18,17 @@ use Symfony\Component\HttpFoundation\File\UploadedFile as FileUploadedFile;
 
 class UploadedFile implements UploadedFileInterface
 {
-    /** @var FileUploadedFile */
-    private $uploadedFile;
-
-    /** @var StreamInterface */
-    private $stream;
-
-    /** @var int|null */
-    private $size;
-
-
-    /** @var bool */
-    private $isMoved = false;
+    private FileUploadedFile $uploadedFile;
+    private ?StreamInterface $stream = null;
+    private ?int $size;
+    private bool $isMoved = false;
 
     /**
      * @param resource|StreamInterface|string $streamOrFile
      */
     public function __construct($streamOrFile, ?int $size, int $errorStatus = null, string $clientFilename = null, string $clientMediaType = null)
     {
-        if (is_resource($streamOrFile)) {
+        if (\is_resource($streamOrFile)) {
             $streamOrFile = \stream_get_meta_data($streamOrFile)['uri'];
         } elseif ($streamOrFile instanceof StreamInterface) {
             $streamOrFile = $streamOrFile->getMetadata('uri');
@@ -62,17 +49,11 @@ class UploadedFile implements UploadedFileInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUploadedFile(): FileUploadedFile
     {
         return $this->uploadedFile;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStream(): StreamInterface
     {
         if ($this->isMoved) {
@@ -90,9 +71,6 @@ class UploadedFile implements UploadedFileInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function moveTo($targetPath): void
     {
         if ($this->isMoved) {
@@ -103,33 +81,21 @@ class UploadedFile implements UploadedFileInterface
         $this->isMoved = true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getSize(): ?int
     {
         return $this->size ?? $this->uploadedFile->getSize();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getError(): int
     {
         return $this->uploadedFile->getError();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClientFilename(): ?string
     {
         return $this->uploadedFile->getClientOriginalName();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getClientMediaType(): ?string
     {
         return $this->uploadedFile->getClientMimeType();

@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -26,20 +21,15 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHand
 
 class CookieSessionHandler extends AbstractSessionHandler
 {
-    /** @var CookieFactoryInterface */
-    private $cookie;
+    private CookieFactoryInterface $cookie;
 
-    /** @var RequestStack|null */
-    private $request;
+    private ?RequestStack $request;
 
-    /** @var int */
-    private $maxAge;
+    private int $maxAge;
 
-    /** @var string */
-    private $cookieName;
+    private string $cookieName;
 
-    /** @var bool */
-    private $gcCalled = false;
+    private bool $gcCalled = false;
 
     /**
      * Create a new cookie driven handler instance.
@@ -48,7 +38,7 @@ class CookieSessionHandler extends AbstractSessionHandler
     {
         $this->cookie = $cookie;
         $this->request = $requestStack;
-        $this->cookieName = 'sess_' . \hash('md5', __CLASS__);
+        $this->cookieName = 'sess_'.\hash('md5', __CLASS__);
         $this->maxAge = $maxAge ?? (int) \ini_get('session.gc_maxlifetime');
     }
 
@@ -87,7 +77,7 @@ class CookieSessionHandler extends AbstractSessionHandler
             $value['expires'] = \time() + $this->maxAge;
         }
 
-        $session = new Cookie($this->cookieName, \json_encode($value, \JSON_PRESERVE_ZERO_FRACTION | \JSON_THROW_ON_ERROR), new \DateTime('@' . $value['expires']));
+        $session = new Cookie($this->cookieName, \json_encode($value, \JSON_PRESERVE_ZERO_FRACTION | \JSON_THROW_ON_ERROR), new \DateTime('@'.$value['expires']));
 
         $this->cookie->addCookie($session);
 
@@ -106,7 +96,7 @@ class CookieSessionHandler extends AbstractSessionHandler
         }
 
         if (isset($value[$sessionId])) {
-            $this->cookie->addCookie(Cookie::create($this->cookieName, $cookie, (new \DateTimeImmutable())->add(new \DateInterval('PT' . $this->maxAge . 'S'))));
+            $this->cookie->addCookie(Cookie::create($this->cookieName, $cookie, (new \DateTimeImmutable())->add(new \DateInterval('PT'.$this->maxAge.'S'))));
 
             return true;
         }
@@ -163,7 +153,7 @@ class CookieSessionHandler extends AbstractSessionHandler
 
             // delete the session records that have expired
             if (isset($value['expires']) && \time() > $value['expires']) {
-                $this->cookie->addCookie((new Cookie($this->cookieName, null, 1)));
+                $this->cookie->addCookie(new Cookie($this->cookieName, null, 1));
             }
         }
 
@@ -181,7 +171,7 @@ class CookieSessionHandler extends AbstractSessionHandler
     /**
      * Get the cookie from request if exists.
      *
-     * @return CookieInterface|string|null
+     * @return Cookie|string|null
      */
     private function getCookie(string $cookieName)
     {

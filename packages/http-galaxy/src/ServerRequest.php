@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -19,7 +14,6 @@ namespace Biurad\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -95,9 +89,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     public function getUploadedFiles()
     {
-        return \array_map(function (\Symfony\Component\HttpFoundation\File\UploadedFile $v) {
-            return new UploadedFile($v->getUploadedFile()->getPath(), $v->getSize(), $v->getError(), $v->getClientFilename(), $v->getClientMediaType());
-        }, $this->message->files->all());
+        return \array_map(fn (\Symfony\Component\HttpFoundation\File\UploadedFile $v) => new UploadedFile($v->getUploadedFile()->getPath(), $v->getSize(), $v->getError(), $v->getClientFilename(), $v->getClientMediaType()), $this->message->files->all());
     }
 
     /**

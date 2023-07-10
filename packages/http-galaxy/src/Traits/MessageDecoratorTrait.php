@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -27,11 +22,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 trait MessageDecoratorTrait
 {
-    /** @var Response|Request */
-    protected $message;
+    protected Response|Request $message;
 
-    /** @var StreamInterface|null */
-    private $stream;
+    private ?StreamInterface $stream;
 
     /**
      * {@inheritdoc}
@@ -53,7 +46,7 @@ trait MessageDecoratorTrait
         if ($this->message instanceof Response) {
             $new->message->setProtocolVersion($version);
         } elseif ($this->message instanceof Request) {
-            $new->message->server->set('SERVER_PROTOCOL', 'HTTP/' . $version);
+            $new->message->server->set('SERVER_PROTOCOL', 'HTTP/'.$version);
         }
 
         return $new;

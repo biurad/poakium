@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -17,8 +12,8 @@ declare(strict_types=1);
 
 namespace Biurad\Http\Response;
 
-use Biurad\Http\Response;
 use Biurad\Http\Exception;
+use Biurad\Http\Response;
 use Symfony\Component\HttpFoundation\JsonResponse as HttpFoundationJsonResponse;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
@@ -34,7 +29,7 @@ class JsonResponse extends Response
      * @param int                              $status          integer status code for the response; 200 by default
      * @param array                            $headers         array of headers to use at initialization
      * @param int                              $encodingOptions JSON encoding options to use
-     * @param string|null                      $callback The JSONP callback or null to use none
+     * @param string|null                      $callback        The JSONP callback or null to use none
      *
      * @throws Exception\InvalidArgumentException if unable to encode the $data to JSON
      */

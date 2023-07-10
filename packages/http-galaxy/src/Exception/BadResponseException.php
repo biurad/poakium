@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -22,11 +17,12 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * Exception when an HTTP error occurs (4xx or 5xx error).
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class BadResponseException extends RequestException
 {
-    /** @var ResponseInterface */
-    private $response;
+    private ResponseInterface $response;
 
     public function __construct(string $message, RequestInterface $request, ResponseInterface $response, \Throwable $previous = null)
     {

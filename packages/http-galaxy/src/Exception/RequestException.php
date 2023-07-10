@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,11 +18,12 @@ use Psr\Http\Message\UriInterface;
 
 /**
  * HTTP Request exception.
+ *
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
 class RequestException extends \RuntimeException
 {
-    /** @var RequestInterface */
-    private $request;
+    private RequestInterface $request;
 
     public function __construct(string $message, RequestInterface $request, \Throwable $previous = null)
     {
@@ -53,7 +49,7 @@ class RequestException extends \RuntimeException
     public static function create(RequestInterface $request, ResponseInterface $response = null, \Throwable $previous = null): self
     {
         if (null === $response) {
-            return new self('Error completing request' . (null !== $previous ? ': ' . $previous->getMessage() : '.'), $request, $previous);
+            return new self('Error completing request'.(null !== $previous ? ': '.$previous->getMessage() : '.'), $request, $previous);
         }
 
         $level = (int) \floor($response->getStatusCode() / 100);

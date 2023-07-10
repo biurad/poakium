@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -32,13 +27,13 @@ class SessionMiddleware implements MiddlewareInterface
     // request attribute
     public const ATTRIBUTE = Session::class;
 
-    /** @var callable(): SessionInterface */
+    /** @var callable(): \Symfony\Component\HttpFoundation\Session\SessionInterface */
     protected $session;
 
     /**
-     * @var array<string, mixed>
+     * @var array<string,mixed>
      */
-    private $sessionOptions;
+    private array $sessionOptions;
 
     /**
      * Create a new session middleware.
@@ -180,7 +175,7 @@ class SessionMiddleware implements MiddlewareInterface
         $mergedSessionOptions = [];
 
         foreach (\session_get_cookie_params() as $key => $value) {
-            $mergedSessionOptions['cookie_' . $key] = $value;
+            $mergedSessionOptions['cookie_'.$key] = $value;
         }
 
         foreach ($sessionOptions as $key => $value) {
