@@ -1,10 +1,10 @@
 {
   "name": "biurad/monorepo",
-  "type": "library",
   "description": "Library for working with Git repositories and PHP as a monorepo",
-  "keywords": ["git", "monorepo", "repository", "repositories", "library", "php"],
+  "keywords": ["git", "monorepo", "repository", "repositories", "library", "php", "biurad"],
   "homepage": "https://biurad.com",
   "license": "BSD-3-Clause",
+  "type": "library",
   "authors": [
     {
       "name": "Divine Niiquaye Ibok",
@@ -16,7 +16,7 @@
     }
   ],
   "support": {
-    "docs": "https://docs.biurad.com/php/monorepo"
+    "docs": "https://docs.biurad.com/poakium/monorepo"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
@@ -35,9 +35,20 @@
     "symfony/process": "^6.0",
     "symfony/yaml": "^6.0"
   },
+  "require-dev": {
+    "psr/log": "^1.0 || ^3.0"
+  },
+  "replace": {
+    "symfony/polyfill-php80": "*"
+  },
   "autoload": {
     "psr-4": {
       "Biurad\\Monorepo\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.x-dev"
     }
   },
   "suggest": {
