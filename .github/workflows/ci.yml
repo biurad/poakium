@@ -6,8 +6,8 @@ on:
   push: { branches: [master], tags: ['*'] }
 
 jobs:
-  tests:
-    name: CI Tests
+  static-analysis:
+    name: Static Analysis Tests
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
@@ -22,6 +22,58 @@ jobs:
           git config --global core.autocrlf false
           git config --global core.eol lf
 
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, xml, pcre, json, iconv, curl, fileinfo
+          ini-values: memory_limit=1G
+          coverage: none
+        env:
+          COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --optimize-autoloader ${{ 8.2 == matrix.php-versions && '--ignore-platform-reqs' || '' }}
+
+      - name: Check coding standards (PHP_CodeSniffer)
+        run: vendor/bin/phpcs
+
+      # - name: Statically analyze code (Phpstan)
+      #   run: vendor/bin/phpstan analyse
+
+      # - name: Statically analyze code (Psalm)
+      #   run: vendor/bin/psalm --output-format=github --taint-analysis --shepherd --report=build/logs/psalm.sarif
+
+      # - name: "Upload security analysis results to GitHub"
+      #   uses: "github/codeql-action/upload-sarif@v2"
+      #   with:
+      #     sarif_file: "build/logs/psalm.sarif"
+
+  unit-tests:
+    name: Pest (PHPUnit) Unit Tests
+    needs: static-analysis
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        php-versions: ['8.0', '8.1', '8.2']
+
+    runs-on: ${{ matrix.operating-system }}
+
+    steps:
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -48,41 +100,61 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-progress --optimize-autoloader ${{ 8.2 == matrix.php-versions && '--ignore-platform-reqs' || '' }}
-        continue-on-error: true # TODO: Remove when tests passes
-
-      - name: Check coding standards (PHP_CodeSniffer)
-        run: vendor/bin/phpcs
-
-      - name: Statically analyze code (Phpstan)
-        run: vendor/bin/phpstan analyse
-        continue-on-error: true # TODO: Remove when tests passes
-
-      - name: Statically analyze code (Psalm)
-        run: vendor/bin/psalm --output-format=github --taint-analysis --shepherd --report=build/logs/psalm.sarif
-        continue-on-error: true # TODO: Remove when tests passes
-
-      - name: "Upload security analysis results to GitHub"
-        uses: "github/codeql-action/upload-sarif@v2"
-        if: ${{ success() }}
-        with:
-          sarif_file: "build/logs/psalm.sarif"
 
       - name: Run unit tests (Pest)
         run: php -d "pcov.enabled=1" vendor/bin/pest --coverage --coverage-clover=coverage.clover
-        continue-on-error: true # TODO: Remove when tests passes
 
       - name: "Upload coverage report to Codecov"
         uses: codecov/codecov-action@v3
-        if: ${{ success() }}
-        continue-on-error: true
         with:
           files: ./coverage.clover
 
+  benchmark:
+    name: Performance Benchmark
+    needs: unit-tests
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
+        php-versions: ['8.0', '8.1', '8.2']
+
+    runs-on: ${{ matrix.operating-system }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, xml, pcre, json, iconv, curl, fileinfo
+          ini-values: memory_limit=1G
+          coverage: none
+        env:
+          COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --optimize-autoloader ${{ 8.2 == matrix.php-versions && '--ignore-platform-reqs' || '' }}
+
+      - name: Run benchmark tests
+        run: vendor/bin/phpbench run --report=default -l none
+
   publish:
     name: Publishing Commits
-    #needs: tests
+    needs: unit-tests
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
