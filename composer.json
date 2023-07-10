@@ -28,7 +28,8 @@
   },
   "replace": {
     "symfony/polyfill-php80": "*",
-    "biurad/git-scm": "*"
+    "biurad/git-scm": "*",
+    "biurad/http-galaxy": "*"
   },
   "scripts": {
     "coverage": [
