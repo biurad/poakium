@@ -13,17 +13,17 @@
 require __DIR__.'./../../vendor/autoload.php';
 
 \spl_autoload_register(function (string $class): void {
-  $names = \explode('\\', $class);
+    $names = \explode('\\', $class);
 
-  if (['Biurad', 'Tests', 'Fixtures'] === [$names[0] ?? null, $names[2] ?? null, $names[3] ?? null]) {
-    $className = \implode('\\', \array_slice($names, 4));
+    if (['Biurad', 'Tests', 'Fixtures'] === [$names[0] ?? null, $names[2] ?? null, $names[3] ?? null]) {
+        $className = \implode('\\', \array_slice($names, 4));
 
-    if ('Annotations' === $names[1]) {
-      if ('annotated_function' === \end($names)) {
-        $className = 'Annotation/function';
-      }
+        if ('Annotations' === $names[1]) {
+            if ('annotated_function' === \end($names)) {
+                $className = 'Annotation/function';
+            }
 
-      require __DIR__.'/../../packages/annotations/tests/Fixtures/'.$className.'.php';
+            require __DIR__.'/../../packages/annotations/tests/Fixtures/'.$className.'.php';
+        }
     }
-  }
 });
