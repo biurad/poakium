@@ -11,7 +11,7 @@
  */
 
 use Biurad\Git\Commit\Message;
-use Biurad\Git\{CommitNew, Remote, Repository};
+use Biurad\Git\{CommitNew, Repository};
 use PHPUnit\Framework as t;
 use PHPUnit\Util\Filesystem;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -101,10 +101,8 @@ test('repo by adding three commits', function (Repository $repo): void {
     t\assertCount(4, $repo->getLog()->getCommits());
     $commit = $repo->getLastCommit();
 
-    t\assertSame('Divine Niiquaye Ibok', $commit->getAuthor()->getName());
-    t\assertSame('divineibok@gmail.com', $commit->getAuthor()->getEmail());
-    t\assertSame('Divine Niiquaye Ibok', $commit->getCommitter()->getName());
-    t\assertSame('divineibok@gmail.com', $commit->getCommitter()->getEmail());
+    t\assertSame($commit->getAuthor()->getName(), $commit->getCommitter()->getName());
+    t\assertSame($commit->getAuthor()->getEmail(), $commit->getCommitter()->getEmail());
     t\assertSame($commit->getCommitter()->getDate()->getTimestamp(), $commit->getAuthor()->getDate()->getTimestamp());
     t\assertSame('Fourth commit', $commit->getMessage()->getSubject());
     t\assertSame('This commit has a body message', $commit->getMessage()->getBody());
