@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.1 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -17,7 +12,6 @@ declare(strict_types=1);
 
 namespace Biurad\Cache;
 
-use Biurad\Cache\Exceptions\InvalidArgumentException;
 use Psr\Cache\CacheItemInterface;
 
 final class CacheItem implements CacheItemInterface
@@ -27,20 +21,11 @@ final class CacheItem implements CacheItemInterface
      */
     public const RESERVED_CHARACTERS = '{}()/\@:';
 
-    /** @var string */
-    private $key;
-
-    /** @var mixed */
-    private $value;
-
-    /** @var bool */
-    private $isHit = false;
-
-    /** @var float|int|null */
-    private $expiry;
-
-    /** @var int */
-    private $defaultLifetime;
+    private ?string $key = null;
+    private mixed $value = null;
+    private bool $isHit = false;
+    private float|int|null $expiry = null;
+    private int $defaultLifetime = 0;
 
     /**
      * {@inheritdoc}
@@ -53,7 +38,7 @@ final class CacheItem implements CacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function get()
+    public function get(): mixed
     {
         return $this->value;
     }
@@ -69,7 +54,7 @@ final class CacheItem implements CacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function set($value)
+    public function set(mixed $value): static
     {
         $this->value = $value;
 
@@ -79,14 +64,10 @@ final class CacheItem implements CacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAt($expiration)
+    public function expiresAt(\DateTimeInterface|null $expiration): static
     {
         if (null === $expiration) {
             return $this->setDefaultExpiration();
-        }
-
-        if (!$expiration instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException('Expiration date must implement DateTimeInterface or be null.');
         }
 
         $this->expiry = (float) $expiration->format('U.u');
@@ -97,7 +78,7 @@ final class CacheItem implements CacheItemInterface
     /**
      * {@inheritdoc}
      */
-    public function expiresAfter($time)
+    public function expiresAfter(\DateInterval|int|null $time): static
     {
         if (null === $time) {
             return $this->setDefaultExpiration();
@@ -108,8 +89,6 @@ final class CacheItem implements CacheItemInterface
             $this->expiry = \microtime(true) + (int) $interval->format('U.u');
         } elseif (\is_int($time)) {
             $this->expiry = $time + \microtime(true);
-        } else {
-            throw new InvalidArgumentException('Expiration date must be an integer, a DateInterval or null.');
         }
 
         return $this;
