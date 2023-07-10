@@ -13,19 +13,35 @@
   </php>
 
   <testsuites>
-    <testsuite name="Poakium Test Suite">
-      <directory>./packages/*/tests/</directory>
-      <directory>./packages/*/*/tests/</directory>
-      <directory>./packages/*/*/*/tests/</directory>
+    <testsuite name="tools">
       <directory>./tools/*/tests/</directory>
+    </testsuite>
+    <testsuite name="annotations">
+      <directory>./packages/annotations/tests</directory>
+    </testsuite>
+    <testsuite name="cache">
+      <directory>./packages/cache/tests</directory>
+    </testsuite>
+    <testsuite name="http-galaxy">
+      <directory>./packages/http-galaxy/tests</directory>
+    </testsuite>
+    <testsuite name="loader">
+      <directory>./packages/loader/tests</directory>
+    </testsuite>
+    <testsuite name="maker">
+      <directory>./packages/maker/tests</directory>
+    </testsuite>
+    <testsuite name="security">
+      <directory>./packages/security/tests</directory>
+    </testsuite>
+    <testsuite name="templating">
+      <directory>./packages/templating/tests</directory>
     </testsuite>
   </testsuites>
 
   <coverage>
     <include>
       <directory>./packages/*/src/</directory>
-      <directory>./packages/*/*/src/</directory>
-      <directory>./packages/*/*/*/src/</directory>
       <directory>./tools/*/src/</directory>
     </include>
 </coverage>
