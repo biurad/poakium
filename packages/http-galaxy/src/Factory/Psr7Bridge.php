@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -279,7 +274,7 @@ class Psr7Bridge
 
             // Append continuation to last header value found
             $value = \array_pop($headers[$currentHeader]);
-            $headers[$currentHeader][] = $value . \ltrim($line);
+            $headers[$currentHeader][] = $value.\ltrim($line);
         }
 
         if (\class_exists(RelativeStream::class)) {
@@ -339,9 +334,9 @@ class Psr7Bridge
     /**
      * @param string $message
      *
-     * @throws \UnexpectedValueException
-     *
      * @return mixed
+     *
+     * @throws \UnexpectedValueException
      */
     private static function getValueFromKey(array $data, string $key, string $message = null)
     {
@@ -355,9 +350,9 @@ class Psr7Bridge
     /**
      * Retrieve the status line for the message.
      *
-     * @throws \UnexpectedValueException if line is malformed
-     *
      * @return array Array with three elements: 0 => version, 1 => status, 2 => reason
+     *
+     * @throws \UnexpectedValueException if line is malformed
      */
     private static function getStatusLine(StreamInterface $stream): array
     {

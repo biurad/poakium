@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -22,20 +17,16 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHand
 
 class CacheSessionHandler extends AbstractSessionHandler
 {
-    /** @var CacheItemPoolInterface */
-    private $cache;
+    private CacheItemPoolInterface $cache;
 
     /** @var int|float */
     private $sessionOpen;
 
-    /** @var string */
-    private $sessionId;
+    private string $sessionId;
 
-    /** @var int */
-    private $minutes;
+    private int $minutes;
 
-    /** @var bool */
-    private $gcCalled = false;
+    private bool $gcCalled = false;
 
     /**
      * Create a new cache driven handler instance.
@@ -65,7 +56,7 @@ class CacheSessionHandler extends AbstractSessionHandler
     public function isSessionExpired(): bool
     {
         if (@$this->sessionOpen < \time() - $this->minutes) {
-            //Session flash expired
+            // Session flash expired
             return true;
         }
 

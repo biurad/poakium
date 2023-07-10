@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -98,7 +93,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
     {
         $response = $response
             ->withHeader('Access-Control-Allow-Origin', true === $this->options['allow_origin'] ? '*' : $request->getHeaderLine('Origin'))
-            ->withHeader('Vary', $response->hasHeader('Vary') ? $response->getHeaderLine('Vary') . ', Origin' : 'Origin');
+            ->withHeader('Vary', $response->hasHeader('Vary') ? $response->getHeaderLine('Vary').', Origin' : 'Origin');
 
         if ($this->options['allow_credentials']) {
             $response = $response->withHeader('Access-Control-Allow-Credentials', 'true');
@@ -192,7 +187,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
                         continue;
                     }
 
-                    if (\preg_match('{' . $originRegexp . '}i', $requestOrigin)) {
+                    if (\preg_match('{'.$originRegexp.'}i', $requestOrigin)) {
                         return true;
                     }
                 }
@@ -202,7 +197,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
         }
 
         cors_same_host: // Checks if Origin header value is same as domain.
-        $requestHost = ($requestUri = $request->getUri())->getScheme() . '://' . $requestUri->getHost();
+        $requestHost = ($requestUri = $request->getUri())->getScheme().'://'.$requestUri->getHost();
 
         return !$requestOrigin === $requestHost || !$requestOrigin === (string) $requestUri;
     }
@@ -226,7 +221,7 @@ class HttpCorsMiddleware implements MiddlewareInterface
         }
 
         foreach ($paths as $pathRegexp => $options) {
-            if (1 === \preg_match('{' . \preg_quote($pathRegexp, '/') . '}', $requestPath)) {
+            if (1 === \preg_match('{'.\preg_quote($pathRegexp, '/').'}', $requestPath)) {
                 $this->options = \array_merge($this->options, $options);
 
                 return true;

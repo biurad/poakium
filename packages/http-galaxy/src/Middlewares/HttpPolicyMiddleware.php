@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -30,7 +25,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 class HttpPolicyMiddleware implements MiddlewareInterface
 {
     /** @var array<string,mixed> */
-    private $policies;
+    private array $policies;
 
     private static $QuotedDirectives = [
         'self' => " 'self'",
@@ -66,7 +61,7 @@ class HttpPolicyMiddleware implements MiddlewareInterface
             if (false === $framePolicy) {
                 $framePolicy = 'DENY';
             } elseif (\is_string($framePolicy) && \preg_match('#^https?:#', $framePolicy)) {
-                $framePolicy = 'ALLOW-FROM ' . $framePolicy;
+                $framePolicy = 'ALLOW-FROM '.$framePolicy;
             }
 
             $response = $response->withHeader('X-Frame-Options', $framePolicy);
@@ -121,11 +116,11 @@ class HttpPolicyMiddleware implements MiddlewareInterface
 
             foreach ($policy as $item) {
                 if ('nonce-' === $item) {
-                    $value .= ' \'nonce-' . ($nonces[$type] = \bin2hex(\random_bytes(18))) . '\'';
+                    $value .= ' \'nonce-'.($nonces[$type] = \bin2hex(\random_bytes(18))).'\'';
                 } elseif (\in_array($item, ['sha256-', 'sha384', 'sha512-'], true)) {
-                    $value .= ' \'' . $item . \base64_encode(\hash(\substr($item, 0, -1), \random_bytes(16), true)) . '\'';
+                    $value .= ' \''.$item.\base64_encode(\hash(\substr($item, 0, -1), \random_bytes(16), true)).'\'';
                 } else {
-                    $value .= self::$QuotedDirectives[$item] ?? ' ' . $item;
+                    $value .= self::$QuotedDirectives[$item] ?? ' '.$item;
                 }
             }
 

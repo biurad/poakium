@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -105,7 +100,7 @@ class CacheControl
         $directives = \array_reduce(\array_keys($cacheControl), function ($res, $name) use ($cacheControl) {
             $add = \implode(' ', (array) $cacheControl[$name]);
 
-            return ('' !== $res ? $res . ', ' : '') . \sprintf('%s%s', $name, '1' === $add ? '' : $add);
+            return ('' !== $res ? $res.', ' : '').\sprintf('%s%s', $name, '1' === $add ? '' : $add);
         }, '');
 
         return $response->withHeader('Cache-Control', \strtr($directives, ' 1', ''));
@@ -117,9 +112,7 @@ class CacheControl
     private static function validateOptions(array $options): void
     {
         if ($diff = \array_diff(\array_keys($options), \array_keys(self::HTTP_RESPONSE_CACHE_CONTROL_DIRECTIVES))) {
-            throw new \InvalidArgumentException(
-                \sprintf('Response does not support the following options: "%s".', \implode('", "', $diff))
-            );
+            throw new \InvalidArgumentException(\sprintf('Response does not support the following options: "%s".', \implode('", "', $diff)));
         }
     }
 }

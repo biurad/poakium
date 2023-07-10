@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -31,12 +26,12 @@ class HeaderCacheKeyGenerator implements CacheKeyGeneratorInterface
     /**
      * The header names we should take into account when creating the cache key.
      *
-     * @var array
+     * @var array<int,string>
      */
-    private $headerNames;
+    private array $headerNames;
 
     /**
-     * @param $headerNames
+     * @param array<int,string> $headerNames
      */
     public function __construct(array $headerNames)
     {
@@ -54,6 +49,6 @@ class HeaderCacheKeyGenerator implements CacheKeyGeneratorInterface
             $concatenatedHeaders[] = \sprintf(' %s:"%s"', $headerName, $request->getHeaderLine($headerName));
         }
 
-        return $request->getMethod() . ' ' . $request->getUri() . \implode('', $concatenatedHeaders) . ' ' . (string) $request->getBody();
+        return $request->getMethod().' '.$request->getUri().\implode('', $concatenatedHeaders).' '.(string) $request->getBody();
     }
 }

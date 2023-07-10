@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -39,34 +34,31 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class CacheControlMiddleware implements MiddlewareInterface
 {
-    /** @var CacheItemPoolInterface */
-    private $pool;
-
-    /** @var StreamFactoryInterface */
-    private $streamFactory;
+    private CacheItemPoolInterface $pool;
+    private StreamFactoryInterface $streamFactory;
 
     /** @var array<string,mixed> */
-    private $config;
+    private array $config;
 
     /**
      * Cache directives indicating if a response can not be cached.
      *
-     * @var string[]
+     * @var array<int,string>
      */
-    private $noCacheFlags = ['no-cache', 'private', 'no-store'];
+    private array $noCacheFlags = ['no-cache', 'private', 'no-store'];
 
     /**
      * @param array<string,mixed> $config
-     *  - default_ttl: (seconds) If we do not respect cache headers or can't calculate a good ttl, use this value
-     *  - hash_algo: The hashing algorithm to use when generating cache keys
-     *  - cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
-     *    we have to store the cache for a longer time than the server originally says it is valid for.
-     *    We store a cache item for cache_lifetime + max age of the response.
-     *  - methods: list of request methods which can be cached
-     *  - blacklisted_paths: list of regex for URLs explicitly not to be cached
-     *  - respect_response_cache_directives: list of cache directives this plugin will respect while caching responses
-     *  - cache_key_generator: an object to generate the cache key. Defaults to a new instance of SimpleGenerator
-     *  - cache_listeners: an array of objects to act on the response based on the results of the cache check. Defaults to an empty array
+     *                                    - default_ttl: (seconds) If we do not respect cache headers or can't calculate a good ttl, use this value
+     *                                    - hash_algo: The hashing algorithm to use when generating cache keys
+     *                                    - cache_lifetime: (seconds) To support serving a previous stale response when the server answers 304
+     *                                    we have to store the cache for a longer time than the server originally says it is valid for.
+     *                                    We store a cache item for cache_lifetime + max age of the response.
+     *                                    - methods: list of request methods which can be cached
+     *                                    - blacklisted_paths: list of regex for URLs explicitly not to be cached
+     *                                    - respect_response_cache_directives: list of cache directives this plugin will respect while caching responses
+     *                                    - cache_key_generator: an object to generate the cache key. Defaults to a new instance of SimpleGenerator
+     *                                    - cache_listeners: an array of objects to act on the response based on the results of the cache check. Defaults to an empty array
      */
     public function __construct(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory, array $config = [])
     {
@@ -89,12 +81,11 @@ class CacheControlMiddleware implements MiddlewareInterface
      * When using the client cache mode the middleware will
      * cache responses with `private` cache directive.
      *
-     * @param StreamFactoryInterface $streamFactory
-     * @param array                  $config        For all possible config options see the constructor docs
+     * @param array<string,mixed> $config For all possible config options see the constructor docs
      *
      * @return static
      */
-    public static function clientCache(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
+    public static function clientCache(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory, array $config = [])
     {
         // Allow caching of private requests
         if (isset($config['respect_response_cache_directives'])) {
@@ -112,12 +103,11 @@ class CacheControlMiddleware implements MiddlewareInterface
      * This method will setup the CacheControlMiddleware in server cache mode. This is the default caching behavior it refuses to
      * cache responses with the `private`or `no-cache` directives.
      *
-     * @param StreamFactoryInterface $streamFactory
-     * @param array<string,mixed>    $config        For all possible config options see the constructor docs
+     * @param array<string,mixed> $config For all possible config options see the constructor docs
      *
      * @return static
      */
-    public static function serverCache(CacheItemPoolInterface $pool, $streamFactory, array $config = [])
+    public static function serverCache(CacheItemPoolInterface $pool, StreamFactoryInterface $streamFactory, array $config = [])
     {
         return new static($pool, $streamFactory, $config);
     }
@@ -146,7 +136,7 @@ class CacheControlMiddleware implements MiddlewareInterface
             }
 
             // Add headers to ask the server if this cache is still valid
-            if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue('@' . $data['createdAt'])) {
+            if ($modifiedSinceValue = $this->getModifiedSinceHeaderValue('@'.$data['createdAt'])) {
                 $request = $request->withHeader('If-Modified-Since', $modifiedSinceValue);
             }
 
@@ -163,7 +153,7 @@ class CacheControlMiddleware implements MiddlewareInterface
      */
     protected function isCacheable(ResponseInterface $response): bool
     {
-        if (!\in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410])) {
+        if (!\in_array($response->getStatusCode(), [200, 203, 300, 301, 302, 404, 410], true)) {
             return false;
         }
 
@@ -180,10 +170,8 @@ class CacheControlMiddleware implements MiddlewareInterface
 
     /**
      * Create a new response into cache.
-     *
-     * @return ResponseInterface
      */
-    private function createResponse(ResponseInterface $response, RequestInterface $request, CacheItemInterface $cacheItem)
+    private function createResponse(ResponseInterface $response, RequestInterface $request, CacheItemInterface $cacheItem): ResponseInterface
     {
         if (304 === $response->getStatusCode()) {
             // The cached response we have is still valid
@@ -225,11 +213,9 @@ class CacheControlMiddleware implements MiddlewareInterface
      * Calculate the timestamp when this cache item should be dropped from the cache. The lowest value that can be
      * returned is $maxAge.
      *
-     * @param int|null $maxAge
-     *
      * @return int|null Unix system time passed to the PSR-6 cache
      */
-    private function calculateCacheItemExpiresAfter($maxAge): ?int
+    private function calculateCacheItemExpiresAfter(?int $maxAge): ?int
     {
         if (null === $this->config['cache_lifetime'] && null === $maxAge) {
             return null;
@@ -242,11 +228,9 @@ class CacheControlMiddleware implements MiddlewareInterface
      * Calculate the timestamp when a response expires. After that timestamp, we need to send a
      * If-Modified-Since / If-None-Match request to validate the response.
      *
-     * @param int|null $maxAge
-     *
      * @return int|null Unix system time. A null value means that the response expires when the cache item expires
      */
-    private function calculateResponseExpiresAt($maxAge): ?int
+    private function calculateResponseExpiresAt(?int $maxAge): ?int
     {
         if (empty($maxAge)) {
             return null;
@@ -274,7 +258,7 @@ class CacheControlMiddleware implements MiddlewareInterface
     /**
      * @return string
      */
-    private function createCacheKey(RequestInterface $request)
+    private function createCacheKey(RequestInterface $request): string
     {
         $key = $this->config['cache_key_generator']->generate($request);
 
@@ -286,7 +270,7 @@ class CacheControlMiddleware implements MiddlewareInterface
      *
      * @return int|null
      */
-    private function getMaxAge(ResponseInterface $response)
+    private function getMaxAge(ResponseInterface $response): ?int
     {
         if (!\in_array('max-age', $this->config['respect_response_cache_directives'], true)) {
             return $this->config['default_ttl'];
@@ -328,7 +312,7 @@ class CacheControlMiddleware implements MiddlewareInterface
 
         $this->pool->deleteItem($cacheKey);
 
-        throw new InvalidArgumentException('Could not read response from cache id: ' . $cacheKey);
+        throw new InvalidArgumentException('Could not read response from cache id: '.$cacheKey);
     }
 
     /**
@@ -339,7 +323,7 @@ class CacheControlMiddleware implements MiddlewareInterface
         $modified = new \DateTime($createdAt);
         $modified->setTimezone(new \DateTimeZone('GMT'));
 
-        return $modified->format('l, d-M-y H:i:s') . ' GMT';
+        return $modified->format('l, d-M-y H:i:s').' GMT';
     }
 
     /**
@@ -363,7 +347,7 @@ class CacheControlMiddleware implements MiddlewareInterface
      *
      * @return ResponseInterface
      */
-    private function handleCacheListeners(RequestInterface $request, ResponseInterface $response, ?CacheItemInterface $cacheItem)
+    private function handleCacheListeners(RequestInterface $request, ResponseInterface $response, ?CacheItemInterface $cacheItem): ResponseInterface
     {
         foreach ($this->config['cache_listeners'] as $cacheListener) {
             /** @var CacheListenerInterface $cacheListener */

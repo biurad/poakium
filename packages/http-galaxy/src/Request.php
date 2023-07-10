@@ -1,14 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
  * This file is part of Biurad opensource projects.
  *
- * PHP version 7.2 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
@@ -26,11 +21,9 @@ class Request implements RequestInterface, \Stringable
 {
     use Traits\MessageDecoratorTrait;
 
-    /** @var string|null */
-    private $requestTarget;
+    private ?string $requestTarget;
 
-    /** @var UriInterface|null */
-    private $uri;
+    private ?UriInterface $uri;
 
     /**
      * @param string                               $method  HTTP method
@@ -45,7 +38,7 @@ class Request implements RequestInterface, \Stringable
             $body = $body->detach();
         }
 
-        $this->message = HttpFoundationRequest::create((string) $uri, $method, [], [], [], $headers + ['SERVER_PROTOCOL' => 'HTTP/' . $version], $body, $version);
+        $this->message = HttpFoundationRequest::create((string) $uri, $method, [], [], [], $headers + ['SERVER_PROTOCOL' => 'HTTP/'.$version], $body);
     }
 
     /**
@@ -132,7 +125,7 @@ class Request implements RequestInterface, \Stringable
      */
     public function getUri(): UriInterface
     {
-        return $this->uri ?? $this->uri = new Uri($this->message->getSchemeAndHttpHost() . $this->message->getRequestUri());
+        return $this->uri ?? $this->uri = new Uri($this->message->getSchemeAndHttpHost().$this->message->getRequestUri());
     }
 
     /**
@@ -162,11 +155,11 @@ class Request implements RequestInterface, \Stringable
                 }
 
                 if ('' !== $uri->getScheme()) {
-                    $requestHost = $uri->getScheme() . '://' . $requestHost;
+                    $requestHost = $uri->getScheme().'://'.$requestHost;
                 }
 
                 if (!\in_array($uri->getPort(), [null, '', 80, 443], true)) {
-                    $requestHost .= ':' . $uri->getPort();
+                    $requestHost .= ':'.$uri->getPort();
                 }
 
                 $request->headers->set('HOST', $requestHost);
