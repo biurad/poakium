@@ -95,7 +95,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
                     parent::__construct($paths, $rootPath);
                 }
 
-                protected function findTemplate(string $name, bool $throw = true): string
+                protected function findTemplate(string $name, bool $throw = true): ?string
                 {
                     if (isset($this->cache[$name])) {
                         return $this->cache[$name];
@@ -110,9 +110,9 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
                     }
 
                     if (!\is_file($name)) {
-                        $name = $this->loader->find($name);
+                        $newName = $this->loader->find($name);
 
-                        if (null === $name) {
+                        if (null === $newName) {
                             $this->errorCache[$name] = \sprintf('The template "%s" is not a valid file path.', $name);
 
                             if (!$throw) {
@@ -121,6 +121,7 @@ final class TwigRender extends AbstractRender implements RenderCacheInterface
 
                             throw new Twig\Error\LoaderError($this->errorCache[$name]);
                         }
+                        $name = $newName;
                     }
 
                     return $this->cache[$name] = $name;

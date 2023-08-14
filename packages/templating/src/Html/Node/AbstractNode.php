@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Biurad\UI\Html\Node;
 
+#[\AllowDynamicProperties]
 abstract class AbstractNode implements \Stringable
 {
     /** @var int|null @read-only */
