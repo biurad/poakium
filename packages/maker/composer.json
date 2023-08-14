@@ -1,57 +1,53 @@
 {
-    "name": "biurad/biurad-scaffolder",
-    "type": "library",
-    "description": "The Scaffold Maker is the fastest way to generate the most common code you'll need in a PHP projects",
-    "keywords": [
-        "scaffolding",
-        "scaffolder",
-        "php code generator",
-        "php generator",
-        "biuradphp",
-        "php7"
-    ],
-    "homepage": "https://www.biurad.com",
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Divine Niiquaye Ibok",
-            "email": "divineibok@gmail.com"
-        },
-        {
-            "name": "Biurad Lap Community",
-            "homepage": "https://biurad.com/contributors"
-        }
-    ],
-    "config": {
-        "preferred-install": "dist",
-        "sort-packages": true
+  "name": "biurad/maker",
+  "description": "The Scaffold Maker is the fastest way to generate the most common code you'll need in a PHP projects",
+  "keywords": ["scaffolding", "scaffolder", "php code generator", "php generator", "biurad", "php"],
+  "homepage": "https://biurad.com",
+  "license": "BSD-3-Clause",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Divine Niiquaye Ibok",
+      "email": "divineibok@gmail.com"
     },
-    "require": {
-        "php": "^7.2",
-        "biurad/doctrine-annotations-bridge": "^0.1",
-        "symfony/console": "^5.1",
-        "doctrine/inflector": "^1.3",
-        "nette/neon": "^3.0",
-        "nette/php-generator": "^3.3",
-        "nikic/php-parser": "^4.4",
-        "symfony/yaml": "^5.1"
-    },
-    "require-dev": {
-        "composer/package-versions-deprecated": "^1.8",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
-        "phpunit/phpunit": "^8.5 || ^9.0",
-        "squizlabs/php_codesniffer": "^3.5",
-        "vimeo/psalm": "^3.11"
-    },
-    "autoload": {
-        "psr-4": {
-            "BiuradPHP\\Scaffold\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "BiuradPHP\\Scaffold\\Tests\\": "Tests/"
-        }
+    {
+      "name": "GitHub Contributors",
+      "homepage": "https://github.com/biurad/php-maker/contributors"
     }
+  ],
+  "support": {
+    "docs": "https://docs.biurad.com/poakium/maker"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "preferred-install": "dist",
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "symfony/console": "^6.0",
+    "doctrine/inflector": "^1.3",
+    "nette/php-generator": "^3.3",
+    "nikic/php-parser": "^4.15"
+  },
+  "require-dev": {
+    "nette/neon": "^3.0",
+    "symfony/yaml": "^5.4 || ^6.0"
+  },
+  "replace": {
+    "symfony/polyfill-php80": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Biurad\\Maker\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.x-dev"
+    }
+  }
 }
