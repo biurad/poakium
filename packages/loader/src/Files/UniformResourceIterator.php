@@ -1,93 +1,56 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files;
+namespace Biurad\Loader\Files;
 
-use BadMethodCallException;
-use BiuradPHP\Loader\Locators\UniformResourceLocator;
-use FilesystemIterator;
-use RuntimeException;
+use Biurad\Loader\Locators\UniformResourceLocator;
 
 /**
  * Implements FilesystemIterator for uniform resource locator.
  *
- * Most of the methods in this file come from Grav CMS,
- * thanks to RocketTheme Team for such a useful class.
+ * This was first implemented by Grav CMS.
+ * thanks to RocketTheme Team. This code has been modified for performance.
  *
  * @author RocketTheme
- * @license MIT
- * @license BSD-3-Clause
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class UniformResourceIterator extends FilesystemIterator
+class UniformResourceIterator extends \FilesystemIterator
 {
-    /**
-     * @var FilesystemIterator
-     */
-    protected $iterator;
+    protected \FilesystemIterator $iterator;
 
-    /**
-     * @var array
-     */
-    protected $found;
+    /** @var array<string,bool> */
+    protected array $found;
 
-    /**
-     * @var array
-     */
-    protected $stack;
-
-    /**
-     * @var string
-     */
-    protected $path;
-
-    /**
-     * @var int
-     */
-    protected $flags;
-
-    /**
-     * @var UniformResourceLocator
-     */
-    protected $locator;
+    /** @var array<int,string> */
+    protected array $stack = [];
 
     /**
      * UniformResourceIterator constructor.
-     *
-     * @param $path
-     * @param null                        $flags
-     * @param null|UniformResourceLocator $locator
      */
-    public function __construct($path, $flags = null, UniformResourceLocator $locator = null)
+    public function __construct(protected string $path, protected int $flags = UniformResourceLocator::FLAG, protected ?UniformResourceLocator $locator = null)
     {
-        if (!$locator) {
-            throw new BadMethodCallException('Use $locator->getIterator() instead');
+        if (null === $locator) {
+            throw new \InvalidArgumentException(\sprintf('Use the %s::getIterator() method instead', UniformResourceLocator::class));
         }
 
-        $this->path = $path;
-        $this->setFlags($flags);
-        $this->locator = $locator;
         $this->rewind();
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->iterator->__toString();
     }
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         if ($this->flags & static::CURRENT_AS_SELF) {
@@ -97,7 +60,7 @@ class UniformResourceIterator extends FilesystemIterator
         return $this->iterator->current();
     }
 
-    public function key()
+    public function key(): string
     {
         return $this->iterator->key();
     }
@@ -106,176 +69,198 @@ class UniformResourceIterator extends FilesystemIterator
     {
         do {
             $found = $this->findNext();
-        } while ($found && !empty($this->found[$found]));
+        } while (null !== $found && !empty($this->found[$found]));
 
-        if ($found) {
+        if (null !== $found) {
             // Mark the file as found.
             $this->found[$found] = true;
         }
     }
 
-    public function valid()
+    public function valid(): bool
     {
-        return $this->iterator && $this->iterator->valid();
+        return $this->iterator->valid();
     }
 
     public function rewind(): void
     {
         $this->found = [];
         $this->stack = $this->locator->findResources($this->path);
-        $this->next();
+
+        if (!$this->nextIterator()) {
+            throw new \RuntimeException('Failed to open dir: '.$this->path.' does not exist.');
+        }
+
+        // Find the first valid entry.
+        while (!$this->valid()) {
+            if (!$this->nextIterator()) {
+                return;
+            }
+        }
+
+        // Mark the first file as found.
+        $this->found[$this->getFilename()] = true;
     }
 
-    public function getUrl()
+    public function getUrl(): string
     {
-        $path = $this->path . (\substr($this->path, -1, 1) === '/' ? '' : '/');
+        $path = $this->path.('/' === $this->path[\strlen($this->path) - 1] ? '' : '/');
 
-        return $path . $this->iterator->getFilename();
+        return $path.$this->iterator->getFilename();
     }
 
     public function seek($position): void
     {
-        throw new RuntimeException('Seek not implemented');
+        throw new \RuntimeException('Seek not implemented');
     }
 
-    public function getATime()
+    #[\ReturnTypeWillChange]
+    public function getATime(): bool|int
     {
         return $this->iterator->getATime();
     }
 
-    public function getBasename($suffix = null)
+    public function getBasename(?string $suffix = ''): string
     {
         return $this->iterator->getBasename($suffix);
     }
 
-    public function getCTime()
+    #[\ReturnTypeWillChange]
+    public function getCTime(): bool|int
     {
         return $this->iterator->getCTime();
     }
 
-    public function getExtension()
+    public function getExtension(): string
     {
         return $this->iterator->getExtension();
     }
 
-    public function getFilename()
+    public function getFilename(): string
     {
         return $this->iterator->getFilename();
     }
 
-    public function getGroup()
+    #[\ReturnTypeWillChange]
+    public function getGroup(): bool|int
     {
         return $this->iterator->getGroup();
     }
 
-    public function getInode()
+    #[\ReturnTypeWillChange]
+    public function getInode(): bool|int
     {
         return $this->iterator->getInode();
     }
 
-    public function getMTime()
+    #[\ReturnTypeWillChange]
+    public function getMTime(): bool|int
     {
         return $this->iterator->getMTime();
     }
 
-    public function getOwner()
+    #[\ReturnTypeWillChange]
+    public function getOwner(): bool|int
     {
         return $this->iterator->getOwner();
     }
 
-    public function getPath()
+    public function getPath(): string
     {
         return $this->iterator->getPath();
     }
 
-    public function getPathname()
+    public function getPathname(): string
     {
         return $this->iterator->getPathname();
     }
 
-    public function getPerms()
+    #[\ReturnTypeWillChange]
+    public function getPerms(): bool|int
     {
         return $this->iterator->getPerms();
     }
 
-    public function getSize()
+    #[\ReturnTypeWillChange]
+    public function getSize(): bool|int
     {
         return $this->iterator->getSize();
     }
 
-    public function getType()
+    #[\ReturnTypeWillChange]
+    public function getType(): bool|string
     {
         return $this->iterator->getType();
     }
 
-    public function isDir()
+    public function isDir(): bool
     {
         return $this->iterator->isDir();
     }
 
-    public function isDot()
+    public function isDot(): bool
     {
         return $this->iterator->isDot();
     }
 
-    public function isExecutable()
+    public function isExecutable(): bool
     {
         return $this->iterator->isExecutable();
     }
 
-    public function isFile()
+    public function isFile(): bool
     {
         return $this->iterator->isFile();
     }
 
-    public function isLink()
+    public function isLink(): bool
     {
         return $this->iterator->isLink();
     }
 
-    public function isReadable()
+    public function isReadable(): bool
     {
         return $this->iterator->isReadable();
     }
 
-    public function isWritable()
+    public function isWritable(): bool
     {
         return $this->iterator->isWritable();
     }
 
-    public function getFlags()
+    public function getFlags(): int
     {
         return $this->flags;
     }
 
-    public function setFlags($flags = null): void
+    public function setFlags(int $flags = UniformResourceLocator::FLAG): void
     {
-        $this->flags = $flags === null ? static::KEY_AS_PATHNAME | static::CURRENT_AS_SELF | static::SKIP_DOTS : $flags;
-
-        if ($this->iterator) {
-            $this->iterator->setFlags($this->flags);
-        }
+        $this->flags = $flags;
+        $this->iterator?->setFlags($this->flags);
     }
 
-    protected function findNext()
+    private function findNext(): ?string
     {
-        if ($this->iterator) {
-            $this->iterator->next();
-        }
+        $this->iterator->next();
 
-        if (!$this->valid()) {
-            do {
-                // Move to the next iterator if it exists.
-                $path = \array_shift($this->stack);
-
-                if (!isset($path)) {
-                    return null;
-                }
-
-                $this->iterator = new FilesystemIterator($path, $this->getFlags());
-            } while (!$this->iterator->valid());
+        while (!$this->valid()) {
+            if (!$this->nextIterator()) {
+                return null;
+            }
         }
 
         return $this->getFilename();
+    }
+
+    private function nextIterator(): bool
+    {
+        // Move to the next iterator if it exists.
+        $hasNext = null !== $path = \array_shift($this->stack);
+
+        if ($hasNext) {
+            $this->iterator = new \FilesystemIterator($path, $this->getFlags());
+        }
+
+        return $hasNext;
     }
 }

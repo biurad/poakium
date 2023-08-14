@@ -1,60 +1,37 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files\Adapters;
-
-use RuntimeException;
+namespace Biurad\Loader\Files\Adapters;
 
 /**
  * Reading and generating Ini files.
  *
- * @author Zend Technologies USA Inc <http://www.zend.com>
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
 final class IniFileAdapter extends AbstractAdapter
 {
-    /**
-     * Separator for nesting levels of configuration data identifiers.
-     *
-     * @var string
-     */
-    protected $nestSeparator = '.';
+    /** Separator for nesting levels of configuration data identifiers. */
+    protected string $nestSeparator = '.';
 
     /**
      * Flag which determines whether sections are processed or not.
      *
      * @see https://www.php.net/parse_ini_file
-     *
-     * @var bool
      */
-    protected $processSections = true;
+    protected bool $processSections = true;
 
-    /**
-     * If true the INI string is rendered in the global namespace without
-     * sections.
-     *
-     * @var bool
-     */
-    protected $renderWithoutSections = false;
+    /** If true the INI string is rendered in the global namespace without sections. */
+    protected bool $renderWithoutSections = false;
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports(string $file): bool
     {
         return 'ini' === \strtolower(\pathinfo($file, \PATHINFO_EXTENSION));
@@ -63,11 +40,9 @@ final class IniFileAdapter extends AbstractAdapter
     /**
      * Set nest separator.
      *
-     * @param string $separator
-     *
      * @return self
      */
-    public function setNestSeparator($separator)
+    public function setNestSeparator(string $separator)
     {
         $this->nestSeparator = $separator;
 
@@ -76,10 +51,8 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Get nest separator.
-     *
-     * @return string
      */
-    public function getNestSeparator()
+    public function getNestSeparator(): string
     {
         return $this->nestSeparator;
     }
@@ -90,14 +63,10 @@ final class IniFileAdapter extends AbstractAdapter
      * values are merged.
      *
      * @see https://www.php.net/parse_ini_file
-     *
-     * @param bool $processSections
-     *
-     * @return $this
      */
-    public function setProcessSections($processSections)
+    public function setProcessSections(bool $processSections): self
     {
-        $this->processSections = (bool) $processSections;
+        $this->processSections = $processSections;
 
         return $this;
     }
@@ -108,10 +77,8 @@ final class IniFileAdapter extends AbstractAdapter
      * values are merged.
      *
      * @see https://www.php.net/parse_ini_file
-     *
-     * @return bool
      */
-    public function getProcessSections()
+    public function getProcessSections(): bool
     {
         return $this->processSections;
     }
@@ -121,12 +88,8 @@ final class IniFileAdapter extends AbstractAdapter
      *
      * If set to true, the INI file is rendered without sections completely
      * into the global namespace of the INI file.
-     *
-     * @param bool $withoutSections
-     *
-     * @return self
      */
-    public function setRenderWithoutSectionsFlags($withoutSections)
+    public function setRenderWithoutSectionsFlags(bool $withoutSections): self
     {
         $this->renderWithoutSections = (bool) $withoutSections;
 
@@ -135,10 +98,8 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Return whether the writer should render without sections.
-     *
-     * @return bool
      */
-    public function shouldRenderWithoutSections()
+    public function shouldRenderWithoutSections(): bool
     {
         return $this->renderWithoutSections;
     }
@@ -146,11 +107,9 @@ final class IniFileAdapter extends AbstractAdapter
     /**
      * Reads configuration from INI data.
      *
-     * @param string $string
+     * @return array<int|string,mixed>
      *
-     * @throws RuntimeException
-     *
-     * @return array|bool
+     * @throws \RuntimeException
      */
     protected function processFrom(string $string): array
     {
@@ -162,34 +121,28 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Generates configuration in INI format.
-     *
-     * @param array $data
-     *
-     * @return string
      */
     protected function processDump(array $data): string
     {
         $class = __CLASS__;
 
-        return "; generated by $class\n\n" . $this->processConfig($data);
+        return "; generated by $class\n\n".$this->processConfig($data);
     }
 
     /**
      * Process data from the parsed ini file.
      *
-     * @param array $data
-     *
-     * @return array
+     * @return array<int|string,mixed>
      */
-    protected function process(array $data)
+    protected function process(array $data): array
     {
         $config = [];
 
         foreach ($data as $section => $value) {
             if (\is_array($value)) {
-                if (\strpos($section, $this->nestSeparator) !== false) {
+                if (\str_contains($section, $this->nestSeparator)) {
                     $sections = \explode($this->nestSeparator, $section);
-                    $config   = \array_merge_recursive($config, $this->buildNestedSection($sections, $value));
+                    $config = \array_merge_recursive($config, $this->buildNestedSection($sections, $value));
                 } else {
                     $config[$section] = $this->processSection($value);
                 }
@@ -204,11 +157,11 @@ final class IniFileAdapter extends AbstractAdapter
     /**
      * Process a section.
      *
-     * @param array $section
+     * @param array<string,string> $section
      *
-     * @return array
+     * @return array<int|string,mixed>
      */
-    protected function processSection(array $section)
+    protected function processSection(array $section): array
     {
         $config = [];
 
@@ -221,30 +174,24 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Process a key.
-     *
-     * @param string $key
-     * @param string $value
-     * @param array  $config
      */
-    protected function processKey($key, $value, array &$config): void
+    protected function processKey(string $key, mixed $value, array &$config): void
     {
-        if (\strpos($key, $this->nestSeparator) !== false) {
+        if (\str_contains($key, $this->nestSeparator)) {
             $pieces = \explode($this->nestSeparator, $key, 2);
 
-            if ($pieces[0] === '' || $pieces[1] === '') {
-                throw new RuntimeException(\sprintf('Invalid key "%s"', $key));
+            if ('' === $pieces[0] || '' === $pieces[1]) {
+                throw new \RuntimeException(\sprintf('Invalid key "%s"', $key));
             }
 
             if (!isset($config[$pieces[0]])) {
-                if ($pieces[0] === '0' && !empty($config)) {
+                if ('0' === $pieces[0] && !empty($config)) {
                     $config = [$pieces[0] => $config];
                 } else {
                     $config[$pieces[0]] = [];
                 }
             } elseif (!\is_array($config[$pieces[0]])) {
-                throw new RuntimeException(
-                    \sprintf('Cannot create sub-key for "%s", as key already exists', $pieces[0])
-                );
+                throw new \RuntimeException(\sprintf('Cannot create sub-key for "%s", as key already exists', $pieces[0]));
             }
 
             $this->processKey($pieces[1], $value, $config[$pieces[0]]);
@@ -255,12 +202,8 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Process array into ini.
-     *
-     * @param array $config
-     *
-     * @return string
      */
-    protected function processConfig(array $config)
+    protected function processConfig(array $config): string
     {
         $iniString = '';
 
@@ -271,9 +214,9 @@ final class IniFileAdapter extends AbstractAdapter
 
             foreach ($config as $sectionName => $data) {
                 if (!\is_array($data)) {
-                    $iniString .= $sectionName . ' = ' . $this->prepareValue($data) . "\n";
+                    $iniString .= $sectionName.' = '.$this->prepareValue($data)."\n";
                 } else {
-                    $iniString .= '[' . $sectionName . ']' . "\n" . $this->addBranch($data) . "\n";
+                    $iniString .= '['.$sectionName.']'."\n".$this->addBranch($data)."\n";
                 }
             }
         }
@@ -284,7 +227,6 @@ final class IniFileAdapter extends AbstractAdapter
     /**
      * Add a branch to an INI string recursively.
      *
-     * @param array $config
      * @param array $parents
      *
      * @return string
@@ -300,9 +242,9 @@ final class IniFileAdapter extends AbstractAdapter
                 $iniString .= $this->addBranch($value, $group);
             } else {
                 $iniString .= \implode($this->nestSeparator, $group)
-                           . ' = '
-                           . $this->prepareValue($value)
-                           . "\n";
+                           .' = '
+                           .$this->prepareValue($value)
+                           ."\n";
             }
         }
 
@@ -312,13 +254,9 @@ final class IniFileAdapter extends AbstractAdapter
     /**
      * Prepare a value for INI.
      *
-     * @param mixed $value
-     *
-     * @throws RuntimeException
-     *
-     * @return string
+     * @throws \RuntimeException
      */
-    protected function prepareValue($value)
+    protected function prepareValue($value): string|int|float
     {
         if (\is_int($value) || \is_float($value)) {
             return $value;
@@ -328,22 +266,20 @@ final class IniFileAdapter extends AbstractAdapter
             return $value ? 'true' : 'false';
         }
 
-        if (!isset($value) || false === \strpos($value, '"')) {
-            return '"' . $value . '"';
+        if (!isset($value) || !\str_contains($value, '"')) {
+            return '"'.$value.'"';
         }
 
-        throw new RuntimeException('Value can not contain double quotes');
+        throw new \RuntimeException('Value can not contain double quotes');
     }
 
     /**
      * Root elements that are not assigned to any section needs to be on the
      * top of config.
      *
-     * @param array $config
-     *
-     * @return array
+     * @return array<int|string,mixed>
      */
-    protected function sortRootElements(array $config)
+    protected function sortRootElements(array $config): array
     {
         $sections = [];
 
@@ -365,21 +301,15 @@ final class IniFileAdapter extends AbstractAdapter
 
     /**
      * Process a nested section.
-     *
-     * @param array $sections
-     * @param mixed $value
-     *
-     * @return array
      */
-    private function buildNestedSection($sections, $value)
+    private function buildNestedSection(array $sections, array $value): array
     {
-        if (!$sections) {
+        if (empty($sections)) {
             return $this->processSection($value);
         }
 
         $nestedSection = [];
-
-        $first                 = \array_shift($sections);
+        $first = \array_shift($sections);
         $nestedSection[$first] = $this->buildNestedSection($sections, $value);
 
         return $nestedSection;

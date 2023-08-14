@@ -1,75 +1,46 @@
-# A robust package for loading files, classes, class aliases, and store data loader...
+<div align="center">
 
-This dependency provides a few fluent and convenient wrappers for working files, class aliases, classes with a data loader that collect's data (scalar, object, array) and then populate's the data into object mapping.
+# The Poakium Loader
 
-**`Please note that this documentation is currently work-in-progress. Feel free to contribute.`**
+[![Latest Version](https://img.shields.io/packagist/v/biurad/loader?include_prereleases&label=Latest&style=flat-square)](https://packagist.org/packages/biurad/loader)
+[![Workflow Status](https://img.shields.io/github/actions/workflow/status/biurad/poakium/ci.yml?branch=master&label=Workflow&style=flat-square)](https://github.com/biurad/poakium/actions?query=workflow)
+[![Software License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg?&label=Poakium&style=flat-square)](LICENSE)
+[![Maintenance Status](https://img.shields.io/maintenance/yes/2023?label=Maintained&style=flat-square)](https://github.com/biurad/poakium)
 
-## Installation
+</div>
 
-The recommended way to install Loader Manager is via Composer:
+---
 
-```bash
-composer require biurad/biurad-loader
-```
+A [PHP][1] library for loading yaml, neon, json, ini, xml, files, resource streamed paths, and aliased classes and namespaces.
 
-It requires PHP version 7.0 and supports PHP up to 7.4. The dev-master version requires PHP 7.1.
+## 📦 Installation
 
-## How To Use
-
-Loader manager offers a very intuitive API for scalables, null, array and object manipulation. Before we show you the first example, we need to think about how to pack all our configurations into one collection and easily access it as string, object or and array without having to define configurations over and over. Including loading classes, class aliases, or annotations.
-
-All Loader manager classes are very well optimized for performance and in the first place, it provides full atomicity of operations.
-
-Before using this dependency, take some time to familiarize yourself with [Php ArrayAccess](http://php.net/manual/en/arrayaccess.php), [Doctrine Annotations](https://github.com/doctrine/annotations), [PHP class_alias function](http://php.net/manual/en/function.class-alias.php), [PHP RecursiveDirectoryIterator](http://php.net/manual/en/recursivedirectoryiterator.php) and [PHP SplFileInfo](http://php.net/manual/en/splfileinfo.php). and handling stored variables in php.
-
-The Loader Manager has some useful classes and methods which you may require while working on a project.
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Testing
-
-To run the tests you'll have to start the included node based server if any first in a separate terminal window.
-
-With the server running, you can start testing.
+This project requires [PHP][1] 8.0 or higher. The recommended way to install, is by using [Composer][2]. Simply run:
 
 ```bash
-vendor/bin/phpunit
+$ composer require biurad/loader
 ```
 
-## Security
+## 📓 Documentation
 
-If you discover any security related issues, please report using the issue tracker.
-use our example [Issue Report](.github/ISSUE_TEMPLATE/Bug_report.md) template.
+In-depth documentation on how to use this library can be found at [docs.biurad.com][3]. It is also recommended to browse through unit tests in the [tests](./tests/) directory.
 
-## Want to be listed on our projects website
+## 🙌 Sponsors
 
-You're free to use this package, but if it makes it to your production environment we highly appreciate you sending us a message on our website, mentioning which of our package(s) you are using.
+If this library made it into your project, or you interested in supporting us, please consider [donating][4] to support future development.
 
-Post Here: [Project Patreons - https://patreons.biurad.com](https://patreons.biurad.com)
+## 👥 Credits & Acknowledgements
 
-We publish all received request's on our website;
+- [Divine Niiquaye Ibok][5] is the author this library.
+- [All Contributors][6] who contributed to this project.
 
-## Credits
+## 📄 License
 
-- [Divine Niiquaye](https://github.com/divineniiquaye)
-- [All Contributors](https://biurad.com/projects/biurad-loader/contributers)
+Poakium Annotations is completely free and released under the [BSD 3 License](LICENSE).
 
-## Support us
-
-`Biurad Lap` is a technology agency in Accra, Ghana. You'll find an overview of all our open source projects [on our website](https://biurad.com/opensource).
-
-Does your business depend on our contributions? Reach out and support us on to build more project's. We want to build over one hundred project's in two years. [Support Us](https://biurad.com/donate) achieve our goal.
-
-Reach out and support us on [Patreon](https://www.patreon.com/biurad). All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
-
-[Thanks to all who made Donations and Pledges to Us.](.github/ISSUE_TEMPLATE/Support_us.md)
-
-## License
-
-The BSD-3-Clause . Please see [License File](LICENSE.md) for more information.
+[1]: https://php.net
+[2]: https://getcomposer.org
+[3]: https://docs.biurad.com/poakium/loader
+[4]: https://biurad.com/sponsor
+[5]: https://github.com/divineniiquaye
+[6]: https://github.com/biurad/php-loader/contributors

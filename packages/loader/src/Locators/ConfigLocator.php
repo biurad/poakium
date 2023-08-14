@@ -1,52 +1,36 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Locators;
+namespace Biurad\Loader\Locators;
 
-use BiuradPHP\Loader\Exceptions\FileLoadingException;
-use BiuradPHP\Loader\Files\Adapters;
-use BiuradPHP\Loader\Interfaces\DataInterface;
-use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
-use InvalidArgumentException;
-use RuntimeException;
+use Biurad\Loader\Exceptions\FileLoadingException;
+use Biurad\Loader\Files\Adapters;
+use Biurad\Loader\Files\Adapters\AbstractAdapter;
 
 class ConfigLocator
 {
     protected const INCLUDES_KEY = 'includes';
 
-    /**
-     * @var array
-     */
-    protected $dependencies = [];
+    /** @var array<int,string> */
+    protected array $dependencies = [];
 
-    /**
-     * @var array
-     */
-    protected $loadedFiles = [];
+    /** @var array<int,string> */
+    protected array $loadedFiles = [];
 
-    /**
-     * @var array
-     */
-    protected $parameters = [];
+    /** @var array<int,string> */
+    protected array $parameters = [];
 
-    /**
-     * @var FileAdapterInterface[] drivers
-     */
-    private $adapters = [
+    /** @var array<int,AbstractAdapter|string> drivers */
+    private array $adapters = [
         Adapters\PhpFileAdapter::class,
         Adapters\IniFileAdapter::class,
         Adapters\XmlFileAdapter::class,
@@ -60,40 +44,33 @@ class ConfigLocator
     /**
      * Reads configuration from file.
      *
-     * @param string    $file
-     * @param null|bool $merge
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return array
+     * @throws \InvalidArgumentException
      */
     public function loadFile(string $file, ?bool $merge = true): array
     {
         if (isset($this->loadedFiles[$file])) {
-            throw new RuntimeException("Recursive included file '$file'");
+            throw new \RuntimeException("Recursive included file '$file'");
         }
         $this->loadedFiles[$file] = true;
 
         $this->dependencies[] = $file;
-        $data                 = $this->getAdapter($file)->fromFile($file);
+        $data = $this->getAdapter($file)->fromFile($file);
 
         $res = [];
 
         if (isset($data[self::INCLUDES_KEY])) {
             if (!$this->isList($data[self::INCLUDES_KEY])) {
-                throw new InvalidArgumentException(
-                    \sprintf('Expected \'included\' to contain a list of paths, invalid type supplied')
-                );
+                throw new \InvalidArgumentException('Expected \'included\' to contain a list of paths, invalid type supplied');
             }
 
             foreach ($data[self::INCLUDES_KEY] as $include) {
                 $include = $this->expandIncludedFile($include, $file);
-                $res     = $this->mergeTree($this->loadFile($include, $merge), $res);
+                $res = $this->mergeTree($this->loadFile($include, $merge), $res);
             }
         }
         unset($data[self::INCLUDES_KEY], $this->loadedFiles[$file]);
 
-        if ($merge === false) {
+        if (false === $merge) {
             $res[] = $data;
         } else {
             $res = $this->mergeTree($data, $res);
@@ -105,14 +82,9 @@ class ConfigLocator
     /**
      * Read configuration from multiple files and merge them.
      *
-     * @param array $files
-     * @param bool  $merge
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return array
+     * @throws \InvalidArgumentException
      */
-    public function loadFiles(array $files, $merge = true)
+    public function loadFiles(array $files, bool $merge = true): array
     {
         $config = [];
 
@@ -125,9 +97,6 @@ class ConfigLocator
 
     /**
      * Save's configuration to file.
-     *
-     * @param array|DataInterface $data
-     * @param string              $file
      */
     public function saveFile(array $data, string $file): void
     {
@@ -139,18 +108,18 @@ class ConfigLocator
 
         // Invalidate configuration file from the opcache.
         if (
-            \function_exists('opcache_invalidate') &&
-            \filter_var(\ini_get('opcache.enable'), \FILTER_VALIDATE_BOOLEAN)
+            \function_exists('opcache_invalidate')
+            && \filter_var(\ini_get('opcache.enable'), \FILTER_VALIDATE_BOOLEAN)
         ) {
             // PHP 5.5.5+
-            @opcache_invalidate($file, true);
+            @\opcache_invalidate($file, true);
         }
 
         // Touch the directory as well, thus marking it modified.
         @\touch(\dirname($file));
 
         if (false === $fileStatus) {
-            throw new InvalidArgumentException("Cannot write file '$file'.");
+            throw new \InvalidArgumentException("Cannot write file '$file'.");
         }
     }
 
@@ -164,56 +133,45 @@ class ConfigLocator
 
     /**
      * Expands included file name.
-     *
-     * @param string $includedFile
-     * @param string $mainFile
-     *
-     * @return string
      */
     public function expandIncludedFile(string $includedFile, string $mainFile): string
     {
         return \preg_match('#([a-z]+:)?[/\\\\]#Ai', $includedFile) // is absolute
             ? $includedFile
-            : \dirname($mainFile) . '/' . $includedFile;
+            : \dirname($mainFile).'/'.$includedFile;
     }
 
     /**
      * Registers adapter for given file extension.
      *
-     * @param FileAdapterInterface $adapter
-     *
      * @return static
      */
-    public function addAdapter(FileAdapterInterface $adapter)
+    public function addAdapter(AbstractAdapter $adapter): static
     {
         $this->adapters[] = $adapter;
 
         return $this;
     }
 
-    public function getAdapter(string $file): FileAdapterInterface
+    public function getAdapter(string $file): AbstractAdapter
     {
-        $adapters = \array_map(function ($adapter) {
-            return \is_object($adapter) ? $adapter : new $adapter();
-        }, $this->adapters);
+        foreach ($this->adapters as &$adapter) {
+            if (\is_string($adapter)) {
+                $adapter = new $adapter();
+            }
 
-        foreach ($adapters as $adapter) {
             if ($adapter->supports($file)) {
                 return $adapter;
             }
         }
 
-        throw new RuntimeException(
-            \sprintf('Filename "%s" is missing an extension and cannot be auto-detected', $file)
-        );
+        throw new \RuntimeException(\sprintf('Filename "%s" is missing an extension and cannot be auto-detected', $file));
     }
 
     /**
      * Finds whether a variable is a zero-based integer indexed array.
-     *
-     * @param mixed $value
      */
-    private function isList($value): bool
+    private function isList(mixed $value): bool
     {
         return \is_array($value) && (!$value || \array_keys($value) === \range(0, \count($value) - 1));
     }

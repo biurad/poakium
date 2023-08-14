@@ -15,7 +15,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Exceptions;
+namespace Biurad\Loader\Exceptions;
 
 class FileNotFoundException extends FileLoadingException
 {

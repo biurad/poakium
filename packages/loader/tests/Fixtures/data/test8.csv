@@ -1,0 +1,3 @@
+test.dir.root,test.dir.lib,test.forbidden_file_extensions,test.debugger_token
+true,null,"[""php"",""php3"",""pl"",""com"",""exe"",""bat"",""cgi"",""htaccess""]",debug
+

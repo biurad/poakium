@@ -1,71 +1,52 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files;
-
-use FilesystemIterator;
-use RecursiveIterator;
-use SeekableIterator;
+namespace Biurad\Loader\Files;
 
 /**
  * Implements recursive iterator over filesystem.
  *
  * @author RocketTheme
- * @license MIT
- * @license BSD-3-Clause
+ * @author Divine Niiquaye Ibok <divineibok@gmail.com>
  */
-class RecursiveUniformResourceIterator extends UniformResourceIterator implements SeekableIterator, RecursiveIterator
+class RecursiveUniformResourceIterator extends UniformResourceIterator implements \SeekableIterator, \RecursiveIterator
 {
-    protected $subPath;
+    protected string $subPath;
 
-    public function getChildren()
+    public function getChildren(): self
     {
         $subPath = $this->getSubPathName();
 
         return (new static($this->getUrl(), $this->flags, $this->locator))->setSubPath($subPath);
     }
 
-    public function hasChildren($allow_links = null)
+    public function hasChildren(int $allow_links = null): bool
     {
-        $allow_links = (bool) (
-            $allow_links !== null ? $allow_links : $this->flags & FilesystemIterator::FOLLOW_SYMLINKS
-        );
+        $allow_links = (bool) (null !== $allow_links ? $allow_links : $this->flags & \FilesystemIterator::FOLLOW_SYMLINKS);
 
         return $this->iterator && $this->isDir() && !$this->isDot() && ($allow_links || !$this->isLink());
     }
 
-    public function getSubPath()
+    public function getSubPath(): string
     {
         return $this->subPath;
     }
 
-    public function getSubPathName()
+    public function getSubPathName(): string
     {
-        return ($this->subPath ? $this->subPath . '/' : '') . $this->getFilename();
+        return ($this->subPath ? $this->subPath.'/' : '').$this->getFilename();
     }
 
-    /**
-     * @param $path
-     *
-     * @return $this
-     *
-     * @internal
-     */
-    public function setSubPath($path)
+    public function setSubPath(string $path): self
     {
         $this->subPath = $path;
 
