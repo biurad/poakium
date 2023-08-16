@@ -57,7 +57,7 @@ class AliasLocator
      */
     public function register(): void
     {
-        static $loaded = new \ArrayObject();
+        $loaded = new \ArrayObject();
         \spl_autoload_register(function (string $class) use (&$loaded): void {
             if (isset($loaded[$class])) {
                 return;
