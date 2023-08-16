@@ -94,20 +94,24 @@ test('repo add a commit with modified author date', function (Repository $repo):
 test('repo by adding three commits', function (Repository $repo): void {
     \file_put_contents($repo->getPath().'/textA.txt', 'A file containing some text labeled A.');
     $repo->commit(new Message('Second commit'));
+    t\assertEquals(0, $repo->getExitCode());
+
     \file_put_contents($repo->getPath().'/textB.txt', 'A file containing some text labeled B.');
     $repo->commit(new Message('Third commit'));
+    t\assertEquals(0, $repo->getExitCode());
+
     \file_put_contents($repo->getPath().'/textC.txt', 'A file containing some text labeled C.');
     $repo->commit(new Message('Fourth commit', 'This commit has a body message'));
+    t\assertEquals(0, $repo->getExitCode());
 
-    t\assertCount(4, $repo->getLog()->getCommits());
     $commit = $repo->getLastCommit();
-
     t\assertSame($commit->getAuthor()->getName(), $commit->getCommitter()->getName());
     t\assertSame($commit->getAuthor()->getEmail(), $commit->getCommitter()->getEmail());
     t\assertSame($commit->getCommitter()->getDate()->getTimestamp(), $commit->getAuthor()->getDate()->getTimestamp());
     t\assertSame('Fourth commit', $commit->getMessage()->getSubject());
     t\assertSame('This commit has a body message', $commit->getMessage()->getBody());
     t\assertSame(['test.txt', 'textA.txt', 'textB.txt', 'textC.txt'], \array_keys($commit->getTree()->getEntries()));
+    t\assertCount(4, $repo->getLog()->getCommits());
 })->with('repo');
 
 test('repo branch is created and exists in references', function (Repository $repo): void {
