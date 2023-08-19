@@ -1,41 +1,30 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files\Adapters;
+namespace Biurad\Loader\Files\Adapters;
 
-use BiuradPHP\Loader\Exceptions\FileGeneratingException;
-use BiuradPHP\Loader\Exceptions\FileLoadingException;
-use BiuradPHP\Loader\Interfaces\DataInterface;
-use BiuradPHP\Loader\Interfaces\FileAdapterInterface;
-use JsonSerializable;
-use stdClass;
-use Traversable;
+use Biurad\Loader\Exceptions\FileGeneratingException;
+use Biurad\Loader\Exceptions\FileLoadingException;
+use Biurad\Loader\Exceptions\LoaderException;
 
 /**
  * Reading and generating PHP files.
  *
- * @author Zend Technologies USA Inc <http://www.zend.com>
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
-abstract class AbstractAdapter implements FileAdapterInterface
+abstract class AbstractAdapter
 {
     /**
-     * {@inheritdoc}
+     * Read from a file and create an array.
      */
     public function fromFile(string $filename): array
     {
@@ -45,21 +34,18 @@ abstract class AbstractAdapter implements FileAdapterInterface
 
         \set_error_handler(
             function ($error, $message = '') use ($filename): void {
-                throw new FileLoadingException(
-                    \sprintf('Error reading config file "%s": %s', $filename, $message),
-                    $error
-                );
+                throw new FileLoadingException(\sprintf('Error reading config file "%s": %s', $filename, $message), $error);
             },
             \E_WARNING
         );
         $config = \file_get_contents($filename);
         \restore_error_handler();
 
-        return (array) $this->fromString($config);
+        return $this->fromString($config);
     }
 
     /**
-     * {@inheritdoc}
+     * Read from a string and create an array.
      */
     public function fromString(string $string): array
     {
@@ -80,61 +66,44 @@ abstract class AbstractAdapter implements FileAdapterInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Generates configuration string.
+     *
+     * Write a config object to a string.
+     *
+     * @param object|array $data e.g (JsonSerializable orTraversable)
      */
-    public function dump($data): string
+    public function dump(object|array $data): string
     {
         if (!\is_array($data = $this->resolveData($data))) {
-            throw new FileGeneratingException(
-                __METHOD__ . ' expects an array, Traversable, stdClass, or JsonSerializable config'
-            );
+            throw new FileGeneratingException(__METHOD__.' expects an array, Traversable, stdClass, or JsonSerializable config');
         }
 
         return $this->processDump($data);
     }
 
     /**
-     * {@inheritdoc}
+     * Check file supported extensions.
      */
     abstract public function supports(string $file): bool;
 
-    /**
-     * @param string $config
-     *
-     * @return array
-     */
-    abstract protected function processFrom(string $config): array;
+    abstract protected function processFrom(string $string): array;
 
-    /**
-     * @param array|JsonSerializable|object|Traversable $config
-     *
-     * @return string
-     */
     abstract protected function processDump(array $config): string;
 
-    /**
-     * @param array|JsonSerializable|object|Traversable $data
-     *
-     * @return array
-     */
-    private function resolveData($data): array
+    private function resolveData(object|array $data): array
     {
-        if ($data instanceof stdClass) {
+        if ($data instanceof \stdClass) {
             return (array) $data;
         }
 
-        if ($data instanceof Traversable) {
+        if ($data instanceof \Traversable) {
             return \iterator_to_array($data);
         }
 
-        if (\class_exists(JsonSerializable::class) && $data instanceof JsonSerializable) {
+        if (\class_exists(\JsonSerializable::class) && $data instanceof \JsonSerializable) {
             return $data->jsonSerialize();
         }
 
-        if ($data instanceof DataInterface) {
-            return $data->toArray();
-        }
-
-        return $data;
+        return is_array($data) ? $data : throw new LoaderException('Unsupported data type');
     }
 }

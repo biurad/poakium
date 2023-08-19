@@ -14,3 +14,4 @@ composer.lock
 .phpcs-cache
 /tools/*/tests/build/
 /packages/*/tests/build/
+/packages/*/tests/caches/

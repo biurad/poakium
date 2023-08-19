@@ -1,36 +1,26 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files\Adapters;
+namespace Biurad\Loader\Files\Adapters;
 
-use BiuradPHP\Loader\Exceptions\FileGeneratingException;
-use Exception;
+use Biurad\Loader\Exceptions\FileGeneratingException;
 
 /**
  * Reading and generating Csv files.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
 final class CsvFileAdapter extends AbstractAdapter
 {
-    /**
-     * {@inheritdoc}
-     */
     public function supports(string $file): bool
     {
         return \in_array(\strtolower(\pathinfo($file, \PATHINFO_EXTENSION)), ['csv', 'tsv'], true);
@@ -38,16 +28,12 @@ final class CsvFileAdapter extends AbstractAdapter
 
     /**
      * Reads configuration from Csv data.
-     *
-     * @param string $string
-     *
-     * @return array
      */
     protected function processFrom(string $string): array
     {
         $lines = \preg_split('/\r\n|\r|\n/', $string);
 
-        if ($lines === false) {
+        if (false === $lines) {
             throw new FileGeneratingException('Decoding CSV failed');
         }
 
@@ -62,12 +48,11 @@ final class CsvFileAdapter extends AbstractAdapter
             foreach ($lines as $line) {
                 if (!empty($line)) {
                     $csv_line = \str_getcsv($line, ',');
-
                     $list[] = \array_combine($header, $csv_line);
                 }
             }
-        } catch (Exception $e) {
-            throw new FileGeneratingException('Badly formatted CSV line: ' . $line, 0, $e);
+        } catch (\Exception $e) {
+            throw new FileGeneratingException('Badly formatted CSV line: '.$line, 0, $e);
         }
 
         return $list;
@@ -75,14 +60,10 @@ final class CsvFileAdapter extends AbstractAdapter
 
     /**
      * Generates configuration in Csv format.
-     *
-     * @param array $data
-     *
-     * @return false|string
      */
     protected function processDump(array $data): string
     {
-        if (\count($data) === 0) {
+        if (0 === \count($data)) {
             return '';
         }
         $header = \array_keys(\reset($data));
@@ -98,20 +79,20 @@ final class CsvFileAdapter extends AbstractAdapter
         return $string;
     }
 
-    protected function encodeLine(array $line, $delimiter = null): string
+    protected function encodeLine(array $line, string $delimiter): string
     {
-        foreach ($line as $key => &$value) {
+        foreach ($line as &$value) {
             $value = $this->escape((string) $value);
         }
         unset($value);
 
-        return \implode($delimiter, $line) . "\n";
+        return \implode($delimiter, $line)."\n";
     }
 
-    protected function escape(string $value)
+    protected function escape(string $value): string
     {
         if (\preg_match('/[,"\r\n]/u', $value)) {
-            $value = '"' . \preg_replace('/"/', '""', $value) . '"';
+            $value = '"'.\preg_replace('/"/', '""', $value).'"';
         }
 
         return $value;

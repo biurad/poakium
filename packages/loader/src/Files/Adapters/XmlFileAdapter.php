@@ -1,50 +1,33 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files\Adapters;
+namespace Biurad\Loader\Files\Adapters;
 
-use BiuradPHP\Loader\Exceptions\FileLoadingException;
-use DOMComment;
-use DOMDocument;
-use DOMElement;
-use DOMText;
-use Exception;
-use LogicException;
-use RuntimeException;
-use XMLWriter;
+use Biurad\Loader\Exceptions\FileLoadingException;
 
 /**
  * Reading and generating XML/Html files.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
 final class XmlFileAdapter extends AbstractAdapter
 {
     public function __construct()
     {
         if (!\extension_loaded('dom') && !\extension_loaded('xmlwriter')) {
-            throw new LogicException('Extension DOM and XmlWriter is required.');
+            throw new \LogicException('Extension DOM and XmlWriter is required.');
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports(string $file): bool
     {
         return \in_array(\strtolower(\pathinfo($file, \PATHINFO_EXTENSION)), ['htm', 'html', 'xml'], true);
@@ -54,34 +37,26 @@ final class XmlFileAdapter extends AbstractAdapter
      * Parses an XML string.
      *
      * @param string               $content          An XML string
-     * @param null|callable|string $schemaOrCallable An XSD schema file path, a callable, or null to disable validation
+     * @param callable|string|null $schemaOrCallable An XSD schema file path, a callable, or null to disable validation
      *
      * @throws FileLoadingException When parsing of XML file returns error
-     * @throws InvalidXmlException  When parsing of XML with schema or callable produces any errors
      *                              unrelated to the XML parsing itself
-     * @throws RuntimeException     When DOM extension is missing
-     *
-     * @return DOMDocument
+     * @throws \RuntimeException    When DOM extension is missing
      */
-    public function parse(string $content, $schemaOrCallable = null): DOMDocument
+    public function parse(string $content, $schemaOrCallable = null): \DOMDocument
     {
-        $internalErrors  = \libxml_use_internal_errors(true);
-        $disableEntities = \libxml_disable_entity_loader(true);
+        $internalErrors = \libxml_use_internal_errors(true);
         \libxml_clear_errors();
 
-        $dom                  = new DOMDocument();
+        $dom = new \DOMDocument();
         $dom->validateOnParse = true;
 
         if (!$dom->loadXML($content, \LIBXML_NONET | (\defined('LIBXML_COMPACT') ? \LIBXML_COMPACT : 0))) {
-            \libxml_disable_entity_loader($disableEntities);
-
-            $dom->loadHTML($content);
+            $dom->loadHTML($content, \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
         }
 
         $dom->normalizeDocument();
-
         \libxml_use_internal_errors($internalErrors);
-        \libxml_disable_entity_loader($disableEntities);
 
         if (null !== $schemaOrCallable) {
             $internalErrors = \libxml_use_internal_errors(true);
@@ -92,25 +67,23 @@ final class XmlFileAdapter extends AbstractAdapter
             if (\is_callable($schemaOrCallable)) {
                 try {
                     $valid = $schemaOrCallable($dom, $internalErrors);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $valid = false;
                 }
             } elseif (!\is_array($schemaOrCallable) && \is_file((string) $schemaOrCallable)) {
                 $schemaSource = \file_get_contents((string) $schemaOrCallable);
-                $valid        = @$dom->schemaValidateSource($schemaSource);
+                $valid = @$dom->schemaValidateSource($schemaSource);
             } else {
                 \libxml_use_internal_errors($internalErrors);
 
-                throw new FileLoadingException(
-                    'The schemaOrCallable argument has to be a valid path to XSD file or callable.'
-                );
+                throw new FileLoadingException('The schemaOrCallable argument has to be a valid path to XSD file or callable.');
             }
 
             if (!$valid) {
                 $messages = $this->getXmlErrors($internalErrors);
 
                 if (empty($messages)) {
-                    throw new RuntimeException('The XML is not valid.', 0, $e);
+                    throw new \RuntimeException('The XML is not valid.', 0, $e);
                 }
 
                 throw new FileLoadingException(\implode("\n", $messages), 0, $e);
@@ -138,15 +111,13 @@ final class XmlFileAdapter extends AbstractAdapter
      *
      *  * The nested-tags are converted to keys (<foo><foo>bar</foo></foo>)
      *
-     * @param DOMElement $element     A \DOMElement instance
-     * @param bool       $checkPrefix Check prefix in an element or an attribute name
-     *
-     * @return mixed
+     * @param \DOMElement $element     A \DOMElement instance
+     * @param bool        $checkPrefix Check prefix in an element or an attribute name
      */
-    public function convertDomElementToArray(DOMElement $element, bool $checkPrefix = true)
+    public function convertDomElementToArray(\DOMElement $element, bool $checkPrefix = true)
     {
         $prefix = (string) $element->prefix;
-        $empty  = true;
+        $empty = true;
         $config = [];
 
         foreach ($element->attributes as $name => $node) {
@@ -154,20 +125,20 @@ final class XmlFileAdapter extends AbstractAdapter
                 continue;
             }
             $config[$name] = $this->phpize($node->value);
-            $empty         = false;
+            $empty = false;
         }
 
         $nodeValue = false;
 
         foreach ($element->childNodes as $node) {
-            if ($node instanceof DOMText) {
+            if ($node instanceof \DOMText) {
                 if ('' !== \trim($node->nodeValue)) {
                     $nodeValue = \trim($node->nodeValue);
-                    $empty     = false;
+                    $empty = false;
                 }
             } elseif ($checkPrefix && $prefix != (string) $node->prefix) {
                 continue;
-            } elseif (!$node instanceof DOMComment) {
+            } elseif (!$node instanceof \DOMComment) {
                 $value = $this->convertDomElementToArray($node, $checkPrefix);
 
                 $key = $node->localName;
@@ -200,10 +171,6 @@ final class XmlFileAdapter extends AbstractAdapter
 
     /**
      * Reads configuration from XML data.
-     *
-     * @param string $string
-     *
-     * @return array
      */
     protected function processFrom(string $string): array
     {
@@ -215,14 +182,10 @@ final class XmlFileAdapter extends AbstractAdapter
     /**
      * Generates configuration in XML format,
      * Process the array|objects for dumping.
-     *
-     * @param array $config
-     *
-     * @return string
      */
     protected function processDump(array $config): string
     {
-        $writer = new XMLWriter();
+        $writer = new \XMLWriter();
         $writer->openMemory();
         $writer->setIndent(true);
         $writer->setIndentString(\str_repeat(' ', 4));
@@ -232,7 +195,7 @@ final class XmlFileAdapter extends AbstractAdapter
             $writer->startElement('html');
         } else {
             $writer->startDocument('1.0', 'UTF-8');
-            $writer->startElement('loader-config');
+            $writer->startElement('config');
         }
 
         foreach ($config as $sectionName => $data) {
@@ -252,84 +215,95 @@ final class XmlFileAdapter extends AbstractAdapter
     /**
      * Add a branch to an XML/Html object recursively.
      *
-     * @param string    $branchName
-     * @param array     $config
-     * @param XMLWriter $writer
+     * @param string $branchName
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
-    protected function addBranch($branchName, array $config, XMLWriter $writer): void
+    protected function addBranch($branchName, array $config, \XMLWriter $writer): void
     {
         $branchType = null;
 
-        foreach ($config as $key => $value) {
-            if ($branchType === null) {
-                if (\is_numeric($key)) {
-                    $branchType = 'numeric';
-                } else {
-                    $writer->startElement($branchName);
-                    $branchType = 'string';
+        if ($isAttribute = \count($config) < 5) {
+            foreach ($config as $v) {
+                if (\is_scalar($v) || null === $v) {
+                    continue;
                 }
-            } elseif ($branchType !== (\is_numeric($key) ? 'numeric' : 'string')) {
-                throw new RuntimeException('Mixing of string and numeric keys is not allowed');
-            }
 
-            if ($branchType === 'numeric') {
-                if (\is_array($value)) {
-                    $this->addBranch($branchName, $value, $writer);
-                } else {
-                    $writer->writeElement($branchName, $this->xmlize($value));
-                }
-            } else {
-                if (\is_array($value)) {
-                    if (\array_key_exists('value', $value)) {
-                        $newValue = $value['value'];
-                        unset($value['value']);
-
-                        $writer->startElement($key);
-                        \array_walk_recursive($value, function ($item, $id) use (&$writer): void {
-                            $writer->writeAttribute($id, $item);
-                        });
-
-                        $writer->writeRaw($this->xmlize($newValue));
-                        $writer->endElement();
-                        $writer->endAttribute();
-                    } else {
-                        $this->addBranch($key, $value, $writer);
-                    }
-                } else {
-                    $writer->writeAttribute($key, $this->xmlize($value));
-                }
+                $isAttribute = false;
+                break;
             }
         }
 
-        if ($branchType === 'string') {
+        foreach ($config as $key => $value) {
+            if ('int' === $branchType || \is_numeric($key)) {
+                $branchType ??= 'int';
+                if (\is_array($value)) {
+                    $this->addBranch($branchName, $value, $writer);
+                    continue;
+                }
+
+                $writer->writeElement($branchName, $this->xmlize($value));
+                continue;
+            }
+
+            if (null === $branchType) {
+                $branchType = 'string';
+                $writer->startElement($branchName);
+            }
+
+            if (\is_array($value)) {
+                if (\array_key_exists('value', $value)) {
+                    $newValue = $value['value'];
+                    unset($value['value']);
+
+                    $writer->startElement($key);
+                    \array_walk_recursive($value, function ($item, $id) use (&$writer): void {
+                        $writer->writeAttribute($id, $item);
+                    });
+
+                    $writer->writeRaw($this->xmlize($newValue));
+                    $writer->endElement();
+                    $writer->endAttribute();
+                    continue;
+                }
+
+                $this->addBranch($key, $value, $writer);
+                continue;
+            }
+
+            if ($isAttribute) {
+                $writer->writeAttribute($key, $this->xmlize($value));
+                continue;
+            }
+
+            $writer->startElement($key);
+            $writer->writeRaw($this->xmlize($value));
+            $writer->endElement();
+        }
+
+        if ('string' === $branchType) {
             $writer->endElement();
         }
     }
 
     /**
      * Converts an xml value to a PHP type.
-     *
-     * @param mixed $value
-     *
-     * @return mixed
      */
     protected function phpize($value)
     {
-        $value          = (string) $value;
+        $value = (string) $value;
         $lowercaseValue = \strtolower($value);
 
         switch (true) {
             case 'null' === $lowercaseValue:
                 return null;
             case \ctype_digit($value):
-                $raw  = $value;
+                $raw = $value;
                 $cast = (int) $value;
 
                 return '0' == $value[0] ? \octdec($value) : (((string) $raw === (string) $cast) ? $cast : $raw);
             case isset($value[1]) && '-' === $value[0] && \ctype_digit(\substr($value, 1)):
-                $raw  = $value;
+                $raw = $value;
                 $cast = (int) $value;
 
                 return '0' == $value[1] ? \octdec($value) : (((string) $raw === (string) $cast) ? $cast : $raw);
@@ -337,10 +311,10 @@ final class XmlFileAdapter extends AbstractAdapter
                 return true;
             case 'false' === $lowercaseValue:
                 return false;
-            case isset($value[1]) && '0b' == $value[0] . $value[1] && \preg_match('/^0b[01]*$/', $value):
+            case isset($value[1]) && '0b' == $value[0].$value[1] && \preg_match('/^0b[01]*$/', $value):
                 return \bindec($value);
             case \is_numeric($value):
-                return '0x' === $value[0] . $value[1] ? \hexdec($value) : (float) $value;
+                return '0x' === $value[0].$value[1] ? \hexdec($value) : (float) $value;
             case \preg_match('/^0x[0-9a-f]++$/i', $value):
                 return \hexdec($value);
             case \preg_match('/^[+-]?[0-9]+(\.[0-9]+)?$/', $value):
@@ -352,10 +326,6 @@ final class XmlFileAdapter extends AbstractAdapter
 
     /**
      * Converts an PHP type to a Xml value.
-     *
-     * @param mixed $value
-     *
-     * @return string
      */
     protected function xmlize($value): string
     {
@@ -363,7 +333,7 @@ final class XmlFileAdapter extends AbstractAdapter
             case null === $value:
                 return 'null';
             case isset($value[1]) && '-' === $value[0] && \ctype_digit(\substr($value, 1)):
-                $raw  = $value;
+                $raw = $value;
                 $cast = (int) $value;
 
                 return (string) 0 == $value[1] ? \octdec($value) : (((string) $raw === (string) $cast) ? $cast : $raw);
@@ -371,7 +341,7 @@ final class XmlFileAdapter extends AbstractAdapter
                 return 'true';
             case false === $value:
                 return 'false';
-            case isset($value[1]) && '0b' == $value[0] . $value[1] && \preg_match('/^0b[01]*$/', (string) $value):
+            case isset($value[1]) && '0b' == $value[0].$value[1] && \preg_match('/^0b[01]*$/', (string) $value):
                 return (string) \bindec($value);
             case \preg_match('/^0x[0-9a-f]++$/i', (string) $value):
                 return \hexdec($value);

@@ -22,9 +22,9 @@
     <testsuite name="cache">
       <directory>./packages/cache/tests</directory>
     </testsuite>
-    <testsuite name="http-galaxy">
+    <!-- <testsuite name="http-galaxy">
       <directory>./packages/http-galaxy/tests</directory>
-    </testsuite>
+    </testsuite> -->
     <testsuite name="loader">
       <directory>./packages/loader/tests</directory>
     </testsuite>

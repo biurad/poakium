@@ -1,50 +1,46 @@
 {
-    "name": "biurad/biurad-loader",
-    "type": "library",
-    "description": "This dependency is a robust package for loading files, classes, class aliases, annotations, and store data",
-    "keywords": ["loader", "loader manager", "biuradphp", "php7"],
-    "homepage": "https://www.biurad.com",
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Divine Niiquaye Ibok",
-            "email": "divineibok@gmail.com"
-        },
-        {
-            "name": "Biurad Lap Community",
-            "homepage": "https://biurad.com/contributors"
-        }
-    ],
-    "require": {
-        "php": "^7.0",
-        "ext-json": "*",
-        "ext-tokenizer": "*",
-        "psr/log": "1.1"
+  "name": "biurad/loader",
+  "description": "This dependency is a robust package for loading files, classes, class aliases, annotations, and store data",
+  "keywords": ["loader", "loader manager", "xml", "yaml", "ini", "csv", "namespace", "alias", "config", "biurad", "php"],
+  "homepage": "https://biurad.com",
+  "license": "BSD-3-Clause",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Divine Niiquaye Ibok",
+      "email": "divineibok@gmail.com"
     },
-    "require-dev": {
-        "composer/package-versions-deprecated": "^1.8",
-        "phpstan/phpstan": "^0.12",
-        "phpstan/phpstan-strict-rules": "^0.12",
-        "phpunit/phpunit": "^8.5 || ^9.0",
-        "squizlabs/php_codesniffer": "^3.5",
-        "vimeo/psalm": "^3.11"
-    },
-    "autoload": {
-        "psr-4": {
-            "BiuradPHP\\Loader\\": "src/"
-        },
-        "exclude-from-classmap": [
-            "/Tests/"
-        ]
-    },
-	"autoload-dev": {
-        "psr-4": {
-            "BiuradPHP\\Loader\\Tests\\": "Tests/"
-        }
-    },
-    "minimum-stability": "dev",
-    "suggest": {
-        "symfony/yaml": "Support loading files in yml or yaml format, if native yaml extension is not avaliable",
-        "nette/neon": "Support loading files in neon format, since nette/neon is an advanced version of yaml"
+    {
+      "name": "GitHub Contributors",
+      "homepage": "https://github.com/biurad/php-loader/contributors"
     }
+  ],
+  "support": {
+    "docs": "https://docs.biurad.com/poakium/loader"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.0",
+    "ext-json": "*",
+    "ext-tokenizer": "*"
+  },
+  "require-dev": {
+    "symfony/yaml": "^6.0",
+    "nette/neon": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Biurad\\Loader\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.x-dev"
+    }
+  },
+  "suggest": {
+    "symfony/yaml": "Support loading files in yml or yaml format, if native yaml extension is not available",
+    "nette/neon": "Support loading files in neon format, since nette/neon is an advanced version of yaml"
+  }
 }

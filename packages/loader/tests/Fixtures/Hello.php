@@ -10,12 +10,8 @@
  * file that was distributed with this source code.
  */
 
- /** @var \Composer\Autoload\ClassLoader */
-$composer = require __DIR__.'/../../vendor/autoload.php';
+namespace Biurad\Loader\Tests\Fixtures;
 
-$composer->addPsr4("Biurad\\Annotations\\Tests\\Fixtures\\", [
-    __DIR__."/../../packages/annotations/tests/Fixtures/",
-    __DIR__."/../../../packages/annotations/tests/Fixtures/",
-]);
-
-$composer->register();
+class Hello
+{
+}

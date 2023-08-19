@@ -1,27 +1,16 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Locators;
-
-use ArrayObject;
-use BiuradPHP\Loader\Aliases\ClassAlias;
-use BiuradPHP\Loader\Aliases\NamespaceAlias;
-use BiuradPHP\Loader\Interfaces\AliasInterface;
-use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
+namespace Biurad\Loader\Locators;
 
 /**
  * The Alias Manager.
@@ -29,129 +18,62 @@ use BiuradPHP\Loader\Interfaces\AliasTypeInterface;
  * Register the array of class or namespace aliases in an application.
  *
  * @author Divine Niiquaye <divineibok@gmail.com>
- * @license BSD-3-Cluase
  */
-class AliasLocator implements AliasInterface
+class AliasLocator
 {
-    private $namespaces = [];
+    /** @var array<int,string> */
+    private array $namespaces = [];
 
-    private $classes = [];
+    /** @var array<int,string> */
+    private array $classes = [];
 
     public function __construct(array $aliases = [])
     {
-        $this->setAliases($aliases);
-    }
-
-    public function addAliasType(AliasTypeInterface $alias): AliasInterface
-    {
-        if ($alias instanceof NamespaceAlias) {
-            $this->namespaces = \array_merge($this->namespaces, $alias->getAlias());
-
-            return $this;
+        foreach ($aliases as $alias => $classOrNamespace) {
+            $this->add($classOrNamespace, $alias);
         }
-
-        $this->classes = \array_merge($this->classes, $alias->getAlias());
-
-        return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * Add a class or namespace alias.
+     *
+     * @param string $classOrNamespace A namespace must end with a backslash
      */
-    public function addAlias(string $classOrNamespace, string $alias): AliasInterface
+    public function add(string $classOrNamespace, string $alias): void
     {
-        if (\class_exists($classOrNamespace)) {
-            return $this->addAliasType(new ClassAlias($alias, $classOrNamespace));
-        }
+        if (\str_ends_with($classOrNamespace, '\\')) {
+            if (!\str_ends_with($alias, '\\')) {
+                throw new \InvalidArgumentException(\sprintf("Alias '%s' must end with a backslash", $alias));
+            }
 
-        return $this->addAliasType(new NamespaceAlias($alias, $classOrNamespace));
+            $this->namespaces[$alias] = $classOrNamespace;
+        } elseif (\class_exists($classOrNamespace)) {
+            $this->classes[$alias] = $classOrNamespace;
+        }
     }
 
     /**
-     * {@inheritdoc}
+     * Autoload namespaces and classes using PHP class_alias function.
      */
     public function register(): void
     {
-        $loaded = new ArrayObject([]);
-
-        \spl_autoload_register(self::createPrependAutoloader(
-            $this->classes,
-            $loaded
-        ), true, true);
-
-        \spl_autoload_register(self::createAppendAutoloader(
-            $this->namespaces,
-            $loaded
-        ));
-    }
-
-    /**
-     * Set the registered aliases.
-     *
-     * @param array $aliases [$alias => $$classOrNamespace]
-     */
-    public function setAliases(array $aliases): void
-    {
-        foreach ($aliases as $alias => $classOrNamespace) {
-            $this->addAlias($classOrNamespace, $alias);
-        }
-    }
-
-    /**
-     * @return callable
-     */
-    private static function createPrependAutoloader(array $classes, ArrayObject $loaded)
-    {
-        /*
-         * @param  string $class Class name to autoload
-         * @return bool|null
-         */
-        return static function ($class) use ($classes, $loaded) {
+        $loaded = new \ArrayObject();
+        \spl_autoload_register(function (string $class) use (&$loaded): void {
             if (isset($loaded[$class])) {
-                return null;
+                return;
             }
 
-            if (isset($classes[$class])) {
-                return \class_alias($classes[$class], $class);
+            if (isset($this->classes[$class])) {
+                $loaded[$class] = \class_alias($this->classes[$class], $class);
+                return;
             }
 
-            return null;
-        };
-    }
-
-    /**
-     * @return callable
-     */
-    private static function createAppendAutoloader(array $namespaces, ArrayObject $loaded)
-    {
-        /*
-         * @param  string $class Class name to autoload
-         * @return void
-         */
-        return static function ($class) use ($namespaces, $loaded) {
-            $segments = \explode('\\', $class);
-
-            $i     = 0;
-            $check = '';
-
-            // We are checking segments of the namespace to match quicker
-            while (isset($segments[$i + 1], $namespaces[$check . $segments[$i] . '\\'])) {
-                $check .= $segments[$i] . '\\';
-                ++$i;
+            foreach ($this->namespaces as $alias => $namespace) {
+                if (\str_starts_with($class, $alias)) {
+                    $loaded[$class] = \class_alias($namespace.\substr($class, \strlen($alias)), $class);
+                    break;
+                }
             }
-
-            if ($check === '') {
-                return null;
-            }
-
-            $alias = $namespaces[$check]
-                . \strtr(\substr($class, \strlen($check)), $namespaces);
-
-            $loaded[$alias] = true;
-
-            if (\class_exists($alias) || \interface_exists($alias) || \trait_exists($alias)) {
-                return \class_alias($alias, $class);
-            }
-        };
+        });
     }
 }

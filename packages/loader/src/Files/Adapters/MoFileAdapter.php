@@ -1,44 +1,35 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 /*
- * This file is part of BiuradPHP opensource projects.
+ * This file is part of Biurad opensource projects.
  *
- * PHP version 7 and above required
- *
- * @author    Divine Niiquaye Ibok <divineibok@gmail.com>
- * @copyright 2019 Biurad Group (https://biurad.com/)
+ * @copyright 2022 Biurad Group (https://biurad.com/)
  * @license   https://opensource.org/licenses/BSD-3-Clause License
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace BiuradPHP\Loader\Files\Adapters;
+namespace Biurad\Loader\Files\Adapters;
 
-use BiuradPHP\Loader\Exceptions\FileGeneratingException;
-use BiuradPHP\Loader\Exceptions\FileLoadingException;
+use Biurad\Loader\Exceptions\FileGeneratingException;
+use Biurad\Loader\Exceptions\FileLoadingException;
 
 /**
  * Reading and generating Mo files.
  *
  * @author Divine Niiquaye Ibok <divineibok@gmail.com>
- * @license BSD-3-Clause
  */
 final class MoFileAdapter extends AbstractAdapter
 {
-    protected $pos = 0;
+    protected int $pos = 0;
 
-    protected $str;
+    protected string $str;
 
-    protected $len;
+    protected int $len;
 
-    protected $endian;
+    protected string $endian;
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports(string $file): bool
     {
         return 'mo' === \strtolower(\pathinfo($file, \PATHINFO_EXTENSION));
@@ -46,23 +37,19 @@ final class MoFileAdapter extends AbstractAdapter
 
     /**
      * Reads configuration from Mo data.
-     *
-     * @param string $string
-     *
-     * @return array
      */
     protected function processFrom(string $string): array
     {
         $this->endian = 'V';
-        $this->str    = $string;
-        $this->len    = \strlen($string);
+        $this->str = $string;
+        $this->len = \strlen($string);
 
-        $magic = $this->readInt() & 0xffffffff;
+        $magic = $this->readInt() & 0xFFFFFFFF;
 
-        if ($magic === 0x950412de) {
+        if (0x950412DE === $magic) {
             // Low endian.
             $this->endian = 'V';
-        } elseif ($magic === 0xde120495) {
+        } elseif (0xDE120495 === $magic) {
             // Big endian.
             $this->endian = 'N';
         } else {
@@ -86,7 +73,7 @@ final class MoFileAdapter extends AbstractAdapter
 
         $items = [];
 
-        for ($i = 0; $i < $total; $i++) {
+        for ($i = 0; $i < $total; ++$i) {
             $this->seek($table_originals[$i * 2 + 2]);
 
             // TODO: Original string can have context concatenated on it. We do not yet support that.
@@ -97,7 +84,7 @@ final class MoFileAdapter extends AbstractAdapter
 
                 // TODO: Plural forms are stored by letting the plural of the original string follow,
                 // TODO: the singular of the original string, separated through a NUL byte.
-                $translated       = $this->read($table_translations[$i * 2 + 1]);
+                $translated = $this->read($table_translations[$i * 2 + 1]);
                 $items[$original] = $translated;
             }
         }
@@ -107,8 +94,6 @@ final class MoFileAdapter extends AbstractAdapter
 
     /**
      * Generates configuration in Mo format.
-     *
-     * @param array $data
      *
      * @return false|string
      */
@@ -124,7 +109,7 @@ final class MoFileAdapter extends AbstractAdapter
     {
         $read = $this->read(4);
 
-        if ($read === false) {
+        if (false === $read) {
             return false;
         }
 
@@ -134,18 +119,14 @@ final class MoFileAdapter extends AbstractAdapter
     }
 
     /**
-     * @param $count
-     *
      * @return array
      */
     protected function readIntArray($count)
     {
-        return \unpack($this->endian . $count, $this->read(4 * $count));
+        return \unpack($this->endian.$count, $this->read(4 * $count));
     }
 
     /**
-     * @param $bytes
-     *
      * @return string
      */
     private function read($bytes)
@@ -156,11 +137,6 @@ final class MoFileAdapter extends AbstractAdapter
         return $data;
     }
 
-    /**
-     * @param $pos
-     *
-     * @return mixed
-     */
     private function seek($pos)
     {
         $this->pos = $pos < $this->len ? $pos : $this->len;
