@@ -41,6 +41,7 @@ jobs:
 
       - name: Cache composer dependencies
         uses: actions/cache@v3
+        continue-on-error: true
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -93,6 +94,7 @@ jobs:
 
       - name: Cache composer dependencies
         uses: actions/cache@v3
+        continue-on-error: true
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -139,6 +141,7 @@ jobs:
 
       - name: Cache composer dependencies
         uses: actions/cache@v3
+        continue-on-error: true
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
