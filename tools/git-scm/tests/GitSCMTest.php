@@ -50,6 +50,14 @@ test('initialize repo', function (Repository $repo): void {
     $repo->initialize();
     t\assertDirectoryExists($repo->getPath());
     t\assertDirectoryExists($repo->getGitPath());
+
+    if (null === $repo->getAuthor()) {
+        $repo->runConcurrent([
+            ["config", "--global", "user.email", "divineibok@gmail.com"],
+            ["config", "--global", "user.name", "Divine Niiquaye Ibok"],
+        ]);
+        t\assertInstanceOf(Identity::class, $repo->getAuthor());
+    }
 })->with('repo');
 
 test('repo directory does not exists with debug false', function (): void {
