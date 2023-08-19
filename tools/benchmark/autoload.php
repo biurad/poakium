@@ -10,29 +10,12 @@
  * file that was distributed with this source code.
  */
 
-require __DIR__.'/../../vendor/autoload.php';
+ /** @var \Composer\Autoload\ClassLoader */
+$composer = require __DIR__.'/../../vendor/autoload.php';
 
-\spl_autoload_register(function (string $class): void {
-    $names = \explode('\\', $class);
+$composer->addPsr4("Biurad\\Annotations\\Tests\\Fixtures\\", [
+    __DIR__."/../../packages/annotations/tests/Fixtures/",
+    __DIR__."/../../../packages/annotations/tests/Fixtures/",
+]);
 
-    if (['Biurad', 'Tests', 'Fixtures'] === [$names[0] ?? null, $names[2] ?? null, $names[3] ?? null]) {
-        $className = \implode('\\', \array_slice($names, 4));
-
-        if ('Annotations' === $names[1]) {
-            if ('annotated_function' === \end($names)) {
-                $className = 'Annotation/function';
-            }
-
-            $files = [
-                __DIR__.'/../../packages/annotations/tests/Fixtures/'.$className.'.php',
-                __DIR__.'/../../../packages/annotations/tests/Fixtures/'.$className.'.php',
-            ];
-
-            foreach ($files as $file) {
-                if (\file_exists($file)) {
-                    require $file;
-                }
-            }
-        }
-    }
-});
+$composer->register();
