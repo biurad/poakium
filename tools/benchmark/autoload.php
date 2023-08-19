@@ -23,7 +23,16 @@ require __DIR__.'./../../vendor/autoload.php';
                 $className = 'Annotation/function';
             }
 
-            require __DIR__.'/../../packages/annotations/tests/Fixtures/'.$className.'.php';
+            $files = [
+                __DIR__.'/../../packages/annotations/tests/Fixtures/'.$className.'.php',
+                __DIR__.'/../../../packages/annotations/tests/Fixtures/'.$className.'.php',
+            ];
+
+            foreach ($files as $file) {
+                if (\file_exists($file)) {
+                    require $file;
+                }
+            }
         }
     }
 });
