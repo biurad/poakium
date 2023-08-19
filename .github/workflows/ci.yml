@@ -175,4 +175,16 @@ jobs:
           coverage: none
 
       - name: Split Commits
-        run: cd tools/monorepo && composer install && cd ../../ && php tools/monorepo/bin/monorepo -v
+        run: |
+          cd tools/monorepo
+          chmod +x ./bin/splitsh-lite
+          composer install --no-progress
+          git config --global user.email "divineibok@gmail.com"
+          git config --global user.name "Divine Niiquaye Ibok"
+          if git diff-index --quiet HEAD --; then
+            echo "No file changes detected."
+          else
+            echo "File changes detected. Creating empty commit."
+            git add -A && git commit --allow-empty-message -m ""
+          fi
+          cd ../../ && php tools/monorepo/bin/monorepo -v
