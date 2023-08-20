@@ -156,7 +156,7 @@ jobs:
     name: Publishing Commits
     needs: unit-tests
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout
@@ -174,17 +174,8 @@ jobs:
           extensions: pcre, json, fileinfo
           coverage: none
 
+      - name: Install dependencies
+        run: cd tools/monorepo && composer install --no-progress && cd ../../
+
       - name: Split Commits
-        run: |
-          cd tools/monorepo
-          chmod +x ./bin/splitsh-lite
-          composer install --no-progress
-          git config --global user.email "divineibok@gmail.com"
-          git config --global user.name "Divine Niiquaye Ibok"
-          if git diff-index --quiet HEAD --; then
-            echo "No file changes detected."
-          else
-            echo "File changes detected. Creating empty commit."
-            git add -A && git commit --allow-empty-message -m ""
-          fi
-          cd ../../ && php tools/monorepo/bin/monorepo -v
+        run: php tools/monorepo/bin/monorepo -v
