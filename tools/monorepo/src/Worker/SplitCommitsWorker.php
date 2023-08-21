@@ -117,6 +117,9 @@ class SplitCommitsWorker implements WorkerInterface
                         $count = (int) \rtrim($mainRepo->run('rev-list', ['--count', $target]) ?? '0');
                         $updates = (int) \rtrim($mainRepo->run('rev-list', ['--count', $branch], cwd: $clonePath) ?? '0');
 
+                        $output->writeln(\sprintf("<info>Target commit count: %d</info>", $count));
+                        $output->writeln(\sprintf("<info>Source commit count: %d</info>", $updates));
+
                         if (($count = $updates > $count ? $updates - $count : $count - $updates) < 0) {
                             continue;
                         }
