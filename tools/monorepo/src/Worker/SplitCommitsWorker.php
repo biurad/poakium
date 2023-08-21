@@ -56,25 +56,21 @@ class SplitCommitsWorker implements WorkerInterface
      */
     public function work(Monorepo $repo, InputInterface $input, SymfonyStyle $output): int
     {
-        [$mainRepo, $branches] = [$repo->getRepository(), $input->getOption('branch')];
-        $currentBranch = $mainRepo->getBranch()->getName();
-
-        if (!\is_executable($split = __DIR__.'/../../bin/splitsh-lite')) {
-            $mainRepo->run('update-index', ['--chmod=+x']);
-        }
+        $currentBranch = ($mainRepo = $repo->getRepository())->getBranch()->getName();
+        $split = __DIR__.'/../../bin/splitsh-lite';
 
         if ('\\' === \DIRECTORY_SEPARATOR) {
             $output->error([
                 'The splitsh-lite command used to split commits to repositories',
                 'is currently not supported on Windows.',
                 'Kindly use Windows Subsystem for Linux (WSL) to run this command.',
-                'Support for Windows is being worked on and will be available soon.',
+                'Support for Windows is being worked on and will be available in the future.',
             ]);
 
             return WorkflowCommand::FAILURE;
         }
 
-        if ($branches && '*' === $branches[0]) {
+        if (($branches = $input->getOption('branch')) && '*' === $branches[0]) {
             if (\count($branches) > 1) {
                 $output->writeln(\sprintf('<error>Expected "*" as the only value for option "--branch", got "%s"</error>', \implode(', ', $branches)));
 
@@ -111,10 +107,10 @@ class SplitCommitsWorker implements WorkerInterface
 
                     if ($output->isVerbose()) {
                         $output->writeln(\sprintf('<%s>[debug] Command "%s": %s</%1$s>', $s->isSuccessful() ? 'info' : 'error', $s->getCommandLine(), $s->getErrorOutput()));
+                    }
 
-                        if (!$s->isSuccessful()) {
-                            continue;
-                        }
+                    if (!$s->isSuccessful()) {
+                        continue;
                     }
 
                     if ($mainRepo->run('log', [$branch, ...$verify], cwd: $clonePath) !== $mainRepo->run('log', [$target, ...$verify])) {
@@ -139,6 +135,10 @@ class SplitCommitsWorker implements WorkerInterface
                             ['branch', '-D', "split-$remote"],
                             ['update-ref', '-d', $target],
                         ]);
+
+                        if (0 !== $mainRepo->getExitCode()) {
+                            return $mainRepo->getExitCode();
+                        }
 
                         if (!$input->getOption('no-push')) {
                             $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f', '-u'] : ['-u']), 'origin', "$branch:$branch"];
@@ -193,7 +193,5 @@ class SplitCommitsWorker implements WorkerInterface
                 return $mainRepo->getExitCode();
             }
         );
-
-        return $mainRepo->getExitCode();
     }
 }
