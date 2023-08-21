@@ -248,6 +248,8 @@ test('repo pulls new commit from remote to', function (Repository $a, Repository
         ['commit', '-m', 'New commit on new-feature branch', '--allow-empty'],
         ['push', 'origin', '--all'],
     ]);
+    t\assertSame(2, $b->getConcurrentRuns());
+
     $a->run('checkout', ['new-feature']);
     $b->reset();
     $a->reset();

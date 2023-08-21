@@ -27,6 +27,7 @@ class Repository
     private float $timeout = 600.0;
     private string $command = 'git';
     private int $exitCode = 0;
+    private int $concurrency = 0;
     private string $gitDir;
     private array $cache = [];
 
@@ -466,6 +467,13 @@ class Repository
     }
 
     /**
+     * Returns the number of concurrent git commands.
+     */
+    public function getConcurrentRuns(): int {
+        return $this->concurrency;
+    }
+
+    /**
      * Resets the repository object reference object, cache
      * and discard all local changes in your working directory.
      *
@@ -631,6 +639,10 @@ class Repository
     {
         $process = new Process([$this->command, $command, ...$args], $cwd ?? $this->path, $this->envVars, null, $this->timeout);
 
+        if (0 !== $this->concurrency) {
+            $this->concurrency = 0;
+        }
+
         try {
             $this->exitCode = $process->mustRun($callback)->getExitCode();
 
@@ -659,6 +671,7 @@ class Repository
     public function runConcurrent(array $commands, callable $callback = null, bool $exitOnFailure = true, string $cwd = null): array
     {
         $outputs = [];
+        $this->concurrency = 0;
 
         if (null !== $this->logger) {
             $message = 'Concurrent command(s) [%s] finished successfully';
@@ -686,11 +699,16 @@ class Repository
                 }
 
                 $this->exitCode = $process->wait();
+                ++$this->concurrency;
             } catch (ExceptionInterface $e) {
+                $this->exitCode = 1;
             }
 
-            if (!$process->isSuccessful()) {
-                $this->logger?->error(isset($e) ? $e->getMessage() : \sprintf('Command "%s" failed', $process->getCommandLine()));
+            if (0 !== $this->exitCode) {
+                $this->logger->error(
+                    \sprintf('Concurrent executed "%s/%s" successfully, but failed on "%s".', $this->concurrency, \count($commands), $process->getCommandLine()),
+                    ['error' => null]
+                );
 
                 if ($exitOnFailure) {
                     return $this->debug ? throw ($e ?? new ProcessFailedException($process)) : [];
