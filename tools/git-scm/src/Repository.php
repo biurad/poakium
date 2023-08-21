@@ -469,7 +469,8 @@ class Repository
     /**
      * Returns the number of concurrent git commands.
      */
-    public function getConcurrentRuns(): int {
+    public function getConcurrentRuns(): int
+    {
         return $this->concurrency;
     }
 
@@ -705,7 +706,7 @@ class Repository
             }
 
             if (0 !== $this->exitCode) {
-                $this->logger->error(
+                $this->logger?->error(
                     \sprintf('Concurrent executed "%s/%s" successfully, but failed on "%s".', $this->concurrency, \count($commands), $process->getCommandLine()),
                     ['error' => null]
                 );
