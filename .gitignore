@@ -10,6 +10,9 @@ composer.lock
 # Monorepo
 /.monorepo-cache
 
+# MacOs
+.DS_Store
+
 # not allowed
 .phpcs-cache
 /tools/*/tests/build/
