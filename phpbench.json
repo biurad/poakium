@@ -1,6 +1,7 @@
 {
   "runner.path": "tools/benchmark",
   "runner.bootstrap": "tools/benchmark/autoload.php",
+  "runner.file_pattern": "*Bench.php",
   "runner.retry_threshold": 5,
   "runner.warmup": 2,
   "runner.php_config": {
