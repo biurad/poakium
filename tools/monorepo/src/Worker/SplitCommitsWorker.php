@@ -140,13 +140,18 @@ class SplitCommitsWorker implements WorkerInterface
                         ]);
 
                         if (0 !== $mainRepo->getExitCode()) {
+                            unresolved:
                             $unmergedPaths = $mainRepo->run('diff', ['--name-only', '--diff-filter=U']);
 
                             foreach (\explode("\n", $unmergedPaths) as $unmergedPath) {
-                                // Accept incoming changes for the file
-                                $mainRepo->runConcurrent([['checkout', '--theirs', $unmergedPath], ['add', $unmergedPath]]);
+                                if (empty($unmergedPath)) {
+                                    continue;
+                                }
 
-                                if ($repo->isDebug()) {
+                                // Accept incoming changes for the file
+                                $mainRepo->runConcurrent([['checkout', '--theirs', $unmergedPath], ['add', $unmergedPath]], null, false);
+
+                                if ($output->isVeryVerbose()) {
                                     $output->writeln(\sprintf('<info>Accepting incoming changes for %s</info>', $unmergedPath));
                                 }
                             }
@@ -158,6 +163,10 @@ class SplitCommitsWorker implements WorkerInterface
                                 ['branch', '-D', "split-$remote"],
                                 ['update-ref', '-d', $target],
                             ]);
+
+                            if (0 !== $mainRepo->getExitCode()) {
+                                goto unresolved;
+                            }
                         }
 
                         if (!$input->getOption('no-push')) {
