@@ -106,7 +106,7 @@ jobs:
         run: php -d "pcov.enabled=1" vendor/bin/pest --coverage --coverage-clover=coverage.clover
 
       - name: "Upload coverage report to Codecov"
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.clover
 
@@ -159,6 +159,10 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      -
+        name: Install libgit2-dev
+        run: sudo apt-get install -y libgit2-dev
+
       - name: Checkout
         uses: actions/checkout@v4
 
