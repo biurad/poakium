@@ -1,10 +1,10 @@
 {
   "name": "biurad/php-starter",
   "description": "A template repository for setting up a new PHP library package.",
-  "type": "library",
-  "keywords": ["biurad","php"],
+  "keywords": ["template", "templating", "biurad", "php"],
   "homepage": "https://biurad.com",
   "license": "BSD-3-Clause",
+  "type": "library",
   "authors": [
     {
       "name": "Divine Niiquaye Ibok",
@@ -16,7 +16,7 @@
     }
   ],
   "support": {
-    "docs": "https://docs.biurad.com/php/starter"
+    "docs": "https://docs.biurad.com/poakium/starter"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
@@ -24,7 +24,7 @@
     "php": "^8.0"
   },
   "require-dev": {
-    "phpstan/phpstan": "^1.0",
+    "phpstan/phpstan": "^1.9",
     "phpunit/phpunit": "^9.5",
     "squizlabs/php_codesniffer": "^3.6",
     "vimeo/psalm": "^4.27"
