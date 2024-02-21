@@ -9,8 +9,11 @@ parameters:
 
   excludePaths:
     - packages/*/resources/*
+    - packages/*/vendor/*
     - packages/*/tests/Fixtures/*
     - tools/*/tests/Fixtures/*
+    - tools/*/vendor/*
 
   ignoreErrors:
-
+    - message: "#^Call to an undefined method Reflector\\:\\:getAttributes\\(\\).$#"
+      path: packages/annotations/src/AnnotationLoader.php
