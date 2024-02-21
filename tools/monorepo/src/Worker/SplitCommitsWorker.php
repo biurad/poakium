@@ -157,7 +157,7 @@ class SplitCommitsWorker implements WorkerInterface
                             }
 
                             $mainRepo->runConcurrent([
-                                ['cherry-pick', '--continue'],
+                                ['cherry-pick', '--skip'],
                                 ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+refs/heads/split-$remote:$branch"],
                                 ['checkout', $currentBranch],
                                 ['branch', '-D', "split-$remote"],
@@ -165,7 +165,11 @@ class SplitCommitsWorker implements WorkerInterface
                             ]);
 
                             if (0 !== $mainRepo->getExitCode()) {
-                                goto unresolved;
+                                $mainRepo->run('cherry-pick', ['--continue']);
+
+                                if (\file_exists($mainRepo->getPath().'/.git/CHERRY_PICK_HEAD')) {
+                                    goto unresolved;
+                                }
                             }
                         }
 

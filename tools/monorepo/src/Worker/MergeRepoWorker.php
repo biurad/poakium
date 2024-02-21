@@ -79,7 +79,7 @@ class MergeRepoWorker implements PriorityInterface, WorkerInterface
             return WorkflowCommand::FAILURE;
         }
 
-        return $repo->resolveRepository($output, static function (array $required) use ($output, $repo, $mainRepo, $readTree): int {
+        return $repo->resolveRepository($output, static function (array $required) use ($output, $mainRepo, $readTree): int {
             [$url, $remote, $path, $clonePath] = $required;
             $output->writeln(\sprintf('<info>Rewriting %s commit history to point to %s</info>', $url, $path));
 
