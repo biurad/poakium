@@ -47,7 +47,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getAttributes()
+    public function getAttributes(): array
     {
         return $this->message->attributes->all();
     }
@@ -55,7 +55,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getCookieParams()
+    public function getCookieParams(): array
     {
         return $this->message->cookies->all();
     }
@@ -71,7 +71,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getQueryParams()
+    public function getQueryParams(): array
     {
         return $this->message->query->all();
     }
@@ -79,7 +79,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getServerParams()
+    public function getServerParams(): array
     {
         return $this->message->server->all();
     }
@@ -87,9 +87,13 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getUploadedFiles()
+    public function getUploadedFiles(): array
     {
-        return \array_map(fn (\Symfony\Component\HttpFoundation\File\UploadedFile $v) => new UploadedFile($v->getUploadedFile()->getPath(), $v->getSize(), $v->getError(), $v->getClientFilename(), $v->getClientMediaType()), $this->message->files->all());
+        return \array_map(
+            fn (\Symfony\Component\HttpFoundation\File\UploadedFile $v) =>
+            new UploadedFile($v->getPath(), $v->getSize(), $v->getError(), $v->getClientOriginalName(), $v->getClientMimeType()),
+            $this->message->files->all()
+        );
     }
 
     /**
