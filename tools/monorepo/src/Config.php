@@ -85,7 +85,7 @@ final class Config implements \ArrayAccess, \Countable
 
         $options->setRequired(['base_url', 'branch_filter', 'workers', 'repositories']);
         $this->config += $options->resolve(\function_exists('yaml_parse_file') ? yaml_parse_file($configFile) : Yaml::parseFile($configFile));
-        $this->config['cache'] = $cachePath ?? $this->config['path'].'/.monorepo-cache';
+        $this->config['cache'] = \realpath($cachePath ?? $this->config['path'].'/.monorepo-cache');
     }
 
     /**
