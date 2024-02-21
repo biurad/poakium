@@ -1,0 +1,33 @@
+{
+  "name": "biurad/database",
+  "type": "library",
+  "description": "Library for SQL querying data into databases (any database supported by PDO)",
+  "keywords": ["database", "query", "repository", "library", "php"],
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Niiquaye Divine Ibok",
+      "email": "divineibok@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "preferred-install": "dist",
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Biurad\\Database\\": "src/"
+    }
+  },
+  "suggest": {
+    "psr/log": "Required to use loggers for reporting of execution"
+  }
+}
