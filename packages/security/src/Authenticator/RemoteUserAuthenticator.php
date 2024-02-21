@@ -102,7 +102,7 @@ class RemoteUserAuthenticator implements AuthenticatorInterface, FailureHandlerI
     {
         $user = $this->userProvider->loadUserByIdentifier($this->userKey);
 
-        return $token ?? new PreAuthenticatedToken($user, $firewallName, $user->getRoles());
+        return new PreAuthenticatedToken($user, $firewallName, $user->getRoles());
     }
 
     /**
@@ -113,7 +113,7 @@ class RemoteUserAuthenticator implements AuthenticatorInterface, FailureHandlerI
         $token =$this->tokenStorage->getToken();
 
         if ($token instanceof PreAuthenticatedToken) {
-            $this->tokenStorage->setToken();
+            $this->tokenStorage->setToken(null);
 
             if (null !== $this->logger) {
                 if (null === $exception) {
