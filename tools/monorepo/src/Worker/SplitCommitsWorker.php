@@ -124,7 +124,7 @@ class SplitCommitsWorker implements WorkerInterface
                             continue;
                         }
 
-                        $output->writeln(\sprintf('<info>Pushing (%d) commits from branch %s to %s</info>', $count, $branch, $url));
+                        $output->writeln(\sprintf('<info>Found (%d) commits in %s:%s</info>', $count, $target, $branch));
                         $mainRepo->runConcurrent(0 === $updates ? [
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+$target:refs/heads/$branch"],
                             ['update-ref', '-d', $target],
@@ -132,7 +132,7 @@ class SplitCommitsWorker implements WorkerInterface
                             ['checkout', '--orphan', "split-$remote"],
                             ['reset', '--hard'],
                             ['pull', $remote, $branch],
-                            ['cherry-pick', ...\explode(' ', "$target~".\implode(" $target~", \array_reverse(\range(0, $count - 1))))],
+                            ['cherry-pick', ...\explode("\n", $mainRepo->run('rev-list', ["--max-count=$count", $target]))],
                             ['push', $input->getOption('force') ? '-f' : '-q', $remote, "+refs/heads/split-$remote:$branch"],
                             ['checkout', $currentBranch],
                             ['branch', '-D', "split-$remote"],
@@ -176,6 +176,7 @@ class SplitCommitsWorker implements WorkerInterface
                         if (!$input->getOption('no-push')) {
                             $pushChanges[] = ['push', ...($input->getOption('force') ? ['-f'] : []), 'origin', $branch];
                         }
+                        $output->writeln(\sprintf('<info>Pushed (%d) commits from %s:%s</info>', $count, $url, $branch));
                     } else {
                         $output->writeln(\sprintf('<info>Nothing to commit; On branch %s, "%s/%1$s" is up to date</info>', $branch, $remote));
                     }
