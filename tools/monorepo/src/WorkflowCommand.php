@@ -97,8 +97,7 @@ class WorkflowCommand extends Command
     {
         $repositories = [];
         $this->output = new SymfonyStyle($input, $output);
-        $path = \realpath(\rtrim($input->getOption('path') ?? $this->rootPath, '\/'));
-        $config = new Config($path, $input->getOption('cache'), $input->getOption('clean'));
+        $config = new Config(\rtrim($input->getOption('path') ?? $this->rootPath, '\/'), $input->getOption('cache'), $input->getOption('clean'));
         $exclusive = $input->getOption('only');
 
         if (empty($jobWorkers = $config['workers'][$stage = $input->getArgument('job')] ?? [])) {
