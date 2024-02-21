@@ -156,23 +156,41 @@ jobs:
     name: Publishing Commits
     needs: unit-tests
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
+      -
+        name: Install libgit2-dev
+        run: sudo apt-get install -y libgit2-dev
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup GO
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.17'
+          go-version: '1.21.1'
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
+          php-version: 8.2
           extensions: pcre, json, fileinfo
           coverage: none
+
+      - name: Install & Build Splitsh-lite
+        run: |
+          git clone https://github.com/splitsh/lite.git /tmp/splitsh-lite
+          git config --global user.email "divineibok@gmail.com"
+          git config --global user.name "Divine Niiquaye Ibok"
+          cd /tmp/splitsh-lite
+          sed -i -e 's/v34/v31/g' go.mod splitter/*.go
+          go mod tidy
+          go build -o splitsh-lite github.com/splitsh/lite
+          sudo rm /home/runner/work/poakium/poakium/tools/monorepo/bin/splitsh-lite
+          sudo mv splitsh-lite /home/runner/work/poakium/poakium/tools/monorepo/bin/splitsh-lite
+          cd /home/runner/work/poakium/poakium
+          git commit -am "chore: update splitsh-lite"
 
       - name: Install dependencies
         run: cd tools/monorepo && composer install --no-progress && cd ../../
